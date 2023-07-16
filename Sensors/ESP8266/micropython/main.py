@@ -71,10 +71,10 @@ def main():
         temperature_data = thermocouple.allReadings(readings)
         org_data = thermocouple.allReadings(myReadings)
         date_time, _, _ = realtc.formattime(time.localtime())
-        out = str(sequence) + ', ' + date_time + ', ' + temperature_data
+        out = str(sequence) + ',' + date_time + ',' + temperature_data
         print(out)
         espnowex.esp_tx(esp_con, out)
-
+        sequence += 1
         # difference between treatment and control leaf handling
         # also check for heater going out of randge
         # and if temperature above maximum value for heating due to other reasons.
@@ -100,7 +100,6 @@ def main():
         # elif diff > 4.75 or diff == 'nan':
         #     print("diff >= 4.75 D8 is off")
         #     D8.off()
-        sequence += 1
         time.sleep(5)
 
 if __name__ == "__main__":
