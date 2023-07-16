@@ -1,14 +1,13 @@
-import machine
+import sys
 import time
-
-# import logger
-import conf
 from math import isnan
+import machine
+
+# import program configuration
+import conf
 import realtc
-# import sd
 import thermocouple
 import espnowex
-import sys
 
 
 print("START TEMPERATURE SENSOR")
@@ -17,12 +16,12 @@ print("START TEMPERATURE SENSOR")
 D8 = machine.Pin(15, machine.Pin.OUT)
 D8.off()
 
+
 def main():
 
     # con = espnowex.init_esp_connection()
     sta, ap = espnowex.wifi_reset()
     esp_con = espnowex.init_esp_connection(sta)
-
 
     # convert hex into readable mac address
     RAW_MAC = espnowex.get_mac(sta)
@@ -71,7 +70,7 @@ def main():
         # temperature_data = ', '.join([str(value[2]) for value in readings.values()])
         temperature_data = thermocouple.allReadings(readings)
         org_data = thermocouple.allReadings(myReadings)
-        date_time = realtc.formattime(time.localtime())
+        date_time, _, _ = realtc.formattime(time.localtime())
         out = str(sequence) + ', ' + date_time + ', ' + temperature_data
         print(out)
         espnowex.esp_tx(esp_con, out)
@@ -106,7 +105,7 @@ def main():
 
 if __name__ == "__main__":
     try:
-        print(f'rest code: {machine.reset_cause()}')
+        print(f'reset code: {machine.reset_cause()}')
         main()
     except KeyboardInterrupt as e:
         print(f'Got ctrl-c {e}')
