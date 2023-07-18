@@ -13,7 +13,8 @@ def temp_c(data):
     temp >>= 2
     if temp & 0x2000:
         temp -= 16384  # Sign bit set, take 2's compliment.
-    return temp * 0.25
+    return (temp/4)
+
 
 
 def callibrated_reading(deviceId, temperature):
@@ -33,7 +34,7 @@ def callibrated_reading(deviceId, temperature):
 
 def initReadings(readings):
     for key in readings.keys():
-        readings[key][2] = 0.0 # 3rd position is temp value
+        readings[key][2] = 0.0 # position is temp value
     return readings
 
 def catReadings(readings):
@@ -112,11 +113,11 @@ def read_thermocouples(readings):
     myReadings = readings
     # initialization for those values that need to be reset
     for key in myReadings.keys():
-        myReadings[key][2] = 0.0 # 3rd position is cumulative temp value
-        myReadings[key][1] = 0   # 2nd position is reading count for averaging
+        myReadings[key][2] = 0.0 # position is cumulative temp value
+        myReadings[key][3] = 0   # position is reading count for averaging
     
     tspi = SPI(1, baudrate=5000000, polarity=0, phase=0)
-    numSamples = 10 # specifiy the number of readings to take and average
+    numSamples = 3 # specifiy the number of readings to take and average
     for i in range(numSamples):
         for key in readings.keys():
             cs_pin = readings[key][0] # first position is pin number
@@ -124,14 +125,15 @@ def read_thermocouples(readings):
 
             if not isnan(tRead): # only increment true values and ignore nan values
                 myReadings[key][2] += tRead
-                myReadings[key][1] += 1
+                myReadings[key][3] += 1
 
-            sleep(0.250) # 250 ms delay before next reading, can be modified
-        print(allReadings(readings)) # TODO debug output
+            sleep(0.50) # delay before next reading, can be modified
+        
+        # print(allReadings(readings)) # TODO debug output
 
     for key in readings.keys():
-        if myReadings[key][1] > 0:
-            avgReading = round(myReadings[key][2] / myReadings[key][1], 2)
+        if myReadings[key][3] > 0:
+            avgReading = round(myReadings[key][2] / myReadings[key][3], 2)
             # calReading = callibrated_re?eading(myReadings[key][3], avgReading)
             # print(f"data key: {myReadings[key][3]}   key: {key}   avg: {avgReading}   cal: {calReading}")
             readings[key][2] = avgReading

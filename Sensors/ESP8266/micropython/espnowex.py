@@ -62,10 +62,11 @@ def esp_tx(e, msg):
 
     try:
         res = e.send(peer, msg, True)  # transmit data and check receive status
-        if not res:
-            print(f"DATA NOT RECORDED response:{res}")
-        else:
-            print(f"DATA TX SUCCESSFUL response:{res}")
+        # TODO always returns true, this isn't really needed, would need to do a handshake
+        # if not res:
+        #     print(f"DATA NOT RECORDED response:{res}")
+        # else:
+        #     print(f"DATA TX SUCCESSFUL response:{res}")
 
     except OSError as err:
         if err.args[0] == errno.ETIMEDOUT:  # standard timeout is okay, ignore it

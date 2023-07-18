@@ -94,7 +94,8 @@ readings['D4'] = [5, 2, 0.0, 105]
 # Output Order
 # this controls the 5 temperature sensor readings' output order
 # output will be a CSV with values corresponding to this order
-readingsOrder = ['TREATMENT', 'CONTROL', 'HEATER', 'D3', 'D4']
+# readingsOrder = ['TREATMENT', 'CONTROL', 'HEATER', 'D3', 'D4']
+readingsOrder = ['HEATER', 'CONTROL', 'TREATMENT', 'D3', 'D4']
 
 # CALLIBRATION TABLE
 # Each thermocouple must be callibrated

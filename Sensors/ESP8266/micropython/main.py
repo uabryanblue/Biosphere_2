@@ -79,7 +79,7 @@ def main():
         # also check for heater going out of randge
         # and if temperature above maximum value for heating due to other reasons.
         diff = readings['TREATMENT'][2] - readings['CONTROL'][2]
-        print(f"CHECK TEMP DIFFERENCE - cont:{readings['CONTROL'][2]}, heat:{readings['TREATMENT'][2]}, DIFFERENCE: {diff}")
+        # print(f"CHECK TEMP DIFFERENCE - cont:{readings['CONTROL'][2]}, heat:{readings['TREATMENT'][2]}, DIFFERENCE: {diff}")
         
         if isnan(diff) is True:
             D8.off() # trouble reading sensor, turn off for safety TODO generate error in system log
