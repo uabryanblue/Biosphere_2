@@ -83,13 +83,14 @@ readings = dict()
 # EXAMPLE:  readings['HEATER'] = [1, 16, 0.0]
 # key = HEATER, PIN = D0, GPIO 16, initial temp value = 0.0
 # SensorID = a unique ID used for identification of the thermocouple in that position
+# Internal Temperature - cold junction on the amplifier board
 #   See CALLIBRATION below
-readings['HEATER'] = [1, 16, 0.0, 101]
-readings['CONTROL'] = [2, 5, 0.0, 102]
-readings['TREATMENT'] = [3, 4, 0.0, 103]
+readings['HEATER'] = [1, 16, 0.0, 101, 0.0]
+readings['CONTROL'] = [2, 5, 0.0, 102, 0.0]
+readings['TREATMENT'] = [3, 4, 0.0, 103, 0.0]
 # two extra sensor locations, default D3 and D4
-readings['D3'] = [4, 0, 0.0, 104]
-readings['D4'] = [5, 2, 0.0, 105]
+readings['D3'] = [4, 0, 0.0, 104, 0.0]
+readings['D4'] = [5, 2, 0.0, 105, 0.0]
 
 # Output Order
 # this controls the 5 temperature sensor readings' output order

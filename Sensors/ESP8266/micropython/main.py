@@ -68,10 +68,10 @@ def main():
 
     
         # temperature_data = ', '.join([str(value[2]) for value in readings.values()])
-        temperature_data = thermocouple.allReadings(readings)
-        org_data = thermocouple.allReadings(myReadings)
+        temperature_data, internal_data = thermocouple.allReadings(readings)
+        org_data, org_inter = thermocouple.allReadings(myReadings)
         date_time, _, _ = realtc.formattime(time.localtime())
-        out = str(sequence) + ',' + date_time + ',' + temperature_data
+        out = ','.join([str(sequence), date_time, temperature_data, internal_data])
         print(out)
         espnowex.esp_tx(esp_con, out)
         sequence += 1
