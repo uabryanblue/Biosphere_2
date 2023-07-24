@@ -1,3 +1,5 @@
 .bak
 .tmp
 *-workspace
+main copy.py
+Sensors/ESP8266/micropython/thermocouple copy.py
