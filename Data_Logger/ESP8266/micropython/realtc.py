@@ -1,13 +1,19 @@
+"""
+Biosphere 2
+AUTHOR: Bryan Blue
+EMAIL: bryanblue@arizona.edu
+STARTED: 2023
+"""
+# HiLetgo DS3231 + AT24C32N
 # RTC module default I2C address is 0x57 (dec 87)
 # address range is 0x50 to 0x57 using solder jumpers
 # https://lastminuteengineers.com/ds3231-rtc-arduino-tutorial/
 
-# HiLetgo DS3231 + AT24C32N
-
+# TODO this could benefit from trying to initialzie from NTP not available when using ESPNow
 # to set the time on the DS3231 use a tuple as shown here
 # d = DS3231(i2c)
 # d.set_time((YY, MM, DD, hh, mm, ss, 0, 0))
-# set time to 2023, May, 29, 7 am, 11 minutes, 1 second, NA, NA
+# example: to set time to 2023, May, 29, 7 am, 11 minutes, 1 second, NA, NA
 # d.set_time((2023, 05, 29, 7, 11, 1, 0, 0))
 
 from machine import I2C, Pin, RTC
@@ -15,13 +21,13 @@ import time
 from ds3231_gen import *
 
 
-def formattime(t):
+def formattime(Time):
     """produce a date/time format from tuple
     only minute resolution supported"""
 
     # YY-MM-DD hh:mm:ss
     return "{}-{:0>2}-{:0>2} {:0>2}:{:0>2}:{:0>2}".format(
-        t[0], t[1], t[2], t[3], t[4], t[5]
+        Time[0], Time[1], Time[2], Time[3], Time[4], Time[5]
     )
 
 
