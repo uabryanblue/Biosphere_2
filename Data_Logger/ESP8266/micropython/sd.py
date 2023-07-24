@@ -9,23 +9,23 @@ import uerrno  # error trapping and code values
 
 
 def initSD(mnt):
-    print(f"mounting {mnt}")
+    # print(f"mounting {mnt}")
     sd = sdcard.SDCard(machine.SPI(1), machine.Pin(15))
     vfs = os.VfsFat(sd)
     os.mount(vfs, mnt)
     # os.listdir(mnt)
     # time.sleep(0.2)
     # list_root = os.listdir()
-    listFiles = os.listdir(mnt)
-    if len(listFiles) > 0:
-        print(f"file(s) in {mnt} {listFiles}")
-    else:
-        print("no file!")
+    # listFiles = os.listdir(mnt)
+    # if len(listFiles) > 0:
+    #     print(f"file(s) in {mnt} {listFiles}")
+    # else:
+    #     print("no file!")
 
 
 def closeSD(mnt):
     try:
-        print(f"unmounting {mnt}")
+        # print(f"unmounting {mnt}")
         os.umount(mnt)
     except OSError as e:
         if e.args[0] == uerrno.ETIMEDOUT:  # standard timeout is okay, ignore it
