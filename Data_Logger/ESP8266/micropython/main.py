@@ -47,7 +47,7 @@ def main():
             print(f"Data Logger: {host}, {str_host} requested the time")
             time.sleep(0.1) # let other side get ready
             # receiver blocked until time is received
-            espnowex.esp_tx(esp_con, str(rtc.datetime()))
+            espnowex.esp_tx(host, esp_con, str(rtc.datetime()))
             D0.on() # turn led off, finished rquest
             print("Data Logger: time sent")
         elif msg == b'ERROR': # TODO generic trap
