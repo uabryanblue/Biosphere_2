@@ -2,18 +2,31 @@
 from machine import Pin, SPI
 from math import isnan
 from time import sleep
+import struct
 import conf
+# import max31855
 
 
-def temp_c(data):
+def parse_max318855(data):
     """translate binary response into degreee C"""
-    temp = data[0] << 8 | data[1]
-    if temp & 0x0001:
-        return float("NaN")  # Fault reading data.
-    temp >>= 2
-    if temp & 0x2000:
-        temp -= 16384  # Sign bit set, take 2's compliment.
-    return (temp/4)
+    # temp = data[0] << 8 | data[1]
+    # if temp & 0x0001:
+    #     return float("NaN")  # Fault reading data.
+    # temp >>= 2
+    # if temp & 0x2000:
+    #     temp -= 16384  # Sign bit set, take 2's compliment.
+
+    #Thermo-couple temperature
+    temperature = struct.unpack(">h", data[0:2])[0] >> 2;  # >h = signed short, big endian. 14 leftmost bits are data.    
+    temperature = temperature / (2**2)  # Two binary decimal places
+
+    #Internal temperature
+    internal_temperature = struct.unpack(">h", data[2:4])[0] >> 4;  # >h = signed short, big endian. 12 leftmost bits are data.  
+    internal_temperature = internal_temperature / (2**4)  # Four binary decimal places
+
+    print(temperature)
+    print(internal_temperature)
+    return temperature, internal_temperature  #  (temp/4)
 
 
 
@@ -92,17 +105,19 @@ def read_thermocouple(cs_pin, spi):
 
     sleep(0.250) # 250 ms
     spi.readinto(raw_data)
-    temp = temp_c(raw_data)
+    temperature, internal = parse_max318855(raw_data)
 
-    return temp
+    return temperature, internal
 
 def allReadings(readings, prefix=''):
     """join all reading values in the order specified by the configuration values in readsingsOrder
     prefix is the default for the output string and should not contain a delimiter"""
     out = prefix + ","
     for item in conf.readingsOrder:
-        out = ','.join([str(readings[item][2]) for item in conf.readingsOrder])
-    return out
+        TempOut = ','.join([str(readings[item][2]) for item in conf.readingsOrder])  # real temperatures
+        IntOut =  ','.join([str(readings[item][4]) for item in conf.readingsOrder])  # internal temperatures
+
+    return TempOut, IntOut
 
 
 def read_thermocouples(readings):
@@ -115,31 +130,36 @@ def read_thermocouples(readings):
     for key in myReadings.keys():
         myReadings[key][2] = 0.0 # position is cumulative temp value
         myReadings[key][3] = 0   # position is reading count for averaging
+        myReadings[key][4] = 0.0 # position is cumulative internal temp value
     
     tspi = SPI(1, baudrate=5000000, polarity=0, phase=0)
     numSamples = 3 # specifiy the number of readings to take and average
     for i in range(numSamples):
         for key in readings.keys():
             cs_pin = readings[key][0] # first position is pin number
-            tRead = read_thermocouple(cs_pin, tspi)
+            temperature, internal_temperature = read_thermocouple(cs_pin, tspi)
 
-            if not isnan(tRead): # only increment true values and ignore nan values
-                myReadings[key][2] += tRead
+            if not isnan(temperature): # only increment true values and ignore nan values
+                myReadings[key][2] += temperature
                 myReadings[key][3] += 1
+                myReadings[key][4] += internal_temperature
 
             sleep(0.50) # delay before next reading, can be modified
         
         # print(allReadings(readings)) # TODO debug output
 
     for key in readings.keys():
-        if myReadings[key][3] > 0:
+        if myReadings[key][3] > 0:  #  position 3 is number of successful reads for averaging
             avgReading = round(myReadings[key][2] / myReadings[key][3], 2)
+            avgInternalReading = round(myReadings[key][4] / myReadings[key][3], 2)
             # calReading = callibrated_re?eading(myReadings[key][3], avgReading)
             # print(f"data key: {myReadings[key][3]}   key: {key}   avg: {avgReading}   cal: {calReading}")
             readings[key][2] = avgReading
+            readings[key][4] = avgInternalReading
             
         else: # we didn't take any readings, therefore not a number
             readings[key][2] = float("NaN")
+            readings[key][4] = float("NaN")
                   
     # TODO put in some error checking to ensure spi is released
     tspi.deinit()
