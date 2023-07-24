@@ -28,8 +28,10 @@ def init_esp_connection(sta):
     # TODO peers should be in the conf file
     # peer = b'\x8c\xaa\xb5M\x7f\x18'  # my #2 esp8266
     # peer = b'\xec\xfa\xbc\xcb\xab\xce' # 1st datalogger
-    peer = b'\xc4[\xbe\xe4\xfdq'
-    e.add_peer(peer) # register the peer for espnow communication
+    peer1 = b'\xc4[\xbe\xe4\xfdq'
+    peer2 = b'\x8c\xaa\xb5M\x7f\x18'
+    e.add_peer(peer1) # register the peer for espnow communication
+    e.add_peer(peer2) # register the peer for espnow communication
 
     return e
 
@@ -46,7 +48,7 @@ def get_mac(wlan_sta):
     return wlan_mac
 
 
-def esp_tx(e, msg):
+def esp_tx(peer, e, msg):
 
     # TODO add support for TX to multiple peers
     # # MAC address of peer1's wifi interface exmaple:
@@ -54,7 +56,8 @@ def esp_tx(e, msg):
     # the receiver MAC address
     # peer = b'\x8c\xaa\xb5M\x7f\x18'  # my #2 esp8266
     # peer = b'\xec\xfa\xbc\xcb\xab\xce' # 1st datalogger
-    peer = b'\xc4[\xbe\xe4\xfdq'
+    
+    # peer = b'\xc4[\xbe\xe4\xfdq'
 
     try:
         res = e.send(peer, msg, True)  # transmit data and check receive status
