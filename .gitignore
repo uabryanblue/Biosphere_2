@@ -3,3 +3,4 @@
 *-workspace
 main copy.py
 Sensors/ESP8266/micropython/thermocouple copy.py
+Sensors/ESP8266/micropython/max6675_test.py
