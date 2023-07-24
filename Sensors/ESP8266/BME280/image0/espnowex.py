@@ -28,10 +28,12 @@ def init_esp_connection(sta):
     # TODO peers should be in the conf file
     # peer = b'\x8c\xaa\xb5M\x7f\x18'  # my #2 esp8266
     # peer = b'\xec\xfa\xbc\xcb\xab\xce' # 1st datalogger
-    # peer = b'\xc4[\xbe\xe4\xfdq'
-    peer = b'\xc4[\xbe\xe4\xfe='
+    # peer1 = b'\xc4[\xbe\xe4\xfdq'
+    # peer2 = b'\x8c\xaa\xb5M\x7f\x18'
+    peer1 = b'\xc4[\xbe\xe4\xfe='
 
-    e.add_peer(peer) # register the peer for espnow communication
+    e.add_peer(peer1) # register the peer for espnow communication
+    # e.add_peer(peer2) # register the peer for espnow communication
 
     return e
 
@@ -48,7 +50,7 @@ def get_mac(wlan_sta):
     return wlan_mac
 
 
-def esp_tx(e, msg):
+def esp_tx(peer, e, msg):
 
     # TODO add support for TX to multiple peers
     # # MAC address of peer1's wifi interface exmaple:
@@ -56,17 +58,15 @@ def esp_tx(e, msg):
     # the receiver MAC address
     # peer = b'\x8c\xaa\xb5M\x7f\x18'  # my #2 esp8266
     # peer = b'\xec\xfa\xbc\xcb\xab\xce' # 1st datalogger
-    # peer = b'\xc4[\xbe\xe4\xfdq'
-    peer = b'\xc4[\xbe\xe4\xfe='
     
+    # peer = b'\xc4[\xbe\xe4\xfdq'
 
     try:
         res = e.send(peer, msg, True)  # transmit data and check receive status
-        # TODO always returns true, this isn't really needed, would need to do a handshake
-        # if not res:
-        #     print(f"DATA NOT RECORDED response:{res}")
+        if not res:
+            print(f"DATA NOT RECORDED response:{res}")
         # else:
-        #     print(f"DATA TX SUCCESSFUL response:{res}")
+            # print(f"DATA TX SUCCESSFUL response:{res}")
 
     except OSError as err:
         if err.args[0] == errno.ETIMEDOUT:  # standard timeout is okay, ignore it
@@ -77,12 +77,12 @@ def esp_tx(e, msg):
     return res
 
 
-def esp_rx(esp_con):
+def esp_rx(esp_con, timeout=1000):
     """init of esp connection needs performed first
     peers need to be added to the espnow connection"""
 
     # wait for a message to process
-    host, msg = esp_con.recv(1000) # ms timeout on receive
+    host, msg = esp_con.recv(timeout) # ms timeout on receive
     # TODO change this to trap for errors, no need to check the msg
     if msg:
         if msg == b'get_time':
