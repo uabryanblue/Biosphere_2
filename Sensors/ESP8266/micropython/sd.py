@@ -7,7 +7,7 @@ import time
 
 
 def initSD(mnt):
-    print(f"mounting {mnt}")
+    # print(f"mounting {mnt}")
     sd = sdcard.SDCard(machine.SPI(1), machine.Pin(15))
     vfs = os.VfsFat(sd)
     os.mount(vfs, mnt)
