@@ -75,7 +75,7 @@ def main():
 
 
         time.sleep(30)
-        temptimer += 30
+        temptimer += 30 # TODO this needs be a real timer
         if temptimer == INTERVAL:
             # TODO this needs changed into proper math for read interval, avg interval
             temperature = temperature / (INTERVAL / 30)
