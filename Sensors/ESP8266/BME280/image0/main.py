@@ -74,7 +74,7 @@ def main():
         counter += 1
 
 
-        time.sleep(30)
+        time.sleep(30) # TODO add in power saving code
         temptimer += 30 # TODO this needs be a real timer
         if temptimer == INTERVAL:
             # TODO this needs changed into proper math for read interval, avg interval
