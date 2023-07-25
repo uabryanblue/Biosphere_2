@@ -108,8 +108,8 @@ readingsOrder = ['HEATER', 'CONTROL', 'TREATMENT', 'D3', 'D4']
     # beta2 = -0.01053 - 2nd order, if needed, set to 0 for linear
 callibrations = dict()
 # TODO these values are not correct
-callibrations[101] = [1, 28.5, 0.262, 0]
-callibrations[102] = [2, 98.5, 4.20, 0]
-callibrations[103] = [3, 22.9, -0.0542, 0]
-callibrations[104] = [4, -14.1, -2.14, 0]
-callibrations[105] = [5, 21.3, -0.148, 0]
+callibrations['101'] = [1, 28.5, 0.262, 0]
+callibrations['102'] = [2, 98.5, 4.20, 0]
+callibrations['103'] = [3, 22.9, -0.0542, 0]
+callibrations['104'] = [4, -14.1, -2.14, 0]
+callibrations['105'] = [5, 21.3, -0.148, 0]
