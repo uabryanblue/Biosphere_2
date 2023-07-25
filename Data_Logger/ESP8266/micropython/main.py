@@ -10,6 +10,10 @@ import lcd
 
 import espnowex
 
+# set the on board RTC to the time from the DS3231
+realtc.rtcinit()
+print("set time")
+
 print("START DATA LOGGER")
 # status pin for logger, GPIO16/D0
 D0 = machine.Pin(16, machine.Pin.OUT)
