@@ -9,19 +9,13 @@ import conf
 
 def parse_max318855(data):
     """translate binary response into degreee C"""
-    # temp = data[0] << 8 | data[1]
-    # if temp & 0x0001:
-    #     return float("NaN")  # Fault reading data.
-    # temp >>= 2
-    # if temp & 0x2000:
-    #     temp -= 16384  # Sign bit set, take 2's compliment.
-
 
     # Binary reading of data based on MAX318855 library by Diego Herranz, 2013
     # modified for MicroPython
     fault = struct.unpack("B", data[1:3])[0] & 0x01
     if fault:
         return float("NaN"), float("NaN")
+
     # Thermo-couple temperature
     temperature = struct.unpack(">h", data[0:2])[0] >> 2;  # >h = signed short, big endian. 14 leftmost bits are data.    
     temperature = temperature / (2**2)  # Two binary decimal places
@@ -30,9 +24,7 @@ def parse_max318855(data):
     internal_temperature = struct.unpack(">h", data[2:4])[0] >> 4;  # >h = signed short, big endian. 12 leftmost bits are data.  
     internal_temperature = internal_temperature / (2**4)  # Four binary decimal places
 
-    # print(temperature)
-    # print(internal_temperature)
-    return temperature, internal_temperature  #  (temp/4)
+    return temperature, internal_temperature
 
 
 
@@ -66,6 +58,8 @@ def read_thermocouple(cs_pin, spi):
     """reads one thermocouple from given CS pin and spi object"""
     raw_data = bytearray(4)
 
+    # turn on pins immediately after assignment
+    # reads on low values
     S0 = Pin(16, Pin.OUT)
     S0.on()
     S1 = Pin(5, Pin.OUT)
@@ -75,38 +69,17 @@ def read_thermocouple(cs_pin, spi):
     S3 = Pin(0, Pin.OUT)
     S3.on()
     S4 = Pin(2, Pin.OUT)
-    S4.on() # signal low to read, default high
+    S4.on()
 
-    # brute force testing
     if cs_pin == 1:
         S0.off()
-        # S1.on()
-        # S2.on()
-        # S3.on()
-        # S4.on()
     elif cs_pin == 2:
-        # S0.on()
         S1.off()
-        # S2.on()
-        # S3.on()
-        # S4.on()
     elif cs_pin == 3:
-        # S0.on()
-        # S1.on()
         S2.off()
-        # S3.on()
-        # S4.on()
     elif cs_pin == 4:
-        # S0.on()
-        # S1.on()
-        # S2.on()
         S3.off()
-        # S4.on()
     elif cs_pin == 5:
-        # S0.on()
-        # S1.on()
-        # S2.on()
-        # S3.on()
         S4.off()
 
     sleep(0.250) # 250 ms
@@ -150,9 +123,7 @@ def read_thermocouples(readings):
                 myReadings[key][3] += 1
                 myReadings[key][4] += internal_temperature
 
-            sleep(0.50) # delay before next reading, can be modified
-        
-        # print(allReadings(readings)) # TODO debug output
+            # sleep(0.50) # delay before next reading, can be modified        
 
     for key in readings.keys():
         if myReadings[key][3] > 0:  #  position 3 is number of successful reads for averaging
