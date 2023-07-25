@@ -93,7 +93,7 @@ if __name__ == "__main__":
         sd.closeSD('/' + conf.LOG_MOUNT)
         sys.exit() # TODO this falls through and resets???? okay for now
     finally: 
-        print(f'Got another error and exiting  {machine.reset_cause()}')
+        print(f'Fatal error, restarting.  {machine.reset_cause()}')
         sd.closeSD('/' + conf.LOG_MOUNT)
         machine.reset()
 

@@ -93,13 +93,6 @@ def main():
         elif diff >= (conf.TDIFF - 0.25): # higher than required temp control leaf
             D8.off()
 
-
-        # if diff <= 4.75:
-        #     print("diff <= 4.5, D8 is on")
-        #     D8.on()
-        # elif diff > 4.75 or diff == 'nan':
-        #     print("diff >= 4.75 D8 is off")
-        #     D8.off()
         time.sleep(5)
 
 if __name__ == "__main__":
@@ -111,7 +104,7 @@ if __name__ == "__main__":
         D8.off()
         sys.exit() # TODO this falls through and resets???? okay for now
     finally: 
-        print(f'Got another error and exiting  {machine.reset_cause()}')
+        print(f'Fatal error, restarting.  {machine.reset_cause()}')
         D8.off()
         machine.reset()
 
