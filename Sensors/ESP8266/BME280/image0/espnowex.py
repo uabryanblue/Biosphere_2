@@ -1,10 +1,8 @@
-
-
 import espnow
 import network
 import time
-
 import network, time
+import conf
 
 def wifi_reset():   # Reset wifi to AP_IF off, STA_IF on and disconnected
     sta = network.WLAN(network.STA_IF); sta.active(False)
@@ -30,9 +28,10 @@ def init_esp_connection(sta):
     # peer = b'\xec\xfa\xbc\xcb\xab\xce' # 1st datalogger
     # peer1 = b'\xc4[\xbe\xe4\xfdq'
     # peer2 = b'\x8c\xaa\xb5M\x7f\x18'
-    peer1 = b'\xc4[\xbe\xe4\xfe='
+    # peer1 = b'\xc4[\xbe\xe4\xfe='
+    [e.add_peer(conf.peers[key]) for key in conf.peers.keys()]
 
-    e.add_peer(peer1) # register the peer for espnow communication
+    # e.add_peer(peer1) # register the peer for espnow communication
     # e.add_peer(peer2) # register the peer for espnow communication
 
     return e
