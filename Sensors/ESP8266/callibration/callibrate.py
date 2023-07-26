@@ -15,47 +15,49 @@
 import conf
 import thermocouple
 # import logger
+
+import time
 import sys
 import machine
 import math
 
 NUM_READINGS = 10 # the number of consecutive readings that must fall within VARIANCE
-VARIANCE = 0.5 # how far NUM_READINGS values must be before accepting reading
-READ_TIMEOUT = 100 # number of readings to take before failing to callibrate
+VARIANCE = 0.1 # how small variance of NUM_READINGS values must be before accepting reading
+READ_TIMEOUT = 50 # number of readings to take before failing to callibrate
 
 def variance(lst):
-    avg = sum(lst) / len(lst)
-    var = sum((x-avg)**2 for x in lst) / len(lst)
-    return var
+    if len(lst) > 0:
+        avg = sum(lst) / len(lst)
+        var = sum((x-avg)**2 for x in lst) / len(lst)
+        return var
+    else:
+        return float("NaN")
 
 def callibrate(BoardPos, TCId):
-    readings = thermocouple.initReadings(conf.readings) # should not be needed, testing
-    temperature_data, internal_data = thermocouple.allReadings(readings)
-    print(temperature_data)
-    return []
-
     read_count = 0
     TRead = []
-    TVar = 0.0
+    TVar = 100.0
     tspi = machine.SPI(1, baudrate=5000000, polarity=0, phase=0)
     print(tspi)
     # read the first NUM_READINGS to calculate variance
     print(f'Taking temperature readings from board {BoardPos}')
-    for cnt in range(NUM_READINGS):
+    while (read_count <= READ_TIMEOUT) and (TVar > VARIANCE):
         temperature, internalTemp = thermocouple.read_thermocouple(BoardPos, tspi)
         if not math.isnan(temperature): 
+            while len(TRead) > NUM_READINGS:
+                del TRead[0]
             TRead.append(temperature)
         else:
             print(f'NaN reading given, check your connections on board position {BoardPos} and try again.')
             tspi.deinit()
-            break
-    print(f'first {NUM_READINGS} are {TRead}')
-    # TVar = variance(TRead)
-    print(f"varince first 10: {TVar}")
-    # while read_count != READ_TIMEOUT:
-    # for cnt in range(READ_TIMEOUT):
-    #     TCTemperature2 = read_thermocouple(BoardPos, tspi)
+            return float("NaN"), float("NaN")
+        read_count += 1
+        time.sleep(2)
+    print(f'total number of readings taken: {NUM_READINGS} with final values of {TRead}')
+    TVar = variance(TRead)
+    print(f"varince of readings: {TVar}")
     tspi.deinit()
+    return sum(TRead) / len(TRead), TVar
 
 
 
@@ -81,14 +83,17 @@ while True:
     TCId = input('Enter thermocouple id ("101", "T2", etc.):')
     RefTemp = input("Enter reference temperature in celsius (0.00):")
     # convert string values into clean values and correct types
-    BoardPos = BoardPos.strip()
+    BoardPos = int(BoardPos)
     TCId = TCId.strip()
     RefTemp = float(RefTemp)
     # only try to callibrate if the sensor entry already exists in the conf.py file
     if verify_sensor(BoardPos, TCId, RefTemp):
         print("Hold thermocouple steady at reference and wait for confirmation or Failed message.")
         print("Callibrating...")
-        callibrate(BoardPos, TCId)
+        TCVals, TCVar = callibrate(BoardPos, TCId)
+        print(f'final values: {TCVals} and variance {TCVar}')
+        if TCVar > VARIANCE:
+            print(f'CALLIBRATION FAILED!!! Final variance greater than {VARIANCE} at {TCVar}')
     else:
         print(f"Sensor ID {TCId} was not found.\n")
 

@@ -8,6 +8,7 @@ import conf
 import realtc
 import thermocouple
 import espnowex
+# import callibrate
 
 
 print("START TEMPERATURE SENSOR")
@@ -61,39 +62,38 @@ def main():
     print(f"Temp Sensor: the new time is: {realtc.formattime(time.localtime())}")  
 
     sequence = 1 # record number from the last time the system restarted
-
-    while True:
-        readings = thermocouple.initReadings(conf.readings)
-        readings, myReadings = thermocouple.read_thermocouples(readings)
-
     
-        # temperature_data = ', '.join([str(value[2]) for value in readings.values()])
-        temperature_data, internal_data = thermocouple.allReadings(readings)
-        org_data, org_inter = thermocouple.allReadings(myReadings)
-        date_time, _, _ = realtc.formattime(time.localtime())
-        out = ','.join([str(sequence), date_time, temperature_data, internal_data])
-        print(out)
-        espnowex.esp_tx(esp_con, out)
-        sequence += 1
-        # difference between treatment and control leaf handling
-        # also check for heater going out of randge
-        # and if temperature above maximum value for heating due to other reasons.
-        diff = readings['TREATMENT'][2] - readings['CONTROL'][2]
-        # print(f"CHECK TEMP DIFFERENCE - cont:{readings['CONTROL'][2]}, heat:{readings['TREATMENT'][2]}, DIFFERENCE: {diff}")
-        
-        if isnan(diff) is True:
-            D8.off() # trouble reading sensor, turn off for safety TODO generate error in system log
-        elif readings['HEATER'][2] >= conf.TMAX_HEATER: # error state, shut down heater
-            D8.off() # TODO record an ERROR in the system log
-        elif readings['TREATMENT'][2] >= conf.TMAX: # warning leaf temp exceeded threshold, turn off heater
-            D8.off() # TODO record a WARNING in the system log
-        # TODO there needs to be a deadband to prevent oscillation
-        elif diff < (conf.TDIFF + 0.25): # lower than required temp above control leaf
-            D8.on() 
-        elif diff >= (conf.TDIFF - 0.25): # higher than required temp control leaf
-            D8.off()
+    readings = thermocouple.initReadings(conf.readings)
+    readings, myReadings = thermocouple.read_thermocouples(readings)
 
-        time.sleep(5)
+    # temperature_data = ', '.join([str(value[2]) for value in readings.values()])
+    temperature_data, internal_data = thermocouple.allReadings(readings)
+    org_data, org_inter = thermocouple.allReadings(myReadings)
+    date_time, _, _ = realtc.formattime(time.localtime())
+    out = ','.join([str(sequence), date_time, temperature_data, internal_data])
+    print(out)
+
+    #-------------------------------------------
+    print("Type 'exit' to stop:")
+    BoardPos = input("Enter board position (1-5):")
+    if 'exit' == BoardPos:
+        # break
+        print("THIS WOULD NORMALLY EXIT")
+    TCId = input('Enter thermocouple id ("101", "T2", etc.):')
+    TCId = "1"
+    RefTemp = input("Enter reference temperature in celsius (0.00):")
+    # convert string values into clean values and correct types
+    BoardPos = BoardPos.strip()
+    TCId = TCId.int()
+    RefTemp = float(RefTemp)
+    # only try to callibrate if the sensor entry already exists in the conf.py file
+    if callibrate.verify_sensor(BoardPos, TCId, RefTemp):
+        print("Hold thermocouple steady at reference and wait for confirmation or Failed message.")
+        print("Callibrating...")
+        callibrate.callibrate(BoardPos, TCId)
+    else:
+        print(f"Sensor ID {TCId} was not found.\n")
+
 
 if __name__ == "__main__":
     try:

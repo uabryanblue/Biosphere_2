@@ -57,7 +57,6 @@ def catReadings(readings):
 def read_thermocouple(cs_pin, spi):
     """reads one thermocouple from given CS pin and spi object"""
     raw_data = bytearray(4)
-    print(f'read thermocouple at position {cs_pin}')
     # turn on pins immediately after assignment
     # reads on low values
     S0 = Pin(16, Pin.OUT)
@@ -84,7 +83,6 @@ def read_thermocouple(cs_pin, spi):
 
     sleep(0.250) # 250 ms
     spi.readinto(raw_data)
-    print(f'raw data value {raw_data}')
     temperature, internal = parse_max318855(raw_data)
 
     return temperature, internal
