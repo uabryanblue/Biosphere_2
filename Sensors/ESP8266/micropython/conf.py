@@ -80,7 +80,7 @@ readings = dict()
 # TREATMENT - leaf that is being heated
 # D3, D4 - 2 extra sensors
 # Define each dictionary element as a PIN, GPIO, TempValue
-# EXAMPLE:  readings['HEATER'] = [1, 16, 0.0]
+# EXAMPLE:  readings['HEATER'] = [1, 16, 0.0, 101, 0.0]
 # key = HEATER, PIN = D0, GPIO 16, initial temp value = 0.0
 # SensorID = a unique ID used for identification of the thermocouple in that position
 # Internal Temperature - cold junction on the amplifier board
