@@ -28,7 +28,7 @@ READ_TIMEOUT = 50 # number of readings to take before failing to callibrate
 def variance(lst):
     if len(lst) > 0:
         avg = sum(lst) / len(lst)
-        var = sum((x-avg)**2 for x in lst) / len(lst)
+        var = sum((x-avg)**2 for x in lst) / len(lst) # population variance
         return var
     else:
         return float("NaN")
@@ -40,7 +40,7 @@ def callibrate(BoardPos, TCId):
     tspi = machine.SPI(1, baudrate=5000000, polarity=0, phase=0)
     print(tspi)
     # read the first NUM_READINGS to calculate variance
-    print(f'Taking temperature readings from board {BoardPos}')
+    print(f'Taking temperature readings from board sensor position {BoardPos}')
     while (read_count <= READ_TIMEOUT) and (TVar > VARIANCE):
         temperature, internalTemp = thermocouple.read_thermocouple(BoardPos, tspi)
         if not math.isnan(temperature): 
@@ -53,10 +53,11 @@ def callibrate(BoardPos, TCId):
             return float("NaN"), float("NaN")
         read_count += 1
         time.sleep(2)
-    print(f'total number of readings taken: {NUM_READINGS} with final values of {TRead}')
+    print(f'Total number of readings taken: {read_count} the last {NUM_READINGS} with values of {TRead}')
     TVar = variance(TRead)
-    print(f"varince of readings: {TVar}")
+    # print(f"varince of readings: {TVar}")
     tspi.deinit()
+    # return the avarage and variance
     return sum(TRead) / len(TRead), TVar
 
 
@@ -91,7 +92,7 @@ while True:
         print("Hold thermocouple steady at reference and wait for confirmation or Failed message.")
         print("Callibrating...")
         TCVals, TCVar = callibrate(BoardPos, TCId)
-        print(f'final values: {TCVals} and variance {TCVar}')
+        print(f'final value: temperature {TCVals} with variance {TCVar}')
         if TCVar > VARIANCE:
             print(f'CALLIBRATION FAILED!!! Final variance greater than {VARIANCE} at {TCVar}')
     else:
