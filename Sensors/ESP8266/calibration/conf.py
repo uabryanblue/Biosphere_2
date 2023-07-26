@@ -6,6 +6,15 @@
 AUTHOR = "Bryan Blue - bryanblue@arizona.edu"
 VERSION = "25.1.1"
 
+#----------------------
+# DEVICE ROLE
+# uncomment one of the corresponding lines to change how
+# the code executes. The different configurations are shown here
+MYROLE = "CALIBRATE" # command line callibration
+# MYROLE = "DATALOGGER" # data logger box
+# MYROLE = "TCRCONTROL" # multiple thermocouple sensor with relay box
+# MYROLE = "THP" # temperatue humidity pressure aspirated sensor
+
 # --------------------
 # DEVICE IDENTIFICATION
 # Communication identification is done using the MAC address of the ESP8266
@@ -99,10 +108,10 @@ readings['D4'] = [5, 2, 0.0, 105, 0.0]
 readingsOrder = ['HEATER', 'CONTROL', 'TREATMENT', 'D3', 'D4']
 
 # CALLIBRATION TABLE
-# Each thermocouple must be callibrated
+# Each thermocouple must be calibrated
 # A unique value for the ID, and the callibration coefficients need to be supplied
 # When taking a temperature reading, if an entry is not found, no adjustment will be applied
-    # Position = 1 through 5 denoting it was callibrated in this position of the board
+    # Position = 1 through 5 denoting it was calibrated in this position of the board
     # beta0 = -15.35578 - offset
     # beta1 = 1.90714 - slope
     # beta2 = -0.01053 - 2nd order, if needed, set to 0 for linear

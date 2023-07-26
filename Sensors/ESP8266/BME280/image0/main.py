@@ -67,6 +67,7 @@ def main():
     counter = 0  # numbe of readings taken used for averaging
     temptimer = 0  # TODO this needs converted to a timer
     recordNumber = 1  # record number from the last time the system restarted
+    
     while True:
         temperature += float(BM280_SENSOR.temperature)
         humidity += float(BM280_SENSOR.humidity)

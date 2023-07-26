@@ -28,13 +28,13 @@ def parse_max318855(data):
 
 
 
-def callibrated_reading(deviceId, temperature):
-    """thermocouples may need callibrated
+def calibrated_reading(deviceId, temperature):
+    """thermocouples may need calibrated
     coefficients should be stored in the config file
     2nd order can be used if non-linear
     set first coeficient to 0 for linear"""
     # TODO need to pass in callibration parameters defined in some config file
-    # callibrate each thermocouple using 2nd order polynomial
+    # calibrate each thermocouple using 2nd order polynomial
     # for linear, set first coefficiet to 0
     beta0 = conf.callibrations[deviceId][1]
     beta1 = conf.callibrations[deviceId][2]
@@ -128,7 +128,7 @@ def read_thermocouples(readings):
         if myReadings[key][3] > 0:  #  position 3 is number of successful reads for averaging
             avgReading = round(myReadings[key][2] / myReadings[key][3], 2)
             avgInternalReading = round(myReadings[key][4] / myReadings[key][3], 2)
-            # calReading = callibrated_re?eading(myReadings[key][3], avgReading)
+            # calReading = calibrated_re?eading(myReadings[key][3], avgReading)
             # print(f"data key: {myReadings[key][3]}   key: {key}   avg: {avgReading}   cal: {calReading}")
             readings[key][2] = avgReading
             readings[key][4] = avgInternalReading
