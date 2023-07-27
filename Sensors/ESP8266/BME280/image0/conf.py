@@ -63,7 +63,7 @@ AVG_INTERVAL = 15
 # DATA LOGGER
 # these are configuration locaions for a mount and filename
 # on a MicroSD card. Max Card Size: 32 GB
-LOG_MOUNT = "/log"
+LOG_MOUNT = "//log"
 LOG_FILENAME = "sensor_log.dat"
 # --------------------
 

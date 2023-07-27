@@ -53,8 +53,8 @@ DB_URL = """http://biosphere2.000webhostapp.com/dbwrite.php"""  # intitial test 
 # DATA LOGGER
 # these are configuration locaions for a mount and filename
 # on a MicroSD card. Max Card Size: 32 GB
-LOG_MOUNT = "/log"
-LOG_FILENAME = "sensor_log.dat"
+LOG_MOUNT = "//log"
+LOG_FILENAME = "callibration.dat"
 # --------------------
 
 # --------------------
