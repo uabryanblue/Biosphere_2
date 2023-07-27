@@ -36,7 +36,8 @@ MYNAME = "ESP8266 MicroPython Temperature Sensor and Temperature Control" # long
 # Values:
 #   DATA_LOGGER - send readings to this MAC address
 peers = dict()
-peers["DATA_LOGGER"] = b'\xc4[\xbe\xe4\xfe='
+peers["DATA_LOGGER2"] = b'\xc4[\xbe\xe4\xfe=' # original esp
+peers["DATA_LOGGER"] = b'\xc4[\xbe\xe4\xfe\x08' # 2nd esp
 # --------------------
 
 
