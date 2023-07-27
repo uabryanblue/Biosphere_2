@@ -32,7 +32,7 @@ def formattime(in_time):
     date = f'{in_time[0]}-{in_time[1]:0>2}-{in_time[2]:0>2}'
     time = f'{in_time[3]:0>2}:{in_time[4]:0>2}:{in_time[5]:0>2}'
     
-    formatted_time = date + time
+    formatted_time = date + ' ' + time
     return formatted_time, date, time
     # return "{}-{:0>2}-{:0>2} {:0>2}:{:0>2}:{:0>2}".format(
     #     InTime[0], InTime[1], InTime[2], InTime[3], InTime[4], InTime[5]
