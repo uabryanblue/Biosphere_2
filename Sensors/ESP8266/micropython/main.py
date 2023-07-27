@@ -10,14 +10,12 @@ import thermocouple
 import espnowex
 
 
-print("START TEMPERATURE SENSOR")
-
-# relay control, start in the off state
-D8 = machine.Pin(15, machine.Pin.OUT)
-D8.off()
-
-
 def main():
+    print("START TEMPERATURE SENSOR")
+
+    # relay control, start in the off state
+    D8 = machine.Pin(15, machine.Pin.OUT)
+    D8.off()
 
     # con = espnowex.init_esp_connection()
     sta, ap = espnowex.wifi_reset()
