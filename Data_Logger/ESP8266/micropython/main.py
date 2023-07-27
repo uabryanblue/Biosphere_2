@@ -1,6 +1,7 @@
 import sys
 import time
 import machine
+import uerrno
 
 import logger
 import conf
@@ -30,7 +31,7 @@ def main():
     MY_ID = "-".join(["{:02x}".format(b) for b in RAW_MAC]).upper()
     print(f"My MAC addres: {MY_MAC} raw: {RAW_MAC}")
 
-    LOGNAME = conf.LOG_MOUNT + '/' + conf.LOG_FILENAME
+    # LOGNAME = conf.LOG_MOUNT + '/' + conf.LOG_FILENAME
     SYSLOG =  conf.LOG_MOUNT + '/' + conf.SYSTEM_LOG
 
     while True:
@@ -72,11 +73,10 @@ def main():
             try:
                 D0.off()  # turn on indicate a message was received
                 # it is assumed the date/time and record number are part of str_msg
-                MsgHost = "-".join(["{:02x}".format(b) for b in host]).upper()
-                log_name = "/".join(
-                    conf.LOG_MOUNT, MsgHost
-                )  # each device has it's own log
-                logger.write_log(log_name, str_host + "," + str_msg)
+                MsgHost = "-".join(["{:02x}".format(b) for b in host]).upper() + ".log"
+                # each device has it's own log
+                LOGNAME = conf.LOG_MOUNT + '/' + MsgHost
+                logger.write_log(LOGNAME, str_host + "," + str_msg)
                 D0.on()  # turn off led
             except OSError as e:
                 D0.off()  # turn LED off as a visual aid for error
