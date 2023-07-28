@@ -43,7 +43,7 @@ def main():
         time.sleep(3)
 
     print(host)
-    str_host = ':'.join(['{:02x}'.format(b) for b in host])
+    str_host = ':'.join(['{:02x}'.format(b) for b in host]).upper()
     # assumption data is utf-8, if not, it may fail
     str_msg = msg.decode('utf-8')
 
@@ -69,7 +69,7 @@ def main():
         temperature_data, internal_data = thermocouple.allReadings(readings)
         org_data, org_inter = thermocouple.allReadings(myReadings)
         date_time, _, _ = realtc.formattime(time.localtime())
-        out = ','.join([str(sequence), date_time, temperature_data, internal_data])
+        out = ','.join([str(sequence), date_time, str_host, temperature_data, internal_data])
         print(out)
         espnowex.esp_tx(esp_con, out)
         sequence += 1
