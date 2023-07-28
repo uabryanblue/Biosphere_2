@@ -16,6 +16,9 @@ def main():
     print("set time")
 
     print("START DATA LOGGER")
+
+    SYSLOG =  conf.LOG_MOUNT + '/' + conf.SYSTEM_LOG
+ 
     # status pin for logger, GPIO16/D0
     D0 = machine.Pin(16, machine.Pin.OUT)
     D0.on()
@@ -31,8 +34,7 @@ def main():
     MY_ID = "-".join(["{:02x}".format(b) for b in RAW_MAC]).upper()
     print(f"My MAC addres: {MY_MAC} raw: {RAW_MAC}")
 
-    # LOGNAME = conf.LOG_MOUNT + '/' + conf.LOG_FILENAME
-    SYSLOG =  conf.LOG_MOUNT + '/' + conf.SYSTEM_LOG
+    logger.write_log(SYSLOG, f"{MY_MAC} data logger started")
 
     while True:
         print("Data Logger: listen for a message")
@@ -76,15 +78,16 @@ def main():
                 MsgHost = "-".join(["{:02x}".format(b) for b in host]).upper() + ".log"
                 # each device has it's own log
                 LOGNAME = conf.LOG_MOUNT + '/' + MsgHost
-                logger.write_log(LOGNAME, str_host + "," + str_msg)
+                logger.write_log(LOGNAME, str_msg)
+                # logger.write_log(LOGNAME, str_host + "," + str_msg)
                 D0.on()  # turn off led
             except OSError as e:
                 D0.off()  # turn LED off as a visual aid for error
                 if e.args[0] == uerrno.ETIMEDOUT:  # standard timeout is okay, ignore it
                     print("ETIMEDOUT found")  # timeout is okay, ignore it
                 else:  # general case, continue processing, prevent hanging
+                    # TODO -------------- WRITE LOG ERROR: [Errno 1] EPERM needs trapped, a reset is in order
                     print(f"-------------- WRITE LOG ERROR: {e}")
-                    time.sleep(5)
 
     # ########### !!! if you don't close it, it will get overwritten
     # when the next PYMAKR update is performed!!!!!!!!!!!
