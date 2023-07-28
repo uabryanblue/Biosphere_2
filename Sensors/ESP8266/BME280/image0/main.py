@@ -79,6 +79,7 @@ def main():
         temptimer += 30 # TODO this needs be a real timer
         if temptimer == INTERVAL:
             # TODO this needs changed into proper math for read interval, avg interval
+            temptimer = 0
             temperature = temperature / (INTERVAL / 30)
             humidity = humidity / (INTERVAL / 30)
             pressure = pressure / (INTERVAL / 30)
@@ -86,14 +87,14 @@ def main():
             out = ",".join(
                 [
                     str(recordNumber),
-                    MY_MAC,
                     date_time,
+                    MY_MAC,
                     str(temperature),
                     str(humidity),
                     str(pressure),
                 ]
             )
-            print(f"15 MINUTE AVERAGE: {out}")
+            print(f"{conf.AVG_INTERVAL} MINUTE AVERAGE: {out}")
             espnowex.esp_tx(conf.peers["DATA_LOGGER"], ESP_CON, out)
             recordNumber += 1
             temperature = 0.0
