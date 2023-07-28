@@ -57,7 +57,7 @@ peers["DATA_LOGGER"] = b'\xc4[\xbe\xe4\xfe\x08' # 2nd esp
 # --------------------
 # SENSOR READINGS
 # AVG_INTERVAL - number of minutes used to calculate and send an average
-AVG_INTERVAL = 15
+AVG_INTERVAL = 5
 
 # --------------------
 # DATA LOGGER
