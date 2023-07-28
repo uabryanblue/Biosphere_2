@@ -43,7 +43,7 @@ def get_total_space(mnt):
 
 def write_log(filename, data):
     """write out a CSV record starting with current system"""
-    print(f"-----------mounting:{conf.LOG_MOUNT}     filename:{filename}")
+    print(f"-----------storing to mount with filename:{filename}")
     sd.initSD(conf.LOG_MOUNT)
     with open(filename, "a") as f:
         f.write(f"{realtc.formattime(time.localtime())}, {data}")
