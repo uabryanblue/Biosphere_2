@@ -66,7 +66,7 @@ def esp_tx(peer, e, msg):
     try:
         res = e.send(peer, msg, True)  # transmit data and check receive status
         if not res:
-            print(f"DATA NOT RECORDED response:{res}")
+            print(f"DATA NOT RECORDED response:{res} from {peer}")
         # else:
             # print(f"DATA TX SUCCESSFUL response:{res}")
 

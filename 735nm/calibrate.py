@@ -1,5 +1,5 @@
 """ This script is for interactive callibration of thermocouples
-    It needs to be run from the REPL 
+    It needs to be run from the REPL
     From the conf.py file is a dict of values
     KEY - the thermocouple identifier, numeric
     1 - the connection position. If you had 5 connections possible
@@ -12,15 +12,16 @@
     callibrations[101] = [1, 28.5, 0.262, 0]
     """
 
+import sys
+import math
+import time
+import machine
 import conf
 import thermocouple
 
 # import logger
 
-import time
-import sys
-import machine
-import math
+
 
 NUM_READINGS = 10  # the number of consecutive readings that must fall within VARIANCE
 VARIANCE = (
@@ -65,8 +66,7 @@ def calibrate(BoardPos, TCId):
         print(f"{TRead} var {TVar}")
         time.sleep(1)
     print(
-        f"Total number of readings taken: {read_count} the last {NUM_READINGS} with"
-        f" values of {TRead}"
+        f"Total number of readings taken: {read_count} the last {NUM_READINGS} with values of {TRead}"
     )
     # TVar = variance(TRead)
     # print(f"varince of readings: {TVar}")
@@ -79,7 +79,7 @@ def verify_sensor(BoardPos, TCId, RefTemp):
     if TCId in conf.callibrations:
         print(f"For board position {BoardPos}")
         print(f"Thermocouple ID was found with value: {TCId}\n")
-        print(f"Equation: y = b0 + b1x + b2x^2")
+        print("Equation: y = b0 + b1x + b2x^2")
         print(f"b0 = {conf.callibrations[TCId][1]}")
         print(f"b1 = {conf.callibrations[TCId][2]}")
         print(f"b2 = {conf.callibrations[TCId][3]}")
@@ -115,8 +115,7 @@ def calibrate_main():
             print(f"final value: temperature {TCVals} with variance {TCVar}")
             if TCVar > VARIANCE:
                 print(
-                    f"CALLIBRATION FAILED!!! Final variance greater than {VARIANCE} at"
-                    f" {TCVar}"
+                    f"CALLIBRATION FAILED!!! Final variance greater than {VARIANCE} at {TCVar}"
                 )
         else:
             print(f"Sensor ID {TCId} was not found.\n")

@@ -10,9 +10,9 @@ VERSION = "25.1.1"
 # DEVICE ROLE
 # uncomment one of the corresponding lines to change how
 # the code executes. The different configurations are shown here
-# MYROLE = "CALIBRATE" # command line callibration
-MYROLE = "DATALOGGER" # data logger box
-# MYROLE = "TCRCONTROL" # multiple thermocouple sensor with relay box
+MYROLE = "CALIBRATE" # command line callibration
+# MYROLE = "DATALOGGER" # data logger box
+# MYROLE = "TRCCONTROL" # multiple thermocouple sensor with relay box
 # MYROLE = "THP" # temperatue humidity pressure aspirated sensor
 
 # --------------------
@@ -47,7 +47,7 @@ MYNAME = "ESP8266 MicroPython Temperature Sensor and Temperature Control" # long
 peers = dict()
 # TODO these need double checked only 2 data loggers
 # TODO need to support additional "roles" so that everyone can communicate
-peers["DATA_LOGGER"] = b'\xc4[\xbe\xe4\xfe=' # original esp
+# peers["DATA_LOGGER"] = b'\xc4[\xbe\xe4\xfe=' # original esp
 peers["DATA_LOGGER"] = b'\xc4[\xbe\xe4\xfe\x08' # 2nd esp
 peers["DATA_LOGGER"] = b'\x8c\xaa\xb5M\x7f\x18' # 2nd ata logger
 # --------------------

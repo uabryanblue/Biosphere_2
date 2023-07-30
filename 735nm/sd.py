@@ -1,7 +1,9 @@
 # CUSTOM CODE TO MOUNT MICROSD CARD
 # DATA SHOULD GO TO /mnt/log/
 
-import machine, sdcard, os
+import machine
+import sdcard
+import os
 from machine import Pin, SPI
 import time
 import uerrno  # error trapping and code values
