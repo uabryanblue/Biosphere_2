@@ -1,27 +1,28 @@
 """
-Biosphere 2 remote sensing project
+Biosphere 2
 AUTHOR: Bryan Blue
 EMAIL: bryanblue@arizona.edu
 STARTED: 2023
 Real Time Clock handling
 HiLetgo DS3231 + AT24C32N
 """
-
+# HiLetgo DS3231 + AT24C32N
 # RTC module default I2C address is 0x57 (dec 87)
 # address range is 0x50 to 0x57 using solder jumpers
 # https://lastminuteengineers.com/ds3231-rtc-arduino-tutorial/
 
-
+# TODO this could benefit from trying to initialzie from NTP not available when using ESPNow
 # to set the time on the DS3231 use a tuple as shown here
 # i2c = I2C(sda=machine.Pin(4), scl=machine.Pin(5))
 # d = DS3231(i2c)
-# d.set_time((yyyy, MM, DD, hh, mm, ss, 0, 0))
-# set time to 2023, May, 29, 7 am, 11 minutes, 1 second, NA, NA
+# d.set_time((YY, MM, DD, hh, mm, ss, 0, 0))
+# example: to set time to 2023, May, 29, 7 am, 11 minutes, 1 second, NA, NA
 # d.set_time((2023, 05, 29, 7, 11, 1, 0, 0))
 
 import time
 from machine import I2C, Pin, RTC
-import ds3231_gen
+import time
+from ds3231_gen import *
 
 
 def formattime(in_time):

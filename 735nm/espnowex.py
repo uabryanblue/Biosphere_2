@@ -5,6 +5,7 @@ import network
 import time
 
 import network, time
+import conf
 
 def wifi_reset():   # Reset wifi to AP_IF off, STA_IF on and disconnected
     sta = network.WLAN(network.STA_IF); sta.active(False)
@@ -28,10 +29,13 @@ def init_esp_connection(sta):
     # TODO peers should be in the conf file
     # peer = b'\x8c\xaa\xb5M\x7f\x18'  # my #2 esp8266
     # peer = b'\xec\xfa\xbc\xcb\xab\xce' # 1st datalogger
-    peer1 = b'\xc4[\xbe\xe4\xfdq'
-    peer2 = b'\x8c\xaa\xb5M\x7f\x18'
-    e.add_peer(peer1) # register the peer for espnow communication
-    e.add_peer(peer2) # register the peer for espnow communication
+    # peer1 = b'\xc4[\xbe\xe4\xfdq'
+    # peer2 = b'\x8c\xaa\xb5M\x7f\x18'
+    # peer1 = b'\xc4[\xbe\xe4\xfe='
+    [e.add_peer(conf.peers[key]) for key in conf.peers.keys()]
+
+    # e.add_peer(peer1) # register the peer for espnow communication
+    # e.add_peer(peer2) # register the peer for espnow communication
 
     return e
 
@@ -63,8 +67,8 @@ def esp_tx(peer, e, msg):
         res = e.send(peer, msg, True)  # transmit data and check receive status
         if not res:
             print(f"DATA NOT RECORDED response:{res}")
-        else:
-            print(f"DATA TX SUCCESSFUL response:{res}")
+        # else:
+            # print(f"DATA TX SUCCESSFUL response:{res}")
 
     except OSError as err:
         if err.args[0] == errno.ETIMEDOUT:  # standard timeout is okay, ignore it

@@ -38,6 +38,22 @@ MYNAME = "ESP8266 MicroPython Temperature Sensor and Temperature Control" # long
 # --------------------
 
 # --------------------
+# ESPNow CONFIGURATION
+# peers are binary MAC addresses to send to
+# up to 4 can be specified
+# these are initialized with the ESPNow add_peer()
+# Values:
+#   DATA_LOGGER - send readings to this MAC address
+peers = dict()
+# TODO these need double checked only 2 data loggers
+# TODO need to support additional "roles" so that everyone can communicate
+peers["DATA_LOGGER"] = b'\xc4[\xbe\xe4\xfe=' # original esp
+peers["DATA_LOGGER"] = b'\xc4[\xbe\xe4\xfe\x08' # 2nd esp
+peers["DATA_LOGGER"] = b'\x8c\xaa\xb5M\x7f\x18' # 2nd ata logger
+# --------------------
+
+
+# --------------------
 # TIMESERVER
 # NTP_HOST = """3.netbsd.pool.ntp.org"""
 # UTC_OFFSET = -7 * 60 * 60  # -7 arizona time
@@ -46,8 +62,14 @@ MYNAME = "ESP8266 MicroPython Temperature Sensor and Temperature Control" # long
 # --------------------
 # DATABASE - NOT USED!!!
 # this should be the base url up to, but not including, the "?" character
-DB_URL = """http://biosphere2.000webhostapp.com/dbwrite.php"""  # intitial test DB location
+# DB_URL = """http://biosphere2.000webhostapp.com/dbwrite.php"""  # intitial test DB location
 # --------------------
+
+
+# --------------------
+# SENSOR READINGS
+# AVG_INTERVAL - number of minutes used to calculate and send an average
+AVG_INTERVAL = 5
 
 # --------------------
 # DATA LOGGER
@@ -86,12 +108,12 @@ TMAX_HEATER = 60 # 140 F
 # sensor readings are recorded in a dictionary containing lists
 readings = dict()
 # requres 1 of each value:
-# HEATER - heating device temperature
-# CONTROL - control leaf temperature
-# TREATMENT - leaf that is being heated
-# D3, D4 - 2 extra sensors
-# Define each dictionary element as a PIN, GPIO, TempValue
-# EXAMPLE:  readings['HEATER'] = [1, 16, 0.0, 101, 0.0]
+#   HEATER - heating device temperature
+#   CONTROL - control leaf temperature
+#   TREATMENT - leaf that is being heated
+#   D3, D4 - 2 extra sensors
+#   Define each dictionary element as a PIN, GPIO, TempValue
+# EXAMPLE:  readings['HEATER'] = [1, 16, 0.0]
 # key = HEATER, PIN = D0, GPIO 16, initial temp value = 0.0
 # SensorID = a unique ID used for identification of the thermocouple in that position
 # Internal Temperature - cold junction on the amplifier board
@@ -103,17 +125,17 @@ readings['TREATMENT'] = [3, 4, 0.0, 103, 0.0]
 readings['D3'] = [4, 0, 0.0, 104, 0.0]
 readings['D4'] = [5, 2, 0.0, 105, 0.0]
 
-# Output Order
+# OUTPUT ORDER
 # this controls the 5 temperature sensor readings' output order
 # output will be a CSV with values corresponding to this order
 # readingsOrder = ['TREATMENT', 'CONTROL', 'HEATER', 'D3', 'D4']
 readingsOrder = ['HEATER', 'CONTROL', 'TREATMENT', 'D3', 'D4']
 
 # CALLIBRATION TABLE
-# Each thermocouple must be calibrated
+# Each thermocouple must be callibrated
 # A unique value for the ID, and the callibration coefficients need to be supplied
 # When taking a temperature reading, if an entry is not found, no adjustment will be applied
-    # Position = 1 through 5 denoting it was calibrated in this position of the board
+    # Position = 1 through 5 denoting it was callibrated in this position of the board
     # beta0 = -15.35578 - offset
     # beta1 = 1.90714 - slope
     # beta2 = -0.01053 - 2nd order, if needed, set to 0 for linear
