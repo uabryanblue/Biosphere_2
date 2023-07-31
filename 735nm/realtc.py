@@ -21,7 +21,11 @@ HiLetgo DS3231 + AT24C32N
 
 import time
 from machine import I2C, Pin, RTC
-from ds3231_gen import *
+# from ds3231_gen import *
+import ds3231_gen
+import espnowex
+import realtc
+import conf
 
 
 def formattime(in_time):
@@ -34,9 +38,6 @@ def formattime(in_time):
     
     formatted_time = date + time
     return formatted_time, date, time
-    # return "{}-{:0>2}-{:0>2} {:0>2}:{:0>2}:{:0>2}".format(
-    #     InTime[0], InTime[1], InTime[2], InTime[3], InTime[4], InTime[5]
-    # )
 
 
 def rtcinit():
@@ -51,42 +52,33 @@ def rtcinit():
     print(f"local time: {formattime(time.localtime())}")
 
 
-###########################
-# TURN ON LATER FOR ntp WiFi SUPPORT
-# this is old code and needs reworked
+def get_remote_time(esp_con):
+    # set the time from device designated as TIME
+    retries = 0
+    host = ""
+    
+    peer = conf.peers["TIME"]
+    espnowex.esp_tx(peer, esp_con, "get_time")
+    host, msg = espnowex.esp_rx(esp_con)
 
-# import network
-# import ntptime
+    # if a message was not received, loop until a time is received
+    while not msg:
+        retries += 1
+        espnowex.esp_tx(peer, esp_con, "get_time")
+        host, msg = espnowex.esp_rx(esp_con)
+        print(f"Get Time: unable to get time from {host} retry # {retries}")
+        time.sleep(3)
 
-# # this is a config file to be used to pass values that can change dynamically
-# import conf
+    # print(host)
+    str_host = ":".join(["{:02x}".format(b) for b in host])
+    # assumption data is utf-8, if not, it may fail
+    str_msg = msg.decode("utf-8")
 
-# try:
-#     import usocket as socket
-# except:
-#     import socket
+    print("\n------------------------")
+    print(f"received a respons from {host} {str_host} of: {msg}")
+    evaltime = eval(msg)
 
-# gc.collect()
-# # setup netword connection
-# station = network.WLAN(network.STA_IF)
-# station.active(True)
-# station.connect(conf.WAP_SSID, conf.WAP_PSWD)
-# while station.isconnected() is False:
-#     pass
-# print("Connection successful")
-# print(f"STATION: {station.ifconfig()}")
-
-# # set current date time with appropriate offset for timezone -7 is Tucson
-# ntptime.host = conf.NTP_HOST
-# try:
-#     print(f"Local time before NTP: {str(time.localtime())}")
-#     ntptime.settime()
-#     print(f"Local time after NTP:
-# {str(time.localtime(time.time() + conf.UTC_OFFSET))}")
-# except:
-#     print("Error syncing time")
-
-# initialize pin for led control
-# led = Pin(2, Pin.OUT)
-# # initialize the led as on
-# led.on()
+    rtcObj = machine.RTC()
+    rtcObj.datetime(evaltime)
+    print(f"The new time is: {realtc.formattime(time.localtime())}")
+    print("------------------------\n")
