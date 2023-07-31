@@ -31,12 +31,24 @@ READ_TIMEOUT = 50  # number of readings to take before failing to calibrate
 
 
 def variance(lst):
-    if len(lst) > 0:
+
+    if len(lst) > 0 and len(lst) > 0:
         avg = sum(lst) / len(lst)
-        var = sum((x - avg) ** 2 for x in lst) / len(lst)  # population variance
+        var = sum(abs((x - avg)) ** 2 for x in lst) / len(lst)  # sample variance
         return var
     else:
         return float("NaN")
+
+def popstddev(data):
+    # Number of observations
+    n = len(data)
+    # Mean of the data
+    mean = sum(data) / n
+    # Square deviations
+    deviations = [(x - mean) ** 2 for x in data]
+    # stddev
+    stddev = math.sqrt(sum(deviations) / (n))
+    return stddev
 
 
 def calibrate(BoardPos, TCId):
@@ -72,7 +84,7 @@ def calibrate(BoardPos, TCId):
     # print(f"varince of readings: {TVar}")
     tspi.deinit()
     # return the avarage and variance
-    return sum(TRead) / len(TRead), TVar
+    return TRead, sum(TRead) / len(TRead), TVar
 
 
 def verify_sensor(BoardPos, TCId, RefTemp):
@@ -92,14 +104,18 @@ def verify_sensor(BoardPos, TCId, RefTemp):
 
 def calibrate_main():
     while True:
+        t = input()
+        if not t.strip():
+            print("wow, empty string...") 
         print("Type 'exit' to stop:")
-        BoardPos = input("Enter board position 1 to 5 (1 default):")
-        if "exit" == BoardPos:
+        BoardPos = input("Enter board position 1 to 5 ('exit' to quit):")
+        if BoardPos == "exit":
             break
+        # TODO add type checking on conversion of strings
         print(f"BoardPos debug |{BoardPos}|")
         BoardPos = int(BoardPos)
         if not BoardPos or BoardPos < 1 or BoardPos > 5:
-            BoardPos = 1
+            BoardPos = "1"
         TCId = input('Enter thermocouple id ("101", "T2", etc.):')
         TCId = TCId.strip()
         RefTemp = input("Enter reference temperature in celsius (0.00):")
@@ -111,11 +127,23 @@ def calibrate_main():
                 " Failed message."
             )
             print("Callibrating...")
-            TCVals, TCVar = calibrate(BoardPos, TCId)
-            print(f"final value: temperature {TCVals} with variance {TCVar}")
+            TCList, TCAvg, TCVar = calibrate(BoardPos, TCId)
+            std = popstddev(TCList)
+            rangeVal = max(TCList) - min(TCList)
+            print("\n------------------------------")
+            print(f"FINAL VALUES: {TCList}")
+            print(f"RANGE: {rangeVal}")
+            print(f"AVERAGE: {TCAvg}")
+            print(f"VARIANCE: {TCVar}")
+            print(f"STD DEVIATION: {std}")
+            print(f"CV: {std/TCAvg}")
+            print("------------------------------")
+            print("\nPress Enter to continue.\n")
             if TCVar > VARIANCE:
                 print(
                     f"CALLIBRATION FAILED!!! Final variance greater than {VARIANCE} at {TCVar}"
                 )
         else:
-            print(f"Sensor ID {TCId} was not found.\n")
+            print(f"\nSensor ID {TCId} was not found, adding to calibration database.\n")
+    print("\n ----- EXITED -----")
+            

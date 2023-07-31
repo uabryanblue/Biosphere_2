@@ -2,15 +2,13 @@ import sys
 import time
 from math import isnan
 import machine
-
-# import program configuration
 import conf
 import realtc
 import thermocouple
 import espnowex
 
 
-def main():
+def trc_main():
     print("START TEMPERATURE SENSOR")
 
     # relay control, start in the off state
@@ -93,18 +91,18 @@ def main():
 
         time.sleep(5)
 
-if __name__ == "__main__":
-    try:
-        print(f'reset code: {machine.reset_cause()}')
-        main()
-    except KeyboardInterrupt as e:
-        print(f'Got ctrl-c {e}')
-        D8.off()
-        sys.exit() # TODO this falls through and resets???? okay for now
-    finally: 
-        print(f'Fatal error, restarting.  {machine.reset_cause()}')
-        D8.off()
-        machine.reset()
+# if __name__ == "__main__":
+#     try:
+#         print(f'reset code: {machine.reset_cause()}')
+#         main()
+#     except KeyboardInterrupt as e:
+#         print(f'Got ctrl-c {e}')
+#         D8.off()
+#         sys.exit() # TODO this falls through and resets???? okay for now
+#     finally: 
+#         print(f'Fatal error, restarting.  {machine.reset_cause()}')
+#         D8.off()
+#         machine.reset()
 
 
 

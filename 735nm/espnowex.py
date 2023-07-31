@@ -1,13 +1,13 @@
-
+"""ESPNow operations for ESP8266 other microcontrollers may not work with this code"""
 
 import espnow
 import network
 import time
-
-import network, time
 import conf
 
 def wifi_reset():   # Reset wifi to AP_IF off, STA_IF on and disconnected
+    """wifi needs turned off so that ESPNow can take over
+    call init_esp_connect() after resetting wifi """
     sta = network.WLAN(network.STA_IF); sta.active(False)
     ap = network.WLAN(network.AP_IF); ap.active(False)
     sta.active(True)
@@ -21,35 +21,28 @@ def wifi_reset():   # Reset wifi to AP_IF off, STA_IF on and disconnected
 def init_esp_connection(sta):
     """creates and espnow object, wifi_reset() needs called before this"""
     # create espnow connection
-    e = espnow.ESPNow()
-    e.active(True)
+    esp = espnow.ESPNow()
+    esp.active(True)
 
-    # MAC address of peer's wifi interface
+    # MAC addresses of peers
     # example: b'\x5c\xcf\x7f\xf0\x06\xda'
-    # TODO peers should be in the conf file
-    # peer = b'\x8c\xaa\xb5M\x7f\x18'  # my #2 esp8266
-    # peer = b'\xec\xfa\xbc\xcb\xab\xce' # 1st datalogger
-    # peer1 = b'\xc4[\xbe\xe4\xfdq'
-    # peer2 = b'\x8c\xaa\xb5M\x7f\x18'
-    # peer1 = b'\xc4[\xbe\xe4\xfe='
-    [e.add_peer(conf.peers[key]) for key in conf.peers.keys()]
+    # values are stored in conf.py
+    # register all define peers
+    # [esp.add_peer(conf.peers[key]) for key in conf.peers.keys()]
+    [esp.add_peer(val) for val in conf.peers['DATA_LOGGER']]
 
-    # e.add_peer(peer1) # register the peer for espnow communication
-    # e.add_peer(peer2) # register the peer for espnow communication
-
-    return e
+    return esp
 
 
-def get_mac(wlan_sta):
-    """ get the MAC address and return it as a binary value
-    change binary to human readable:
-    ':'.join(['{:02x}'.format(b) for b in espnowex.get_mac()])
+def get_mac(sta):
+    """ get the MAC address and return it as a binary abd human readable value
     """
 
-    # TODO add some error handling
-    wlan_mac = wlan_sta.config('mac')
+    binaryMac = sta.config('mac')
+    # change binary to human readable:
+    humanMac = ':'.join(['{:02x}'.format(b) for b in binaryMac])
     
-    return wlan_mac
+    return binaryMac, humanMac
 
 
 def esp_tx(peer, e, msg):
@@ -64,7 +57,8 @@ def esp_tx(peer, e, msg):
     # peer = b'\xc4[\xbe\xe4\xfdq'
 
     try:
-        res = e.send(peer, msg, True)  # transmit data and check receive status
+        # transmit data and check receive status
+        res = e.send(conf.peers['TIME'][0], msg, True) # only one TIME entry should exist 
         if not res:
             print(f"DATA NOT RECORDED response:{res} from {peer}")
         # else:

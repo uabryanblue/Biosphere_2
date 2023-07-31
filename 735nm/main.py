@@ -11,60 +11,56 @@ import espnowex
 import calibrate
 # import datalogger_main
 # import BME280_main
-# import TRC_main  
+import TRC_main  
 
 
 print("START SENSOR")
 
 
-def get_remote_time():
-    # con = espnowex.init_esp_connection()
+def init_device():
+
+    # turn off wifi and connect with ESPNow
     sta, ap = espnowex.wifi_reset()
     esp_con = espnowex.init_esp_connection(sta)
 
-    # convert hex into readable mac address
-    RAW_MAC = espnowex.get_mac(sta)
-    MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC])
-    # print(f"My MAC:: {MY_MAC}")
+    # display my MAC in human readable and binary response
+    RAW_MAC, MY_MAC = espnowex.get_mac(sta)
     print(f"My MAC addres:: {MY_MAC} raw MAC:: {RAW_MAC}")
 
-    # set the time from the logger
+    # set the time from device designated as TIME
     retries = 0
     host = ""
     
-    # TODO this is old way, need to use conf.py values
-    peer = b'\x8c\xaa\xb5M\x7f\x18'
+    peer = conf.peers["TIME"]
     espnowex.esp_tx(peer, esp_con, "get_time")
     host, msg = espnowex.esp_rx(esp_con)
 
+    # if a message was not received, loop until a time is received
+    # output the current number of retries
     while not msg:
         retries += 1
         espnowex.esp_tx(peer, esp_con, "get_time")
-        # print("Time Sensor: wait for time response")
         host, msg = espnowex.esp_rx(esp_con)
-        print(f"found host: {host}")
-        print(f"Get Time: unable to get time ({retries})")
+        print(f"Get Time: unable to get time from {host} retry # {retries}")
         time.sleep(3)
 
-    print(host)
+    # print(host)
     str_host = ":".join(["{:02x}".format(b) for b in host])
     # assumption data is utf-8, if not, it may fail
     str_msg = msg.decode("utf-8")
 
-    print("------------------------")
+    print("\n------------------------")
     print(f"received a respons from {host} {str_host} of: {msg}")
-    et = eval(msg)
-    print("--------------------")
-    print(f"et: {et}")
-    print("--------------------")
+    evaltime = eval(msg)
 
     rtc = machine.RTC()
-    rtc.datetime(et)
+    rtc.datetime(evaltime)
     print(f"The new time is: {realtc.formattime(time.localtime())}")
+    print("------------------------\n")
 
 
 def main():
-    get_remote_time()
+    init_device()
     print(f"time set and my role is {conf.MYROLE}")
     # use the conf.py file to select the roll of the device
     # and then call the appropriate startup
@@ -76,7 +72,7 @@ def main():
         # datalogger_main.data_looger_main()
     elif conf.MYROLE == "TRCCONTROL":
         print("tcr")
-        TRC_main.main()
+        TRC_main.trc_main()
         # call the thermocouple and relay control main here
     elif conf.MYROLE == "THP":
         # call the temp/humidity/pressure main here
@@ -107,7 +103,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt as e:
         print(f"Got ctrl-c {e}")
         # D8.off() # TODO D8 HAS TO BE SET TO OFF ON ERROR !!!!!!!!!!!!!!!!!!
-        sys.exit()  # TODO this falls through and resets???? okay for now
+        # sys.exit()  # TODO this falls through and resets???? okay for now
     finally:
         print(f"Fatal error, restarting.  {machine.reset_cause()}")
         # D8.off() # TODO D8 HAS TO BE SET TO OFF ON ERROR !!!!!!!!!!!!!!!!!!

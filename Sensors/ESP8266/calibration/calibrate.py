@@ -30,12 +30,24 @@ READ_TIMEOUT = 50  # number of readings to take before failing to calibrate
 
 
 def variance(lst):
-    if len(lst) > 0:
+
+    if len(lst) > 0 and len(lst) > 0:
         avg = sum(lst) / len(lst)
-        var = sum((x - avg) ** 2 for x in lst) / len(lst)  # population variance
+        var = sum(abs((x - avg)) ** 2 for x in lst) / len(lst)  # sample variance
         return var
     else:
         return float("NaN")
+
+def popstddev(data):
+    # Number of observations
+    n = len(data)
+    # Mean of the data
+    mean = sum(data) / n
+    # Square deviations
+    deviations = [(x - mean) ** 2 for x in data]
+    # stddev
+    stddev = math.sqrt(sum(deviations) / (n))
+    return stddev
 
 
 def calibrate(BoardPos, TCId):
@@ -54,8 +66,7 @@ def calibrate(BoardPos, TCId):
             TRead.append(temperature)
         else:
             print(
-                "NaN reading given, check your connections on board position"
-                f" {BoardPos} and try again."
+                f"NaN reading given, check your connections on board position {BoardPos} and try again."
             )
             tspi.deinit()
             return float("NaN"), float("NaN")
@@ -65,14 +76,13 @@ def calibrate(BoardPos, TCId):
         print(f"{TRead} var {TVar}")
         time.sleep(1)
     print(
-        f"Total number of readings taken: {read_count} the last {NUM_READINGS} with"
-        f" values of {TRead}"
+        f"Total number of readings taken: {read_count} the last {NUM_READINGS} with values of {TRead}"
     )
     # TVar = variance(TRead)
     # print(f"varince of readings: {TVar}")
     tspi.deinit()
-    # return the avarage and variance
-    return sum(TRead) / len(TRead), TVar
+    # return the list, avarage and variance
+    return TRead, sum(TRead) / len(TRead), TVar
 
 
 def verify_sensor(BoardPos, TCId, RefTemp):
@@ -93,13 +103,15 @@ def verify_sensor(BoardPos, TCId, RefTemp):
 def calibrate_main():
     while True:
         print("Type 'exit' to stop:")
-        BoardPos = input("Enter board position 1 to 5 (1 default):")
+        BoardPos = input()
+        BoardPos = input("Enter board position 1 to 5 (1 default):") # TODO this is not working on first pass
+        # BoardPos = "1"
+        print(f"BoardPos debug |{BoardPos}|")
         if "exit" == BoardPos:
             break
-        print(f"BoardPos debug |{BoardPos}|")
         BoardPos = int(BoardPos)
         if not BoardPos or BoardPos < 1 or BoardPos > 5:
-            BoardPos = 1
+            BoardPos = "1"
         TCId = input('Enter thermocouple id ("101", "T2", etc.):')
         TCId = TCId.strip()
         RefTemp = input("Enter reference temperature in celsius (0.00):")
@@ -107,16 +119,22 @@ def calibrate_main():
         # only try to calibrate if the sensor entry already exists in the conf.py file
         if verify_sensor(BoardPos, TCId, RefTemp):
             print(
-                "Hold thermocouple steady at reference and wait for confirmation or"
-                " Failed message."
+                "Hold thermocouple steady at reference and wait for confirmation or Failed message."
             )
             print("Callibrating...")
-            TCVals, TCVar = calibrate(BoardPos, TCId)
-            print(f"final value: temperature {TCVals} with variance {TCVar}")
+            TCList, TCAvg, TCVar = calibrate(BoardPos, TCId)
+            range = max(TCList) - min(TCList)
+            print(f"FINAL VALUES: {TCList}")
+            print(f"RANGE: {range}")
+            print(f"AVERAGE: {TCAvg}")
+            print(f"VARIANCE: {TCVar}")
+            std = popstddev(TCList)
+            print(f"STD DEVIATION: {std}")
+            print(f"CV: {std/TCAvg}")
+            print("\n")
             if TCVar > VARIANCE:
                 print(
-                    f"CALLIBRATION FAILED!!! Final variance greater than {VARIANCE} at"
-                    f" {TCVar}"
+                    f"CALLIBRATION FAILED!!! Final variance greater than {VARIANCE} at {TCVar}"
                 )
         else:
             print(f"Sensor ID {TCId} was not found.\n")

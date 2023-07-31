@@ -43,13 +43,14 @@ MYNAME = "ESP8266 MicroPython Temperature Sensor and Temperature Control" # long
 # up to 4 can be specified
 # these are initialized with the ESPNow add_peer()
 # Values:
-#   DATA_LOGGER - send readings to this MAC address
-peers = dict()
-# TODO these need double checked only 2 data loggers
+#   DATA_LOGGER - send readings to these MAC addresses in binary format
+#   TIME - get date/time from this device, should only be ONE entry
 # TODO need to support additional "roles" so that everyone can communicate
-# peers["DATA_LOGGER"] = b'\xc4[\xbe\xe4\xfe=' # original esp
-peers["DATA_LOGGER"] = b'\xc4[\xbe\xe4\xfe\x08' # 2nd esp
-peers["DATA_LOGGER"] = b'\x8c\xaa\xb5M\x7f\x18' # 2nd ata logger
+# EXAMPLE: peers["DATA_LOGGER"] = b'\xc4[\xbe\xe4\xfe='
+peers = dict()
+peers["DATA_LOGGER"] = [b'\xc4[\xbe\xe4\xfe\x08', b'\x8c\xaa\xb5M\x7f\x18']  # kist of data loggers
+# peers["DATA_LOGGER2"] = b'\x8c\xaa\xb5M\x7f\x18' # 2nd data logger
+peers["TIME"] = [b'\x8c\xaa\xb5M\x7f\x18'] # try to get time from here
 # --------------------
 
 
