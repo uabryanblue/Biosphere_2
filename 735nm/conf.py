@@ -11,8 +11,8 @@ VERSION = "25.1.1"
 # uncomment one of the corresponding lines to change how
 # the code executes. The different configurations are shown here
 # MYROLE = "CALIBRATE" # command line callibration
-# MYROLE = "DATALOGGER" # data logger box
-MYROLE = "TRCCONTROL" # multiple thermocouple sensor with relay box
+MYROLE = "DATALOGGER" # data logger box
+# MYROLE = "TRCCONTROL" # multiple thermocouple sensor with relay box
 # MYROLE = "THP" # temperatue humidity pressure aspirated sensor
 
 # --------------------
@@ -46,11 +46,14 @@ MYNAME = "ESP8266 MicroPython Temperature Sensor and Temperature Control" # long
 # Values:
 #   DATA_LOGGER - send readings to these MAC addresses in binary format
 #   TIME - get date/time from this device, should only be ONE entry
-# TODO need to support additional "roles" so that everyone can communicate
+#   REMOTE - data logger to register remote sensors
 # EXAMPLE: peers["DATA_LOGGER"] = [b'\xc4[\xbe\xe4\xfe=']
-peers = dict()
+peers = {}
+# remote sensor configuration, connect to all data loggers, pick one for time
 peers["DATA_LOGGER"] = [b'\xc4[\xbe\xe4\xfe\x08', b'\x8c\xaa\xb5M\x7f\x18']  # kist of data loggers
 peers["TIME"] = [b'\x8c\xaa\xb5M\x7f\x18'] # try to get time from here
+# data logger information
+peers["REMOTE"] = [b'\xc4[\xbe\xe4\xfdq'] # TRC testing 20230731
 # --------------------
 
 
@@ -93,7 +96,7 @@ TDIFF = 3 # number of degees, not a temperature e.g. 3 degrees C above ambient
 # it is a failsafe to prevent scorching, or in case of heater malfunction
 # to cut the power
 # Value must be less than TMAX_HEATER
-TMAX = 50 # 122 F 
+TMAX = 50 # 122 F
 
 # maximum degrees celsius that the heating device should achieve
 # this will turn the device off at this setpoint and should be
@@ -107,7 +110,7 @@ TMAX_HEATER = 60 # 140 F
 # second list element: GPIO number corresponding to D0 - D4
 # third list element: temperature value
 # sensor readings are recorded in a dictionary containing lists
-readings = dict()
+readings = {}
 # requres 1 of each value:
 #   HEATER - heating device temperature
 #   CONTROL - control leaf temperature
@@ -140,8 +143,8 @@ readingsOrder = ['HEATER', 'CONTROL', 'TREATMENT', 'D3', 'D4']
     # beta0 = -15.35578 - offset
     # beta1 = 1.90714 - slope
     # beta2 = -0.01053 - 2nd order, if needed, set to 0 for linear
-callibrations = dict()
-# TODO these values are not correct
+callibrations = {}
+# EXAMPLES ONLY !!!!! these values are not correct
 callibrations['101'] = [1, 28.5, 0.262, 0]
 callibrations['102'] = [2, 98.5, 4.20, 0]
 callibrations['103'] = [3, 22.9, -0.0542, 0]
