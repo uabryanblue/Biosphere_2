@@ -1,15 +1,18 @@
 """ESPNow operations for ESP8266 other microcontrollers may not work with this code"""
 
+import time
 import espnow
 import network
-import time
 import conf
+
 
 def wifi_reset():   # Reset wifi to AP_IF off, STA_IF on and disconnected
     """wifi needs turned off so that ESPNow can take over
     call init_esp_connect() after resetting wifi """
-    sta = network.WLAN(network.STA_IF); sta.active(False)
-    ap = network.WLAN(network.AP_IF); ap.active(False)
+    sta = network.WLAN(network.STA_IF)
+    sta.active(False)
+    ap = network.WLAN(network.AP_IF)
+    ap.active(False)
     sta.active(True)
     while not sta.active():
         time.sleep(0.1)
@@ -17,6 +20,7 @@ def wifi_reset():   # Reset wifi to AP_IF off, STA_IF on and disconnected
     while sta.isconnected():
         time.sleep(0.1)
     return sta, ap
+
 
 def init_esp_connection(sta):
     """creates and espnow object, wifi_reset() needs called before this"""
@@ -41,11 +45,12 @@ def get_mac(sta):
     binaryMac = sta.config('mac')
     # change binary to human readable:
     humanMac = ':'.join(['{:02x}'.format(b) for b in binaryMac])
-    
+
     return binaryMac, humanMac
 
 
 def esp_tx(peer, e, msg):
+    # TODO THIS ONLY WORKS FROM REMOTE SENSORS
 
     # TODO add support for TX to multiple peers
     # # MAC address of peer1's wifi interface exmaple:
@@ -53,12 +58,12 @@ def esp_tx(peer, e, msg):
     # the receiver MAC address
     # peer = b'\x8c\xaa\xb5M\x7f\x18'  # my #2 esp8266
     # peer = b'\xec\xfa\xbc\xcb\xab\xce' # 1st datalogger
-    
+
     # peer = b'\xc4[\xbe\xe4\xfdq'
 
     try:
         # transmit data and check receive status
-        res = e.send(conf.peers['TIME'][0], msg, True) # only one TIME entry should exist 
+        res = e.send(conf.peers['TIME'][0], msg, True)  # only one TIME entry should exist
         if not res:
             print(f"DATA NOT RECORDED response:{res} from {peer}")
         # else:
@@ -78,7 +83,7 @@ def esp_rx(esp_con, timeout=1000):
     peers need to be added to the espnow connection"""
 
     # wait for a message to process
-    host, msg = esp_con.recv(timeout) # ms timeout on receive
+    host, msg = esp_con.recv(timeout)  # ms timeout on receive
     # TODO change this to trap for errors, no need to check the msg
     if msg:
         if msg == b'get_time':
@@ -86,6 +91,5 @@ def esp_rx(esp_con, timeout=1000):
             print("host: {host} requested time")
         else:
             print(f"received from: {host}, message: {msg}")
-    
+
     return host, msg
-                
