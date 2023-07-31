@@ -1,13 +1,10 @@
 # CUSTOM CODE TO MOUNT MICROSD CARD
 # DATA SHOULD GO TO /mnt/log/
 
-import machine
-import sdcard
-import os
-from machine import Pin, SPI
+import machine, sdcard, os
+# from machine import Pin, SPI
 import time
-import uerrno  # error trapping and code values
-
+# import uerrno  # error trapping and code values
 
 
 def initSD(mnt):
@@ -15,25 +12,18 @@ def initSD(mnt):
     sd = sdcard.SDCard(machine.SPI(1), machine.Pin(15))
     vfs = os.VfsFat(sd)
     os.mount(vfs, mnt)
-    # os.listdir(mnt)
-    # time.sleep(0.2)
-    # list_root = os.listdir()
-    # listFiles = os.listdir(mnt)
-    # if len(listFiles) > 0:
-    #     print(f"file(s) in {mnt} {listFiles}")
-    # else:
-    #     print("no file!")
 
 
 def closeSD(mnt):
-    try:
-        # print(f"unmounting {mnt}")
-        os.umount(mnt)
-    except OSError as e:
-        if e.args[0] == uerrno.ETIMEDOUT:  # standard timeout is okay, ignore it
-            print("ETIMEDOUT found")  # timeout is okay, ignore it
-        else:  # general case, continue processing, prevent hanging
-            print(f"OSError: Connection closed {e}")
+    os.umount(mnt)
+    # try:
+    #     # print(f"unmounting {mnt}")
+    #     os.umount(mnt)
+    # except OSError as e:
+    #     if e.args[0] == uerrno.ETIMEDOUT:  # standard timeout is okay, ignore it
+    #         print("ETIMEDOUT found")  # timeout is okay, ignore it
+    #     else:  # general case, continue processing, prevent hanging
+    #         print(f"OSError: Connection closed {e}")
 
 
 # vfs = os.VfsFat(sd)
