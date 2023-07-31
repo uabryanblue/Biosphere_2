@@ -23,8 +23,9 @@ def init_device():
     sta, ap = espnowex.wifi_reset()
     esp_con = espnowex.init_esp_connection(sta)
 
-    # display my MAC in human readable and binary response
+    # convert hex into readable mac address
     RAW_MAC, MY_MAC = espnowex.get_mac(sta)
+    # MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC])
     print(f"My MAC addres:: {MY_MAC} raw MAC:: {RAW_MAC}")
 
     # set the time from device designated as TIME
@@ -57,26 +58,28 @@ def init_device():
     rtc.datetime(evaltime)
     print(f"The new time is: {realtc.formattime(time.localtime())}")
     print("------------------------\n")
+    return esp_con, sta, str_host
 
 
 def main():
-    init_device()
+    esp_con, station, str_host = init_device()
     print(f"time set and my role is {conf.MYROLE}")
     # use the conf.py file to select the roll of the device
     # and then call the appropriate startup
     if conf.MYROLE == "CALIBRATE":
+        print("Calibration Mode (terminal window)")
         calibrate.calibrate_main()
     elif conf.MYROLE == "DATALOGGER":
         # call the data logger main here
-        print("datalogger")
+        print("Data Logger")
         # datalogger_main.data_looger_main()
     elif conf.MYROLE == "TRCCONTROL":
-        print("tcr")
-        TRC_main.trc_main()
+        print("Temperature Relay Controller")
+        TRC_main.trc_main(esp_con, station, str_host)
         # call the thermocouple and relay control main here
     elif conf.MYROLE == "THP":
         # call the temp/humidity/pressure main here
-        print("THP")
+        print("BME280 Temp/Humidity/Pressure")
         BME280_main.main()
 
         

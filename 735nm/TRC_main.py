@@ -8,55 +8,61 @@ import thermocouple
 import espnowex
 
 
-def trc_main():
+def trc_main(esp_con, sta, str_host):
     print("START TEMPERATURE SENSOR")
 
     # relay control, start in the off state
     D8 = machine.Pin(15, machine.Pin.OUT)
     D8.off()
 
-    # con = espnowex.init_esp_connection()
-    sta, ap = espnowex.wifi_reset()
-    esp_con = espnowex.init_esp_connection(sta)
+    # # con = espnowex.init_esp_connection()
+    # sta, ap = espnowex.wifi_reset()
+    # esp_con = espnowex.init_esp_connection(sta)
 
-    # convert hex into readable mac address
-    RAW_MAC = espnowex.get_mac(sta)
-    MY_MAC = ':'.join(['{:02x}'.format(b) for b in RAW_MAC])
-    # print(f"My MAC:: {MY_MAC}")
-    print(f"My MAC addres:: {MY_MAC} raw MAC:: {RAW_MAC}")
+    # # convert hex into readable mac address
+    # RAW_MAC = espnowex.get_mac(sta)
+    # MY_MAC = ':'.join(['{:02x}'.format(b) for b in RAW_MAC])
+    # # print(f"My MAC:: {MY_MAC}")
+    # print(f"My MAC addres:: {MY_MAC} raw MAC:: {RAW_MAC}")
 
     # set the time from the logger
-    retries = 0
-    host = ''
-    espnowex.esp_tx(esp_con, 'get_time')
-    host, msg = espnowex.esp_rx(esp_con)
+    # retries = 0
+    # host = ''
+    # espnowex.esp_tx(esp_con, 'get_time')
+    # host, msg = espnowex.esp_rx(esp_con)
 
-    while not msg:
-        retries += 1
-        espnowex.esp_tx(esp_con, 'get_time')
-        # print("Time Sensor: wait for time response")
-        host, msg = espnowex.esp_rx(esp_con)
-        print(f'found host: {host}')        
-        print(f"Get Time: unable to get time ({retries})")
-        time.sleep(3)
+    # while not msg:
+    #     retries += 1
+    #     espnowex.esp_tx(esp_con, 'get_time')
+    #     # print("Time Sensor: wait for time response")
+    #     host, msg = espnowex.esp_rx(esp_con)
+    #     print(f'found host: {host}')        
+    #     print(f"Get Time: unable to get time ({retries})")
+    #     time.sleep(3)
 
-    print(host)
-    str_host = ':'.join(['{:02x}'.format(b) for b in host]).upper()
-    # assumption data is utf-8, if not, it may fail
-    str_msg = msg.decode('utf-8')
+    # print(host)
+    # str_host = ':'.join(['{:02x}'.format(b) for b in host]).upper()
+    # # assumption data is utf-8, if not, it may fail
+    # str_msg = msg.decode('utf-8')
 
-    print("------------------------")
-    print(f"received a respons from {host} {str_host} of: {msg}") 
-    et = eval(msg)
-    print("--------------------")
-    print(f"et: {et}")
-    print("--------------------")
+    # print("------------------------")
+    # print(f"received a respons from {host} {str_host} of: {msg}") 
+    # et = eval(msg)
+    # print("--------------------")
+    # print(f"et: {et}")
+    # print("--------------------")
 
-    rtc = machine.RTC()
-    rtc.datetime(et)
-    print(f"Temp Sensor: the new time is: {realtc.formattime(time.localtime())}")  
+    # rtc = machine.RTC()
+    # rtc.datetime(et)
+    # print(f"Temp Sensor: the new time is: {realtc.formattime(time.localtime())}")  
 
     sequence = 1 # record number from the last time the system restarted
+
+    # convert hex into readable mac address
+    RAW_MAC, MY_MAC = espnowex.get_mac(sta)
+    print(f"trc my mac: {RAW_MAC} {MY_MAC}")
+    # MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC])
+    # print(f"My MAC addres:: {MY_MAC} raw MAC:: {RAW_MAC}")
 
     while True:
         readings = thermocouple.initReadings(conf.readings)
@@ -67,9 +73,12 @@ def trc_main():
         temperature_data, internal_data = thermocouple.allReadings(readings)
         org_data, org_inter = thermocouple.allReadings(myReadings)
         date_time, _, _ = realtc.formattime(time.localtime())
-        out = ','.join([str(sequence), date_time, str_host, temperature_data, internal_data])
+        out = ','.join([str(sequence), date_time, MY_MAC, temperature_data, internal_data])
         print(out)
-        espnowex.esp_tx(esp_con, out)
+        # transmit to all conf DATA_LOGGER values
+        [espnowex.esp_tx(val, esp_con, out) for val in conf.peers['DATA_LOGGER']]
+
+        # espnowex.esp_tx(conf.peers["DATA_LOGGER"][0], esp_con, out)
         sequence += 1
         # difference between treatment and control leaf handling
         # also check for heater going out of randge
