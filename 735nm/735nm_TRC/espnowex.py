@@ -48,25 +48,22 @@ def get_mac(sta):
     return binaryMac
 
 
-def esp_tx(peer, e, msg):
-    # TODO THIS ONLY WORKS FROM REMOTE SENSORS
-
-    # TODO add support for TX to multiple peers
-    # # MAC address of peer1's wifi interface exmaple:
-    # # peer1 = b'\xe8\x68\xe7\x4e\xbb\x19'
-    # the receiver MAC address
-    # peer = b'\x8c\xaa\xb5M\x7f\x18'  # my #2 esp8266
-    # peer = b'\xec\xfa\xbc\xcb\xab\xce' # 1st datalogger
-
+def esp_tx(peer, esp_con, msg):
+    # TODO THIS ONLY WORKS FROM REMOTE SENSORS NOW
+    # MAC address of peer1's wifi interface exmaple:
+    # peer1 = b'\xe8\x68\xe7\x4e\xbb\x19'
     # peer = b'\xc4[\xbe\xe4\xfdq'
 
     try:
         # transmit data and check receive status
-        res = e.send(conf.peers['TIME'][0], msg, True)  # only one TIME entry should exist
-        if not res:
-            print(f"DATA NOT RECORDED response:{res} from {peer}")
+        res = esp_con.send(peer, msg, True)  # only one TIME entry should exist
+        print(f"sent to {peer}")
+        print(f"{msg}")
+        # TODO protocol returns false, no need to check, possibly handshake later
+        # if not res:
+        #     print(f"DATA NOT RECORDED response:{res} from {peer}")
         # else:
-            # print(f"DATA TX SUCCESSFUL response:{res}")
+            # print(f"DATA TX SUCCESSFUL reseeeponse:{res}")
 
     except OSError as err:
         if err.args[0] == errno.ETIMEDOUT:  # standard timeout is okay, ignore it
