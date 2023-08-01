@@ -9,7 +9,7 @@ import espnowex
 
 
 def trc_main(esp_con, sta, RAW_MAC):
-    print("START TEMPERATURE SENSOR")
+    print("START TEMPERATURE RELAY CONTROL SENSOR")
 
     # relay control, start in the off state
     D8 = machine.Pin(15, machine.Pin.OUT)
@@ -27,7 +27,7 @@ def trc_main(esp_con, sta, RAW_MAC):
         MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC])
 
         out = ','.join([str(sequence), date_time, MY_MAC, temperature_data, internal_data])
-        print(out)
+        # print(f"Data Packet: {out}")
         # transmit to all conf DATA_LOGGER values
         [espnowex.esp_tx(val, esp_con, out) for val in conf.peers['DATA_LOGGER']]
         sequence += 1
