@@ -29,7 +29,7 @@ def init_device():
 def main():
     print("--------START DEVICE--------")
     esp_con, station, RAW_MAC = init_device()
-    
+
     # verify that the conf.py file is associated with this code base
     if conf.MYROLE == "DATALOGGER":
         print("Data Logger")
