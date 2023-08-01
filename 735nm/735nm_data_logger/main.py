@@ -32,7 +32,16 @@ def main():
 
     # verify that the conf.py file is associated with this code base
     if conf.MYROLE == "DATALOGGER":
-        print("Data Logger")
+        print("\n================ MY CONFIGURATION ================")
+        print("MY DATA LOGGERS")
+        [print(val) for val in conf.peers['DATA_LOGGER']]
+        print("MY TIME SERVER")
+        [print(val) for val in conf.peers['TIME']]
+        print("================ MY CONFIGURATION ================\n")
+
+        # anything other than a data logger needs to get the remote time
+        if conf.MYROLE != "DATALOGGER":
+            realtc.get_remote_time(esp_con)
         datalogger_main.data_looger_main(esp_con, station, RAW_MAC)
     else:
         print(f'MY ROLE IS {CONF.MYROLE} BUT IT SHOULD BE "TRCCONTROL".')
