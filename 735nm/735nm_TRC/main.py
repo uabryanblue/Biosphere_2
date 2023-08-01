@@ -28,11 +28,17 @@ def init_device():
 def main():
     print("--------START DEVICE--------")
     esp_con, station, RAW_MAC = init_device()
-    print(f"time set and my role is {conf.MYROLE}")
 
     # verify that the conf.py file is associated with this code base
     if conf.MYROLE == "TRCCONTROL":
-        print("Temperature Relay Controller")
+        print("\n================ MY CONFIGURATION ================")
+        print("MY DATA LOGGERS")
+        [print(val) for val in conf.peers['DATA_LOGGER']]
+        print("MY TIME SERVER")
+        [print(val) for val in conf.peers['TIME']]
+        print("================ MY CONFIGURATION ================\n")
+
+        realtc.get_remote_time(esp_con)
         TRC_main.trc_main(esp_con, station, RAW_MAC)
     else:
         print(f'MY ROLE IS {CONF.MYROLE} BUT IT SHOULD BE "TRCCONTROL".')
