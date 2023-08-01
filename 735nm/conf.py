@@ -11,8 +11,8 @@ VERSION = "25.1.1"
 # uncomment one of the corresponding lines to change how
 # the code executes. The different configurations are shown here
 # MYROLE = "CALIBRATE" # command line callibration
-MYROLE = "DATALOGGER" # data logger box
-# MYROLE = "TRCCONTROL" # multiple thermocouple sensor with relay box
+# MYROLE = "DATALOGGER" # data logger box
+MYROLE = "TRCCONTROL" # multiple thermocouple sensor with relay box
 # MYROLE = "THP" # temperatue humidity pressure aspirated sensor
 
 # --------------------
@@ -51,7 +51,7 @@ MYNAME = "ESP8266 MicroPython Temperature Sensor and Temperature Control" # long
 peers = {}
 # remote sensor configuration, connect to all data loggers, pick one for time
 peers["DATA_LOGGER"] = [b'\xc4[\xbe\xe4\xfe\x08', b'\x8c\xaa\xb5M\x7f\x18']  # kist of data loggers
-peers["TIME"] = [b'\x8c\xaa\xb5M\x7f\x18'] # try to get time from here
+peers["TIME"] = [b'\xc4[\xbe\xe4\xfe='] # try to get time from here
 # data logger information
 peers["REMOTE"] = [b'\xc4[\xbe\xe4\xfdq'] # TRC testing 20230731
 # --------------------
