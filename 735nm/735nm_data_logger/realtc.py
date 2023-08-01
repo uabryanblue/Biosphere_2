@@ -20,8 +20,7 @@ HiLetgo DS3231 + AT24C32N
 # d.set_time((2023, 05, 29, 7, 11, 1, 0, 0))
 
 import time
-from machine import I2C, Pin, RTC
-# from ds3231_gen import *
+import machine
 import ds3231_gen
 import espnowex
 import realtc
@@ -43,8 +42,8 @@ def formattime(in_time):
 def rtcinit():
     """get the time from the RTC DS3231 board and set the local RTC"""
 
-    rtc = RTC()
-    i2c = I2C(sda=Pin(4), scl=Pin(5))
+    rtc = machine.RTC()
+    i2c = machine.I2C(sda=machine.Pin(4), scl=machine.Pin(5))
     ds3231 = ds3231_gen.DS3231(i2c)
     YY, MM, DD, hh, mm, ss, wday, _ = ds3231.get_time()
     rtc.datetime((YY, MM, DD, wday, hh, mm, ss, 0))
@@ -57,7 +56,9 @@ def get_remote_time(esp_con):
     retries = 0
     host = ""
     
-    peer = conf.peers["TIME"]
+    peer = bytearray()
+    peer = conf.peers["TIME"][0]
+    # peer= b'\xc4[\xbe\xe4\xfe=' # TODO debug why not tx work
     espnowex.esp_tx(peer, esp_con, "get_time")
     host, msg = espnowex.esp_rx(esp_con)
 
