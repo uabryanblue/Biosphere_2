@@ -10,7 +10,7 @@ import espnowex
 # import BME280_main
 import TRC_main
 
-
+# TODO common code, should be abstracted out of main.py
 def init_device():
 
     # turn off wifi and connect with ESPNow
@@ -30,10 +30,9 @@ def main():
     esp_con, station, RAW_MAC = init_device()
     print(f"time set and my role is {conf.MYROLE}")
 
+    # verify that the conf.py file is associated with this code base
     if conf.MYROLE == "TRCCONTROL":
-        # realtc.get_remote_time(esp_con)
         print("Temperature Relay Controller")
-        import TRC_main
         TRC_main.trc_main(esp_con, station, RAW_MAC)
     else:
         print(f'MY ROLE IS {CONF.MYROLE} BUT IT SHOULD BE "TRCCONTROL".')
