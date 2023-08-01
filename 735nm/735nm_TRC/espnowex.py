@@ -88,6 +88,7 @@ def esp_rx(esp_con, timeout=1000):
         if msg == b'get_time':
             print("host: {host} requested time")
         else:
-            print(f"received from: {host}, message: {msg}")
+            print(f"received from: {host}")
+            print(f"message: {msg}")
 
     return host, msg
