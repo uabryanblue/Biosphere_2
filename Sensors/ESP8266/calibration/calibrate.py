@@ -22,10 +22,8 @@ import sys
 import machine
 import math
 
-NUM_READINGS = 10  # the number of consecutive readings that must fall within VARIANCE
-VARIANCE = (
-    0.1  # how small variance of NUM_READINGS values must be before accepting reading
-)
+NUM_READINGS = 30  # the number of consecutive readings that must fall within VARIANCE
+VARIANCE = 0.1  # how small variance of NUM_READINGS values must be before accepting reading
 READ_TIMEOUT = 50  # number of readings to take before failing to calibrate
 
 
@@ -81,8 +79,10 @@ def calibrate(BoardPos, TCId):
     # TVar = variance(TRead)
     # print(f"varince of readings: {TVar}")
     tspi.deinit()
+    TAvg = sum(TRead) / len(TRead)
     # return the list, avarage and variance
-    return TRead, sum(TRead) / len(TRead), TVar
+    print(TRead, TAvg, TVar)
+    return TRead, TAvg, TVar
 
 
 def verify_sensor(BoardPos, TCId, RefTemp):
