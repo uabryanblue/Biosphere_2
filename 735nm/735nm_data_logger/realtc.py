@@ -13,11 +13,13 @@ HiLetgo DS3231 + AT24C32N
 
 # TODO this could benefit from trying to initialzie from NTP not available when using ESPNow
 # to set the time on the DS3231 use a tuple as shown here
-# i2c = I2C(sda=machine.Pin(4), scl=machine.Pin(5))
-# d = DS3231(i2c)
-# d.set_time((YY, MM, DD, hh, mm, ss, 0, 0))
-# example: to set time to 2023, May, 29, 7 am, 11 minutes, 1 second, NA, NA
-# d.set_time((2023, 05, 29, 7, 11, 1, 0, 0))
+# EXAMPLE
+# rtc = machine.RTC()
+# i2c = machine.I2C(sda=machine.Pin(4), scl=machine.Pin(5))
+# ds3231 = ds3231_gen.DS3231(i2c)
+# rtc.set_time((YY, MM, DD, hh, mm, ss, 0, 0))
+#   example: to set time to 2023, May, 29, 7 am, 11 minutes, 1 second, NA, NA
+#   rtc.set_time((2023, 05, 29, 7, 11, 1, 0, 0))
 
 import time
 import machine

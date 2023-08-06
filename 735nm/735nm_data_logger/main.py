@@ -33,11 +33,13 @@ def main():
     # verify that the conf.py file is associated with this code base
     if conf.MYROLE == "DATALOGGER":
         print("\n================ MY CONFIGURATION ================")
-        print("MY DATA LOGGERS")
+        print("DATA LOGGERS")
         [print(val) for val in conf.peers['DATA_LOGGER']]
-        print("MY TIME SERVER")
+        print("TIME SERVER (should only be one)")
         [print(val) for val in conf.peers['TIME']]
-        print("================ MY CONFIGURATION ================\n")
+        print("REMOTE DEVICES")
+        [print(val) for val in conf.peers['REMOTE']]
+        print("==================================================\n")
 
         # anything other than a data logger needs to get the remote time
         if conf.MYROLE != "DATALOGGER":
