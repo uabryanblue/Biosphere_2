@@ -56,28 +56,36 @@ def main():
         print("Data Logger: listen for a message")
         D0.on()  # reset LED off as a visual aid
         host, msg = espnowex.esp_rx(esp_con, 10000)
-        if host is not None:
-            str_host = ":".join(["{:02x}".format(b) for b in host])
+        gc.collect()
+        # if host is not None:
+            # str_host = ":".join(["{:02x}".format(b) for b in host])
             # D0.off() # turn on indicate a message was received
+        # else:
+        #     msg = b"ERROR"  # TODO error should be generic
+        if host in conf.peers["REMOTE"]:
+            print(f"VERIFIED ------- {host} is in my REMOTE list {conf.peers["REMOTE"]}")
+            str_host = ":".join(["{:02x}".format(b) for b in host])
         else:
-            msg = b"ERROR"  # TODO error should be generic
+            msg = b"NOT MY MAC"
+            print(f"INVALID host ------- {host} not in my REMOTE list {conf.peers["REMOTE"]}")
 
         # assumption data is utf-8, if not, it may fail
         str_msg = msg.decode("utf-8")
 
         if msg == b"get_time":
             D0.off()  # turn on indicate a message was received
-            print(f"Data Logger: {host}, {str_host} requested the time")
+            # print(f"Data Logger: {host}, {str_host} requested the time")
 
             # TODO turn into function
             tx_mac = ":".join(["{:02x}".format(b) for b in host]).upper()
             sys_msg = f"Time requested by: {tx_mac}"
             logger.write_log(conf.SYSTEM_LOG, sys_msg)
-
-            time.sleep(0.1)  # let other side get ready
+                        
+            # time.sleep(0.1)  # let other side get ready
             # receiver blocked until time is received
             espnowex.esp_tx(host, esp_con, str(rtc.datetime()))
-
+            gc.collect()
+            
             # TODO turn into function (see above)
             tx_mac = ":".join(["{:02x}".format(b) for b in host]).upper()
             sys_msg = f"Time sent to: {tx_mac}"
@@ -107,7 +115,7 @@ def main():
 
     # ########### !!! if you don't close it, it will get overwritten
     # when the next PYMAKR update is performed!!!!!!!!!!!
-    logger.closeSD(conf.LOG_MOUNT)
+    # logger.closeSD(conf.LOG_MOUNT)
 
 
 if __name__ == "__main__":
