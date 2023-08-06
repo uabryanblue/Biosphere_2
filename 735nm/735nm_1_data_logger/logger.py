@@ -6,7 +6,7 @@ import conf
 import uerrno  # error trapping and code values
 import sdcard
 import gc 
-import esp
+# import esp
 
 
 def initSD(mnt):
@@ -63,7 +63,7 @@ def write_log(logname, data):
 
     initSD(conf.LOG_MOUNT)
     print("card initialized")
-    with open(logname, "a") as f:
+    with open(outfile, "a") as f:
         f.write(f"{realtc.formattime(time.localtime())}, {data}")
         f.write("\n")
     closeSD(conf.LOG_MOUNT)

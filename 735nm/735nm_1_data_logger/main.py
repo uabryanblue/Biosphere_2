@@ -2,33 +2,49 @@ import sys
 import time
 import machine
 import uerrno
-
+import gc
 import logger
 import conf
 import realtc
 
 import espnowex
 
-def main():
+
+def init_device():
+    # turn off wifi and connect with ESPNow
+    sta, ap = espnowex.wifi_reset()
+    esp_con = espnowex.init_esp_connection(sta)
+
     # set the on board RTC to the time from the DS3231
     realtc.rtcinit()
-    rtc = machine.RTC()
     print("set time")
 
+    # convert hex into readable mac address
+    RAW_MAC = espnowex.get_mac(sta)
+    # print(f"My MAC addres:: {MY_MAC} raw MAC:: {RAW_MAC}")
+
+    return esp_con, sta, RAW_MAC
+
+def main():
+
     print("START DATA LOGGER")
+    rtc = machine.RTC()
  
     # status pin for logger, GPIO16/D0
     D0 = machine.Pin(16, machine.Pin.OUT)
     D0.on()
 
+    gc.collect()
+    esp_con, station, RAW_MAC = init_device()
 
-    station, ap = espnowex.wifi_reset()
-    esp_con = espnowex.init_esp_connection(station)
 
+    # station, ap = espnowex.wifi_reset()
+    # esp_con = espnowex.init_esp_connection(station)
+    # RAW_MAC = bytearray()
+    # RAW_MAC = espnowex.get_mac(station)
+    
     # convert hex into readable mac address
-    # old RAW_MAC = espnowex.get_mac(sta)
-    RAW_MAC = bytearray()
-    RAW_MAC = espnowex.get_mac(station)
+    
     
     MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC]).upper()
     MY_ID = "-".join(["{:02x}".format(b) for b in RAW_MAC]).upper()
