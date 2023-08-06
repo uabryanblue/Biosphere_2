@@ -16,8 +16,6 @@ def main():
     print("set time")
 
     print("START DATA LOGGER")
-
-    SYSLOG =  conf.LOG_MOUNT + '/' + conf.SYSTEM_LOG
  
     # status pin for logger, GPIO16/D0
     D0 = machine.Pin(16, machine.Pin.OUT)
@@ -36,7 +34,7 @@ def main():
     MY_ID = "-".join(["{:02x}".format(b) for b in RAW_MAC]).upper()
     print(f"My MAC addres: {MY_MAC} raw: {RAW_MAC}")
 
-    logger.write_log(SYSLOG, f"{MY_MAC} data logger started")
+    logger.write_log(conf.SYSTEM_LOG, f"{MY_MAC} data logger started")
 
     while True:
         print("Data Logger: listen for a message")
@@ -58,7 +56,7 @@ def main():
             # TODO turn into function
             tx_mac = ":".join(["{:02x}".format(b) for b in host]).upper()
             sys_msg = f"Time requested by: {tx_mac}"
-            logger.write_log(SYSLOG, sys_msg)
+            logger.write_log(conf.SYSTEM_LOG, sys_msg)
 
             time.sleep(0.1)  # let other side get ready
             # receiver blocked until time is received
@@ -68,7 +66,7 @@ def main():
             tx_mac = ":".join(["{:02x}".format(b) for b in host]).upper()
             sys_msg = f"Time sent to: {tx_mac}"
             print(sys_msg)
-            logger.write_log(SYSLOG, sys_msg)
+            logger.write_log(conf.SYSTEM_LOG, sys_msg)
 
             D0.on()  # turn led off, finished rquest
         elif msg == b"ERROR":  # TODO generic trap
@@ -80,7 +78,7 @@ def main():
                 MsgHost = "-".join(["{:02x}".format(b) for b in host]).upper() + ".log"
                 # each device has it's own log
                 LOGNAME = conf.LOG_MOUNT + '/' + MsgHost
-                logger.write_log(LOGNAME, str_msg)
+                logger.write_log(conf.LOG_FILENAME, str_msg)
                 # logger.write_log(LOGNAME, str_host + "," + str_msg)
                 D0.on()  # turn off led
             except OSError as e:
