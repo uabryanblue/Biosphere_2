@@ -85,7 +85,7 @@ def main():
             # receiver blocked until time is received
             espnowex.esp_tx(host, esp_con, str(rtc.datetime()))
             gc.collect()
-            
+
             # TODO turn into function (see above)
             tx_mac = ":".join(["{:02x}".format(b) for b in host]).upper()
             sys_msg = f"Time sent to: {tx_mac}"
@@ -93,16 +93,17 @@ def main():
             logger.write_log(conf.SYSTEM_LOG, sys_msg)
 
             D0.on()  # turn led off, finished rquest
-        elif msg == b"ERROR":  # TODO generic trap
-            print("No Messages")  # normally this is a timeout, just continue
+        elif msg == b"NOT MY MAC":
+            print(f"MAC {host} not for me, ignoring.")
         else:
             try:
                 D0.off()  # turn on indicate a message was received
                 # it is assumed the date/time and record number are part of str_msg
                 MsgHost = "-".join(["{:02x}".format(b) for b in host]).upper() + ".log"
                 # each device has it's own log
-                LOGNAME = conf.LOG_MOUNT + '/' + MsgHost
-                logger.write_log(conf.LOG_FILENAME, str_msg)
+                # LOGNAME = conf.LOG_MOUNT + '/' + MsgHost
+                print(f"MAC {host} is for me, storing to {MsgHost}")
+                logger.write_log(MsgHost, str_msg)
                 # logger.write_log(LOGNAME, str_host + "," + str_msg)
                 D0.on()  # turn off led
             except OSError as e:
