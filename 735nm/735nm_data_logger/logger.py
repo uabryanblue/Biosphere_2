@@ -1,49 +1,36 @@
-# import os
+import os
+import machine
 import realtc
 import time
-import sd
+import sdcard
 import conf
 
-# use "//" to get size from root, on chip memory
-# use "//mnt" for any mount named "mnt" stats
-# Example: os.statvfs('//')
-# f_bsize = 0 # preferred file system block size.
-# f_frsize = 1 # fundamental file system block size.
-# f_blocks = 2 # total number of blocks in the filesystem.
-# f_bfree = 3 # total number of free blocks.
-# f_bavail = 4 # free blocks available to non-super user.
-# f_files = 5 # total number of file nodes.
-# f_ffree = 6 # total number of free file nodes.
-# f_favail = 7 # free nodes available to non-super user.
-# f_flag = 8 # system dependent.
-# f_namemax = 9 # maximum file name length.
+def initSD(mnt):
+    # print(f"mounting {mnt}")
+    sd = sdcard.SDCard(machine.SPI(1), machine.Pin(15))
+    os.mount(sd, mnt)
 
-
-# def get_storage_free_space(mnt):
-#     """calculate total ree space, use '//' for total"""
-
-#     storage = os.statvfs(mnt)
-#     # block size * blocks available
-#     free = storage[f_bsize] * storage[f_bavail]
-#     return free
-
-# def get_storage_total(mnt):
-#     """calculate total storage available, use '//' for total"""
-
-#     storage = os.statvfs(mnt)
-#     # block size * total blocks available
-#     total_storage = storage[f_bsize] * storage[f_blocks]
-#     return total_storage
-
+def closeSD(mnt):
+    try:
+        # print(f"unmounting {mnt}")
+        os.umount(mnt)
+    except OSError as e:
+        if e.args[0] == uerrno.ETIMEDOUT:  # standard timeout is okay, ignore it
+            print("ETIMEDOUT found")  # timeout is okay, ignore it
+        else:  # general case, continue processing, prevent hanging
+            print(f"OSError: Connection closed {e}")
 
 def write_log(filename, data):
     """write out a CSV record starting with current system"""
-    # print(f"-----------storing to mount with filename:{filename}")
-    sd.initSD(conf.LOG_MOUNT)
-    with open(filename, "a") as f:
+    # print(f"starting write_log for {filename} with {data}")
+    outfile = conf.LOG_MOUNT + '/' + filename
+    print(f"-----------storing: {outfile} mount:{conf.LOG_MOUNT} with filename:{filename}")
+    initSD(conf.LOG_MOUNT)
+    print("inited")
+    with open(outfile, "a") as f:
         f.write(f"{realtc.formattime(time.localtime())}, {data}")
         f.write("\n")
-    sd.closeSD(conf.LOG_MOUNT)
+    closeSD(conf.LOG_MOUNT)
 
 
 # def cat_log(filename):
