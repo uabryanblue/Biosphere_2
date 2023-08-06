@@ -6,32 +6,11 @@ import conf
 import uerrno  # error trapping and code values
 
 
-# documentation of system call for total space from root '//'
-# os.statvfs('//')
-# f_bsize − preferred file system block size.
-# f_frsize − fundamental file system block size.
-# f_blocks − total number of blocks in the filesystem.
-# f_bfree − total number of free blocks.
-# f_bavail − free blocks available to non-super user.
-# f_files − total number of file nodes.
-# f_ffree − total number of free file nodes.
-# f_favail − free nodes available to non-super user.
-# f_flag − system dependent.
-# f_namemax − maximum file name length.
-
 def initSD(mnt):
     # print(f"mounting {mnt}")
     sd = sdcard.SDCard(machine.SPI(1), machine.Pin(15))
     # vfs = os.VfsFat(sd)
     os.mount(sd, mnt)
-    # os.listdir(mnt)
-    # time.sleep(0.2)
-    # list_root = os.listdir()
-    # listFiles = os.listdir(mnt)
-    # if len(listFiles) > 0:
-    #     print(f"file(s) in {mnt} {listFiles}")
-    # else:
-    #     print("no file!")
 
 
 def closeSD(mnt):
