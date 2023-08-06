@@ -6,16 +6,12 @@ import conf
 import uerrno  # error trapping and code values
 import sdcard
 import gc 
-# import esp
 
 
 def initSD(mnt):
     gc.collect()
     # print(f"mounting {mnt}")
     sd = sdcard.SDCard(machine.SPI(1), machine.Pin(15))
-    # vfs = os.VfsFat(sd)
-    # print(gc.mem_free())
-    # print(esp.freemem())
     os.mount(sd, mnt)
 
 
