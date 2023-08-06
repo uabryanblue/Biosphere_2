@@ -3,6 +3,8 @@ import realtc
 import time
 import sd
 import conf
+import uerrno  # error trapping and code values
+
 
 # documentation of system call for total space from root '//'
 # os.statvfs('//')
@@ -16,6 +18,32 @@ import conf
 # f_favail − free nodes available to non-super user.
 # f_flag − system dependent.
 # f_namemax − maximum file name length.
+
+def initSD(mnt):
+    # print(f"mounting {mnt}")
+    sd = sdcard.SDCard(machine.SPI(1), machine.Pin(15))
+    # vfs = os.VfsFat(sd)
+    os.mount(sd, mnt)
+    # os.listdir(mnt)
+    # time.sleep(0.2)
+    # list_root = os.listdir()
+    # listFiles = os.listdir(mnt)
+    # if len(listFiles) > 0:
+    #     print(f"file(s) in {mnt} {listFiles}")
+    # else:
+    #     print("no file!")
+
+
+def closeSD(mnt):
+    try:
+        # print(f"unmounting {mnt}")
+        os.umount(mnt)
+    except OSError as e:
+        if e.args[0] == uerrno.ETIMEDOUT:  # standard timeout is okay, ignore it
+            print("ETIMEDOUT found")  # timeout is okay, ignore it
+        else:  # general case, continue processing, prevent hanging
+            print(f"OSError: Connection closed {e}")
+
 
 
 def get_free_space(mnt):

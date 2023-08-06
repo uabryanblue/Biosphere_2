@@ -6,7 +6,6 @@ import uerrno
 import logger
 import conf
 import realtc
-import sd
 
 import espnowex
 
@@ -91,7 +90,7 @@ def main():
 
     # ########### !!! if you don't close it, it will get overwritten
     # when the next PYMAKR update is performed!!!!!!!!!!!
-    sd.closeSD(conf.LOG_MOUNT)
+    logger.closeSD(conf.LOG_MOUNT)
 
 
 if __name__ == "__main__":
@@ -100,9 +99,9 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt as e:
         print(f"Got ctrl-c {e}")
-        sd.closeSD(conf.LOG_MOUNT)
+        logger.closeSD(conf.LOG_MOUNT)
         sys.exit()  # TODO this falls through and resets???? okay for now
     finally:
         print(f"Fatal error, restarting.  {machine.reset_cause()}")
-        sd.closeSD(conf.LOG_MOUNT)
+        logger.closeSD(conf.LOG_MOUNT)
         machine.reset()
