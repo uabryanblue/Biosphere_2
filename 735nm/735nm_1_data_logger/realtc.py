@@ -17,16 +17,13 @@ STARTED: 2023
 # example: to set time to 2023, May, 29, 7 am, 11 minutes, 1 second, NA, NA
 # d.set_time((2023, 05, 29, 7, 11, 1, 0, 0))
 
-# from machine import I2C, Pin, RTC
-import machine
+from machine import I2C, Pin, RTC
 import time
-# from ds3231_gen import *
-import ds3231_gen
+from ds3231_gen import *
 import gc
 
-def formattime(Time):
-    gc.collect()
 
+def formattime(Time):
     """produce a date/time format from tuple
     only minute resolution supported"""
 
@@ -40,9 +37,9 @@ def rtcinit():
     """get the time from the RTC DS3231 board and set the local RTC"""
     gc.collect()
 
-    rtc = machine.RTC()
-    i2c = machine.I2C(sda=machine.Pin(4), scl=machine.Pin(5))
-    d = ds3231_gen.DS3231(i2c)
+    rtc = RTC()
+    i2c = I2C(sda=machine.Pin(4), scl=machine.Pin(5))
+    d = DS3231(i2c)
     YY, MM, DD, hh, mm, ss, wday, _ = d.get_time()
     rtc.datetime((YY, MM, DD, wday, hh, mm, ss, 0))
     print(f"DS3231 time: {d.get_time()}")
