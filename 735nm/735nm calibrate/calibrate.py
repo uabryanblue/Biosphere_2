@@ -17,6 +17,7 @@ import thermocouple
 import gc
 # import logger
 
+import espnowex
 import time
 import sys
 import machine
@@ -125,6 +126,7 @@ def calibrate_main(esp_con, station, RAW_MAC):
         )
         # print(f"Callibrating sensor on board position {BoardPos}...\n")
         TCList = calibrate(BoardPos, TCId)
+        gc.collect()
         print("\n================== RESULTS ==================")
         range = max(TCList) - min(TCList) # range is used for control of accepting readings
         TCAvg = sum(TCList) / len(TCList) # 30 sample average
@@ -145,5 +147,10 @@ def calibrate_main(esp_con, station, RAW_MAC):
             )
         else:  #  send information to datalogger to record
             data = ','.join(str(out) for out in [RAW_MAC, TCId, BoardPos, RefTemp, TCList])
-            print(data)
-            
+            # print(data)
+            gc.collect()
+            # send the data to every conf entry in CALIBRATE
+            [espnowex.esp_tx(val, esp_con, data) for val in conf.peers['CALIBRATE']]
+            print("Sent data")
+            gc.collect()
+           
