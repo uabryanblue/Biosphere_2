@@ -120,31 +120,30 @@ def calibrate_main(esp_con, station, RAW_MAC):
         TCId = TCId.strip()
         RefTemp = input("Enter reference temperature in celsius (0.00):")
         RefTemp = float(RefTemp)
-        # no need to verify, just send values to data logger and analyze later
-        # only try to calibrate if the sensor entry already exists in the conf.py file
-        if verify_sensor(BoardPos, TCId, RefTemp):
-            print(
-                "Hold thermocouple steady at reference and wait for confirmation or Failed message."
-            )
-            # print(f"Callibrating sensor on board position {BoardPos}...\n")
-            TCList = calibrate(BoardPos, TCId)
-            print("\n================== RESULTS ==================")
-            range = max(TCList) - min(TCList) # range is used for control of accepting readings
-            TCAvg = sum(TCList) / len(TCList) # 30 sample average
-            std = stddev(TCList, 1) # 1 - sample std
-            print(f"VALUES: {TCList}")
-            print(f"MIN, MAX: {min(TCList)}, {max(TCList)}")
-            print(f"RANGE: {range}")
-            print(f"MEAN: {TCAvg:<20}")
-            print(f"STD DEVIATION: {std:<20}") # number of degrees from the mean each point falls into
-            # on average, each value deviates from the mean by std degrees 
-            print(f"CV: {std/TCAvg:<20}")
-            print("=============================================")
-            print("\n")
+        print(
+            "\nHold thermocouple steady at reference and wait for confirmation or Failed message."
+        )
+        # print(f"Callibrating sensor on board position {BoardPos}...\n")
+        TCList = calibrate(BoardPos, TCId)
+        print("\n================== RESULTS ==================")
+        range = max(TCList) - min(TCList) # range is used for control of accepting readings
+        TCAvg = sum(TCList) / len(TCList) # 30 sample average
+        std = stddev(TCList, 1) # 1 - sample std
+        print(f"VALUES: {TCList}")
+        print(f"MIN, MAX: {min(TCList)}, {max(TCList)}")
+        print(f"RANGE: {range}")
+        print(f"MEAN: {TCAvg:<20}")
+        print(f"STD DEVIATION: {std:<20}") # number of degrees from the mean each point falls into
+        # on average, each value deviates from the mean by std degrees 
+        print(f"CV: {std/TCAvg:<20}")
+        print("=============================================")
+        print("\n")
 
-            if range > RANGE:
-                print(
-                    f"CALLIBRATION FAILED!!! Out of specified range of {RANGE} at {range}"
-                )
-        else:
-            print(f"Sensor ID {TCId} was not found.\n")
+        if range > RANGE:
+            print(
+                f"CALLIBRATION FAILED!!! Out of specified range of {RANGE} at {range}"
+            )
+        else:  #  send information to datalogger to record
+            data = ','.join(str(out) for out in [RAW_MAC, TCId, BoardPos, RefTemp, TCList])
+            print(data)
+            
