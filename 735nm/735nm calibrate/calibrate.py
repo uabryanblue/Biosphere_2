@@ -24,6 +24,8 @@ import math
 
 NUM_READINGS = 30  # the number of consecutive readings that must fall within VARIANCE
 VARIANCE = 0.1  # how small variance of NUM_READINGS values must be before accepting reading
+STDVAL = 1.05 # how far each value is from the mean
+RANGE = 0.75 # how far min and max values of 30 points need to be to pass
 READ_TIMEOUT = 50  # number of readings to take before failing to calibrate
 
 
@@ -57,11 +59,13 @@ def calibrate(BoardPos, TCId):
     read_count = 0
     TRead = []
     TVar = 100.0
+    std = 100.0 # arbitrary bad range
+    rng = 3 # degrees difference in 30 values
     tspi = machine.SPI(1, baudrate=5000000, polarity=0, phase=0)
     # print(tspi)
     # read the first NUM_READINGS to calculate variance
     # print(f"Taking temperature readings from board sensor position {BoardPos}")
-    while (read_count < READ_TIMEOUT) and (TVar > VARIANCE):
+    while (read_count < READ_TIMEOUT) and (rng > RANGE):
         temperature, internalTemp = thermocouple.read_thermocouple(BoardPos, tspi)
         if not math.isnan(temperature):
             while len(TRead) > NUM_READINGS:
@@ -75,17 +79,14 @@ def calibrate(BoardPos, TCId):
             return float("NaN"), float("NaN")
         read_count += 1
         if read_count >= NUM_READINGS:
-            TVar = variance(TRead)
-        # print(f"{TRead} var {TVar}")
+            rng = max(TRead) - min(TRead)
         time.sleep(0.25)
     print(
         f"Total number of readings taken: {read_count}"
     )
     tspi.deinit()
-    TAvg = sum(TRead) / len(TRead)
 
-    # return the list, avarage and variance
-    return TRead, TAvg, TVar
+    return TRead
 
 
 def verify_sensor(BoardPos, TCId, RefTemp):
@@ -119,27 +120,31 @@ def calibrate_main(esp_con, station, RAW_MAC):
         TCId = TCId.strip()
         RefTemp = input("Enter reference temperature in celsius (0.00):")
         RefTemp = float(RefTemp)
+        # no need to verify, just send values to data logger and analyze later
         # only try to calibrate if the sensor entry already exists in the conf.py file
         if verify_sensor(BoardPos, TCId, RefTemp):
             print(
                 "Hold thermocouple steady at reference and wait for confirmation or Failed message."
             )
             # print(f"Callibrating sensor on board position {BoardPos}...\n")
-            TCList, TCAvg, TCVar = calibrate(BoardPos, TCId)
+            TCList = calibrate(BoardPos, TCId)
             print("\n================== RESULTS ==================")
-            range = max(TCList) - min(TCList)
-            print(f"FINAL VALUES: {TCList}")
-            print(f"RANGE: {range:<20}") # TODO change the formatting, this is wrong
-            print(f"AVERAGE: {TCAvg:<20}")
-            # print(f"VARIANCE: {TCVar}")
-            std = stddev(TCList, 1) # 1 - sample
-            print(f"STD DEVIATION: {std:<20}")
+            range = max(TCList) - min(TCList) # range is used for control of accepting readings
+            TCAvg = sum(TCList) / len(TCList) # 30 sample average
+            std = stddev(TCList, 1) # 1 - sample std
+            print(f"VALUES: {TCList}")
+            print(f"MIN, MAX: {min(TCList)}, {max(TCList)}")
+            print(f"RANGE: {range}")
+            print(f"MEAN: {TCAvg:<20}")
+            print(f"STD DEVIATION: {std:<20}") # number of degrees from the mean each point falls into
+            # on average, each value deviates from the mean by std degrees 
             print(f"CV: {std/TCAvg:<20}")
             print("=============================================")
             print("\n")
-            if TCVar > VARIANCE:
+
+            if range > RANGE:
                 print(
-                    f"CALLIBRATION FAILED!!! Final variance greater than {VARIANCE} at {TCVar}"
+                    f"CALLIBRATION FAILED!!! Out of specified range of {RANGE} at {range}"
                 )
         else:
             print(f"Sensor ID {TCId} was not found.\n")
