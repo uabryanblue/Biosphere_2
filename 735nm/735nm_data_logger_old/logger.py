@@ -6,12 +6,16 @@ import conf
 import uerrno  # error trapping and code values
 import sdcard
 import gc 
+import esp
 
 
 def initSD(mnt):
     gc.collect()
     # print(f"mounting {mnt}")
     sd = sdcard.SDCard(machine.SPI(1), machine.Pin(15))
+    # vfs = os.VfsFat(sd)
+    # print(gc.mem_free())
+    # print(esp.freemem())
     os.mount(sd, mnt)
 
 
@@ -53,13 +57,13 @@ def get_total_space(mnt):
 
 def write_log(logname, data):
     """write out a CSV record starting with current system"""
-    # print(f"-----------storing to mount with filename:{logname}")
+    print(f"-----------storing to mount with filename:{logname}")
     outfile = conf.LOG_MOUNT + '/' + logname
-    # print(f"-----------storing: {outfile} mount:{conf.LOG_MOUNT} with filename:{logname}")
+    print(f"-----------storing: {outfile} mount:{conf.LOG_MOUNT} with filename:{logname}")
 
     initSD(conf.LOG_MOUNT)
-    # print("card initialized")
-    with open(outfile, "a") as f:
+    print("card initialized")
+    with open(logname, "a") as f:
         f.write(f"{realtc.formattime(time.localtime())}, {data}")
         f.write("\n")
     closeSD(conf.LOG_MOUNT)
