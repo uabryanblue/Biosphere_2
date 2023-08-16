@@ -32,12 +32,20 @@ MYNAME = "ESP8266 MicroPython Temperature Sensor and Temperature Control" # long
 # ESPNow CONFIGURATION
 # peers are binary MAC addresses to send to
 # up to 4 can be specified
+# peers is a dict that points to a list
 # these are initialized with the ESPNow add_peer()
 # Values:
-#   DATA_LOGGER - send readings to this MAC address
-peers = dict()
+#   DATA_LOGGER - send readings to these MAC addresses in binary format
+#   TIME - get date/time from this device, should only be ONE entry
+#   REMOTE - data logger to register remote sensors
+# EXAMPLE: peers["DATA_LOGGER"] = [b'\xc4[\xbe\xe4\xfe=']
+peers = {}
+# remote sensor configuration, connect to all data loggers, pick one for time
+peers["DATA_LOGGER"] = [b'\xc4[\xbe\xe4\xfe\x08', b'\x8c\xaa\xb5M\x7f\x18']  # kist of data loggers
 peers["DATA_LOGGER2"] = b'\xc4[\xbe\xe4\xfe=' # original esp
-peers["DATA_LOGGER"] = b'\xc4[\xbe\xe4\xfe\x08' # 2nd esp
+peers["TIME"] = [b'\xc4[\xbe\xe4\xfe='] # try to get time from here
+# data logger information
+peers["REMOTE"] = [b'\xc4[\xbe\xe4\xfdq'] # TRC testing 20230731
 # --------------------
 
 
