@@ -42,8 +42,9 @@ def rtcinit():
     d = DS3231(i2c)
     YY, MM, DD, hh, mm, ss, wday, _ = d.get_time()
     rtc.datetime((YY, MM, DD, wday, hh, mm, ss, 0))
-    print(f"DS3231 time: {d.get_time()}")
-    print(f"local time: {formattime(time.localtime())}")
+    print(f"DS3231 get_time(): {d.get_time()}")
+    print(f"time localtime(): {formattime(time.localtime())}")
+    print(f"RTC datetime(): {rtc.datetime()}")
 
 
 ###########################
