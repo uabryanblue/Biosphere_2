@@ -1,4 +1,3 @@
-import sys
 import time
 import machine
 import uerrno
@@ -55,39 +54,38 @@ def main():
 
     while True:
         print("Data Logger: listen for a message")
-        D0.on()  # reset LED off as a visual aid
+        D0.on()  # LED off as a visual aid
         host, msg = espnowex.esp_rx(esp_con, 10000)
         gc.collect()
-        # if host is not None:
-            # str_host = ":".join(["{:02x}".format(b) for b in host])
-            # D0.off() # turn on indicate a message was received
-        # else:
-        #     msg = b"ERROR"  # TODO error should be generic
-        if host in conf.peers["REMOTE"]:
-            print(f"VERIFIED ------- {host} is in my REMOTE list {conf.peers["REMOTE"]}")
+        if host is not None:
             str_host = ":".join(["{:02x}".format(b) for b in host])
-        elif host is not None:
+            D0.off() # turn on indicate a message was received
+            if host in conf.peers["REMOTE"]:
+                print(f"VERIFIED ------- {host} is in my REMOTE list {conf.peers["REMOTE"]}")
+                str_host = ":".join(["{:02x}".format(b) for b in host])
+        else:
             msg = b"NOT MY MAC"
             print(f"INVALID host ------- {host} not in my REMOTE list {conf.peers["REMOTE"]}")
 
         # assumption data is utf-8, if not, it may fail
-        str_msg = msg.decode("utf-8")
+        if msg is not None:
+            str_msg = msg.decode("utf-8")
+        else:
+            str_msg = ''
 
+        # host is already verified to be one that should be processed
         if msg == b"get_time":
             D0.off()  # turn on indicate a message was received
             # print(f"Data Logger: {host}, {str_host} requested the time")
 
-            # TODO turn into function
             tx_mac = ":".join(["{:02x}".format(b) for b in host]).upper()
             sys_msg = f"Time requested by: {tx_mac}"
             logger.write_log(conf.SYSTEM_LOG, sys_msg)
                         
-            # time.sleep(0.1)  # let other side get ready
             # receiver blocked until time is received
             espnowex.esp_tx(host, esp_con, str(rtc.datetime()))
             gc.collect()
 
-            # TODO turn into function (see above)
             tx_mac = ":".join(["{:02x}".format(b) for b in host]).upper()
             sys_msg = f"Time sent to: {tx_mac}"
             print(sys_msg)
@@ -96,6 +94,13 @@ def main():
             D0.on()  # turn led off, finished rquest
         elif msg == b"NOT MY MAC":
             print(f"MAC {host} not for me, ignoring.")
+        elif "CALIBRATE:" in str_msg:
+            tx_mac = "_".join(["{:02x}".format(b) for b in host]).upper()
+            log_name = f"calibrate_{tx_mac}.log"
+            print(f"CALIBRATE: storing to {log_name} - {str_msg[10:]}")
+            # remove the word CALIBRATE: and store the rest
+            logger.write_log(log_name, str_msg[10:])
+            gc.collect()
         else:
             try:
                 D0.off()  # turn on indicate a message was received
@@ -126,8 +131,8 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt as e:
         print(f"Got ctrl-c {e}")
+        logger.closeSD()
         logger.closeSD(conf.LOG_MOUNT)
-        sys.exit()  # TODO this falls through and resets???? okay for now
     finally:
         print(f"Fatal error, restarting.  {machine.reset_cause()}")
         logger.closeSD(conf.LOG_MOUNT)

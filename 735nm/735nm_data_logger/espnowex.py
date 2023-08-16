@@ -77,7 +77,6 @@ def esp_tx(peer, esp_con, msg):
 def esp_rx(esp_con, timeout=1000):
     """init of esp connection needs performed first
     peers need to be added to the espnow connection"""
-
     # wait for a message to process
     host, msg = esp_con.recv(timeout)  # ms timeout on receive
     # TODO change this to trap for errors, no need to check the msg
