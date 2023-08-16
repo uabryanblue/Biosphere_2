@@ -108,6 +108,7 @@ def verify_sensor(BoardPos, TCId, RefTemp):
 def calibrate_main(esp_con, station, RAW_MAC):
     while True:
         gc.collect()
+        MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC]).upper()
 
         print("Press Enter to continue.")
         BoardPos = input()
@@ -146,11 +147,12 @@ def calibrate_main(esp_con, station, RAW_MAC):
                 f"CALLIBRATION FAILED!!! Out of specified range of {RANGE} at {range}"
             )
         else:  #  send information to datalogger to record
-            data = ','.join(str(out) for out in [RAW_MAC, TCId, BoardPos, RefTemp, TCList])
-            # print(data)
+            data = ','.join(str(out) for out in [MY_MAC, TCId, BoardPos, RefTemp, str(TCList).replace(' ','')])
+            data = f"CALIBRATE:{data.replace(' ','')}"
+            print(data)
             gc.collect()
             # send the data to every conf entry in CALIBRATE
             [espnowex.esp_tx(val, esp_con, data) for val in conf.peers['CALIBRATE']]
             print("Sent data")
             gc.collect()
-           
+
