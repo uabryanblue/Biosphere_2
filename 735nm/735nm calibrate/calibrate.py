@@ -91,8 +91,8 @@ def calibrate_main(esp_con, station, RAW_MAC):
         MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC]).upper()
 
         # BoardPos is the physical TC position on circuit board T1 - T5
-        BoardPos = input("Press Enter to continue ('exit' to quit): ")
-        if BoardPos == 'exit':
+        BoardPos = input("Press Enter to continue ('q' to quit): ")
+        if BoardPos.upper() == 'Q':
             break
         while BoardPos not in ['1','2','3','4','5']:
             BoardPos = input("Enter board position 1 to 5:")
