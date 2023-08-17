@@ -32,7 +32,6 @@ def init_esp_connection(sta):
     # example: b'\x5c\xcf\x7f\xf0\x06\xda'
     # values are stored in conf.py
     # register all define peers
-    # [esp.add_peer(conf.peers[key]) for key in conf.peers.keys()]
     [esp.add_peer(val) for val in conf.peers['DATA_LOGGER']]
 
     return esp
@@ -59,12 +58,7 @@ def esp_tx(peer, esp_con, msg):
         res = esp_con.send(peer, msg, True)  # only one TIME entry should exist
         print(f"sent to {peer}")
         print(f"{msg}")
-        # TODO protocol returns false, no need to check, possibly handshake later
-        # if not res:
-        #     print(f"DATA NOT RECORDED response:{res} from {peer}")
-        # else:
-            # print(f"DATA TX SUCCESSFUL reseeeponse:{res}")
-
+ 
     except OSError as err:
         if err.args[0] == errno.ETIMEDOUT:  # standard timeout is okay, ignore it
             print("ETIMEDOUT found")  # timeout is okay, ignore it
@@ -77,14 +71,8 @@ def esp_tx(peer, esp_con, msg):
 def esp_rx(esp_con, timeout=1000):
     """init of esp connection needs performed first
     peers need to be added to the espnow connection"""
+
     # wait for a message to process
     host, msg = esp_con.recv(timeout)  # ms timeout on receive
-    # TODO change this to trap for errors, no need to check the msg
-    # if msg:
-    #     if msg == b'get_time':
-    #         print("host: {host} requested time")
-    #     else:
-    #         print(f"received from: {host}")
-    #         print(f"message: {msg}")
 
     return host, msg
