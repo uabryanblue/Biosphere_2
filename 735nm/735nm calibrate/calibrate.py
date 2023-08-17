@@ -135,15 +135,19 @@ def calibrate_main(esp_con, station, RAW_MAC):
             print(
                 f"CALLIBRATION FAILED!!! Out of specified range of {RANGE} at {range}"
             )
-        else:  
-            #  send information to datalogger, data must start with "CALIBRATE:"
-            #  date/time added at data logger
-            data = ','.join(str(out) for out in [MY_MAC, TCId, BoardPos, RefTemp, str(TCList)])
-            data = f"CALIBRATE:{data.replace(' ','')}" # get rid of all spaces to keep under 250 byte max
-            print(data)
-            gc.collect()
-            # send the data to every conf entry in CALIBRATE
-            [espnowex.esp_tx(val, esp_con, data) for val in conf.peers['CALIBRATE']]
-            print("Sent data")
+        else:
+            record_value = input("Enter 'r' to record calibration value (any other key to skip): ")
+            if record_value.upper() == 'R':    
+                #  send information to datalogger, data must start with "CALIBRATE:"
+                #  date/time added at data logger
+                data = ','.join(str(out) for out in [MY_MAC, TCId, BoardPos, RefTemp, str(TCList)])
+                data = f"CALIBRATE:{data.replace(' ','')}" # get rid of all spaces to keep under 250 byte max
+                print(data)
+                gc.collect()
+                # send the data to every conf entry in CALIBRATE
+                [espnowex.esp_tx(val, esp_con, data) for val in conf.peers['CALIBRATE']]
+                print("\nCALIBRATION READINGS SENT TO DATA LOGGER.\n")
+            else:
+                print('\nCALIBRATION READINGS NOT RECORDED!\n')
             gc.collect()
 
