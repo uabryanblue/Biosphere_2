@@ -76,22 +76,6 @@ def calibrate(BoardPos, TCId):
 
     return TRead
 
-
-def verify_sensor(BoardPos, TCId, RefTemp):
-    if TCId in conf.callibrations:
-        print(f"For board position {BoardPos}")
-        print(f"Thermocouple ID was found with value: {TCId}\n")
-        print(f"Equation: y = b0 + b1x + b2x^2")
-        print(f"b0 = {conf.callibrations[TCId][1]}")
-        print(f"b1 = {conf.callibrations[TCId][2]}")
-        print(f"b2 = {conf.callibrations[TCId][3]}")
-        print("\n")
-        return True
-    else:
-        print("Thermocouple was not found.\n")
-        return False
-
-
 def calibrate_main(esp_con, station, RAW_MAC):
     while True:
         gc.collect()
@@ -120,7 +104,7 @@ def calibrate_main(esp_con, station, RAW_MAC):
         print(
             "\nHold thermocouple steady at reference and wait for confirmation or Failed message."
         )
-        # print(f"Callibrating sensor on board position {BoardPos}...\n")
+
         TCList = calibrate(BoardPos, TCId)
         gc.collect()
         print("\n================== RESULTS ==================")
@@ -141,9 +125,11 @@ def calibrate_main(esp_con, station, RAW_MAC):
             print(
                 f"CALLIBRATION FAILED!!! Out of specified range of {RANGE} at {range}"
             )
-        else:  #  send information to datalogger to record
-            data = ','.join(str(out) for out in [MY_MAC, TCId, BoardPos, RefTemp, str(TCList).replace(' ','')])
-            data = f"CALIBRATE:{data.replace(' ','')}"
+        else:  
+            #  send information to datalogger, data must start with "CALIBRATE:"
+            #  date/time added at data logger
+            data = ','.join(str(out) for out in [MY_MAC, TCId, BoardPos, RefTemp, str(TCList)])
+            data = f"CALIBRATE:{data.replace(' ','')}" # get rid of all spaces to keep under 250 byte max
             print(data)
             gc.collect()
             # send the data to every conf entry in CALIBRATE
