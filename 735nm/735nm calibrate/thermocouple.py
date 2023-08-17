@@ -54,12 +54,9 @@ def catReadings(readings):
         strReadings =+ readings[key][2] # 2nd position is temp value
     return strReadings
 
-def read_thermocouple(cs_pin, spi):
-    """reads one thermocouple from given CS pin and spi object"""
-    raw_data = bytearray(4)
-
-    # turn on pins immediately after assignment
-    # reads on low values
+def thermocouples_off():
+    # returns all TP 1 - 5 on the board off
+    # reads on low values, 'on' is off value
     S0 = Pin(16, Pin.OUT)
     S0.on()
     S1 = Pin(5, Pin.OUT)
@@ -71,21 +68,35 @@ def read_thermocouple(cs_pin, spi):
     S4 = Pin(2, Pin.OUT)
     S4.on()
 
+def read_thermocouple(cs_pin, spi):
+    """reads one thermocouple from given CS pin and spi object"""
+    raw_data = bytearray(4)
+
+    # turn off all thermocouples
+    thermocouples_off()
+
     if cs_pin == 1:
+        S0 = Pin(16, Pin.OUT)
         S0.off()
     elif cs_pin == 2:
+        S1 = Pin(5, Pin.OUT)
         S1.off()
     elif cs_pin == 3:
+        S2 = Pin(4, Pin.OUT)
         S2.off()
     elif cs_pin == 4:
+        S3 = Pin(0, Pin.OUT)
         S3.off()
     elif cs_pin == 5:
+        S4 = Pin(2, Pin.OUT)
         S4.off()
 
     sleep(0.250) # 250 ms
     spi.readinto(raw_data)
     temperature, internal = parse_max318855(raw_data)
 
+    # turn off all thermocouples
+    thermocouples_off()
     return temperature, internal
 
 def allReadings(readings, prefix=''):
@@ -138,7 +149,9 @@ def read_thermocouples(readings):
             readings[key][2] = float("NaN")
             readings[key][4] = float("NaN")
                   
-    # TODO put in some error checking to ensure spi is released
+    # turn all of the thermocouple sensors off when not in use
+    thermocouples_off()
+
     tspi.deinit()
 
     return readings, myReadings
