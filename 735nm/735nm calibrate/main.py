@@ -4,10 +4,6 @@ import conf
 import realtc
 import espnowex
 
-# CHECK THE BLOCK OF ROLES
-# import calibrate
-# import datalogger_main
-# import BME280_main
 import calibrate
 
 # TODO common code, should be abstracted out of main.py
@@ -30,16 +26,19 @@ def main():
     esp_con, station, RAW_MAC = init_device()
 
     # verify that the conf.py file is associated with this code base
-    if conf.MYROLE == "CALIBRATE":
-        print("\n================ MY CONFIGURATION ================")
-        print("MY DATA LOGGERS")
-        [print(val) for val in conf.peers['DATA_LOGGER']]
-        print("MY TIME SERVER")
-        [print(val) for val in conf.peers['TIME']]
-        print("================ MY CONFIGURATION ================\n")
+    print("\n================ MY CONFIGURATION ================")
+    print("MY DATA LOGGERS")
+    [print(val) for val in conf.peers['DATA_LOGGER']]
+    print("MY TIME SERVER")
+    [print(val) for val in conf.peers['TIME']]
+    print("==================================================\n")
+    realtc.get_remote_time(esp_con)
 
-        realtc.get_remote_time(esp_con)
-        calibrate.calibrate_main(esp_con, station, RAW_MAC)
+    print('\nNOTE: Although readings are sent wirelessly to a data logger, there is no confirmation they are actually recorded.')
+    print('You should verify data is recorded after the first stored value by looking at the data logger storage.')
+    print('Future versions will include a confirmation message that the data was recorded.\n')
+
+    calibrate.calibrate_main(esp_con, station, RAW_MAC)
 
 
 
