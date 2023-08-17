@@ -33,9 +33,11 @@ NUM_READINGS = 30  # the number of consecutive readings that must fall within VA
 RANGE = 0.75 # how far min and max values of 30 points need to be to pass
 READ_TIMEOUT = 50  # number of readings to take before failing to calibrate
 
-# sample = 1 => sample std
-# sample = 0 => population std
+
 def stddev(data, sample = 1):
+    """ sample = 1 => sample std (default)
+        sample = 0 => population std """
+
     if sample != 0 and sample != 1:
         return 0.0
     # Number of observations
@@ -50,6 +52,9 @@ def stddev(data, sample = 1):
 
 
 def calibrate(BoardPos, TCId):
+    """ take NUM_READINGS consecutive readings until the number of values
+        get to the READ_TIMEOUT value or the desired error is met """
+        
     read_count = 0
     TRead = []
     TVar = 100.0
