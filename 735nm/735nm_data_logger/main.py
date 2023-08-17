@@ -100,7 +100,7 @@ def main():
                 log_name = f"{log_host}.log"
                 # each device has it's own log
                 # LOGNAME = conf.LOG_MOUNT + '/' + MsgHost
-                print(f"MAC {host} is for me, storing to {MsgHost}")
+                print(f"MAC {host} is for me, storing to {log_name}")
                 logger.write_log(log_name, str_msg)
                 # logger.write_log(LOGNAME, str_host + "," + str_msg)
                 D0.on()  # turn off led
