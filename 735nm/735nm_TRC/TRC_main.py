@@ -8,6 +8,27 @@ import thermocouple
 import espnowex
 
 
+# =================== try this?
+
+# from datetime import datetime
+# from time import sleep
+
+# def run(condition):
+#     while datetime.now().minute not in {0, 15, 30, 45}:  # Wait 1 second until we are synced up with the 'every 15 minutes' clock
+#         sleep(1)
+
+#     def task():
+#         # Your task goes here
+#         # Functionised because we need to call it twice
+#         temperature_store()
+    
+#     task()
+
+#     while condition == True:
+#         sleep(60*15)  # Wait for 15 minutes
+#         task()
+# ================================
+
 def trc_main(esp_con, sta, RAW_MAC):
     print("START TEMPERATURE RELAY CONTROL SENSOR")
 
