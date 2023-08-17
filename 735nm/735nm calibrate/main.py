@@ -23,6 +23,11 @@ def init_device():
 
 def main():
     print("--------START DEVICE--------")
+    
+    # on board relay control, put in the off state
+    D8 = machine.Pin(15, machine.Pin.OUT)
+    D8.off() # turn pin low
+
     esp_con, station, RAW_MAC = init_device()
 
     # verify that the conf.py file is associated with this code base
