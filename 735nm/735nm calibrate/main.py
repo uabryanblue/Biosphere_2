@@ -49,9 +49,4 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt as e:
         print(f"Got ctrl-c {e}")
-        # D8.off() # TODO D8 HAS TO BE SET TO OFF ON ERROR !!!!!!!!!!!!!!!!!!
-        # sys.exit()  # TODO this falls through and resets???? okay for now
-    finally:
-        print(f"Fatal error, restarting.  {machine.reset_cause()}")
-        # D8.off() # TODO D8 HAS TO BE SET TO OFF ON ERROR !!!!!!!!!!!!!!!!!!
-        # machine.reset()
+        
