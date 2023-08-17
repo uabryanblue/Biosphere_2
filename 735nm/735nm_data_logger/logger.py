@@ -16,10 +16,10 @@ def initSD(mnt):
 
 
 def closeSD(mnt):
-    gc.collect()
     try:
         # print(f"unmounting {mnt}")
         os.umount(mnt)
+        gc.collect()
     except OSError as e:
         if e.args[0] == uerrno.ETIMEDOUT:  # standard timeout is okay, ignore it
             print("ETIMEDOUT found")  # timeout is okay, ignore it
@@ -66,7 +66,10 @@ def write_log(logname, data):
 
 
 def cat_log(filename):
+    outfile = conf.LOG_MOUNT + '/' + logname
+    initSD(conf.LOG_MOUNT)
     with open(filename, "r") as f:
         for line in f:
             print(line.rstrip())
-    print("end of log")
+    print("\n--------------END LOG--------------")
+    closeSD(conf.LOG_MOUNT)
