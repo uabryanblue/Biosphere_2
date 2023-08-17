@@ -1,4 +1,9 @@
-""" This script is for interactive callibration of thermocouples
+""" 
+AUTHOR: Bryan Blue, bryanblue@arizona.edu
+For edcuational use only. Not to be used commercially or sold without permission
+of the AUTHOR.
+
+    This script is for interactive callibration of thermocouples
     It needs to be run from the REPL 
     From the conf.py file is a dict of values
     KEY - the thermocouple identifier, numeric
