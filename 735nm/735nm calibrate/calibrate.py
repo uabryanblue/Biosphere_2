@@ -61,8 +61,7 @@ def calibrate(BoardPos, TCId):
     std = 100.0 # arbitrary bad range
     rng = 3 # degrees difference in 30 values
     tspi = machine.SPI(1, baudrate=5000000, polarity=0, phase=0)
-    # print(tspi)
-    # print(f"Taking temperature readings from board sensor position {BoardPos}")
+
     while (read_count < READ_TIMEOUT) and (rng > RANGE):
         temperature, internalTemp = thermocouple.read_thermocouple(BoardPos, tspi)
         if not math.isnan(temperature):
