@@ -24,21 +24,9 @@ import machine
 import math
 
 NUM_READINGS = 30  # the number of consecutive readings that must fall within VARIANCE
-VARIANCE = 0.1  # how small variance of NUM_READINGS values must be before accepting reading
-STDVAL = 1.05 # how far each value is from the mean
+# STDVAL = 1.05 # how far each value is from the mean
 RANGE = 0.75 # how far min and max values of 30 points need to be to pass
 READ_TIMEOUT = 50  # number of readings to take before failing to calibrate
-
-
-# THIS IS WRONG!!!
-def variance(lst):
-
-    if len(lst) > 0 and len(lst) > 0:
-        avg = sum(lst) / len(lst)
-        var = sum(abs((x - avg)) ** 2 for x in lst) / len(lst)  # sample variance
-        return var
-    else:
-        return float("NaN")
 
 # sample = 1 => sample std
 # sample = 0 => population std
@@ -64,7 +52,6 @@ def calibrate(BoardPos, TCId):
     rng = 3 # degrees difference in 30 values
     tspi = machine.SPI(1, baudrate=5000000, polarity=0, phase=0)
     # print(tspi)
-    # read the first NUM_READINGS to calculate variance
     # print(f"Taking temperature readings from board sensor position {BoardPos}")
     while (read_count < READ_TIMEOUT) and (rng > RANGE):
         temperature, internalTemp = thermocouple.read_thermocouple(BoardPos, tspi)
@@ -110,18 +97,26 @@ def calibrate_main(esp_con, station, RAW_MAC):
         gc.collect()
         MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC]).upper()
 
-        print("Press Enter to continue.")
-        BoardPos = input()
-        BoardPos = input("Enter board position 1 to 5 (1 default) or 'exit' ot quit:") 
-        if "exit" == BoardPos:
+        # BoardPos is the physical TC position on circuit board T1 - T5
+        BoardPos = input("Press Enter to continue ('exit' to quit): ")
+        if BoardPos == 'exit':
             break
+        while BoardPos not in ['1','2','3','4','5']:
+            BoardPos = input("Enter board position 1 to 5:")
         BoardPos = int(BoardPos)
-        if not BoardPos or BoardPos < 1 or BoardPos > 5:
-            BoardPos = "1"
-        TCId = input('Enter thermocouple id ("101", "T2", etc.):')
+
+        # user value can be whatever they want but not blank
+        TCId = input('Enter thermocouple ID ("101", "T2", etc.): ')
+        while len(TCId.strip()) == 0:
+            TCId = input('ID cannot be empty.\nEnter thermocouple ID ("101", "T2", etc.):' )
         TCId = TCId.strip()
-        RefTemp = input("Enter reference temperature in celsius (0.00):")
+
+        # a temperature can only be numberic, period, or a sign
+        RefTemp = input("Enter reference temperature in celsius (0.00): ")
+        while not bool(RefTemp and not RefTemp.strip("0123456789.-+")):
+            RefTemp = input("Value must be a float.\nEnter reference temperature in celsius (0.00): ")
         RefTemp = float(RefTemp)
+
         print(
             "\nHold thermocouple steady at reference and wait for confirmation or Failed message."
         )
