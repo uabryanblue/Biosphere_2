@@ -34,8 +34,8 @@ def formattime(in_time):
     # YYYY-MM-DD hh:mm:ss
     date = f'{in_time[0]}-{in_time[1]:0>2}-{in_time[2]:0>2}'
     time = f'{in_time[3]:0>2}:{in_time[4]:0>2}:{in_time[5]:0>2}'
+    formatted_time = date + ' ' + time
     
-    formatted_time = date + time
     return formatted_time, date, time
 
 
@@ -59,13 +59,13 @@ def get_remote_time(esp_con):
     peer = bytearray()
     peer = conf.peers["TIME"][0]
     # peer= b'\xc4[\xbe\xe4\xfe=' # TODO debug why not tx work
-    espnowex.esp_tx(peer, esp_con, "get_time")
+    espnowex.esp_tx(peer, esp_con, "GET_TIME")
     host, msg = espnowex.esp_rx(esp_con)
 
     # if a message was not received, loop until a time is received
     while not msg:
         retries += 1
-        espnowex.esp_tx(peer, esp_con, "get_time")
+        espnowex.esp_tx(peer, esp_con, "GET_TIME")
         host, msg = espnowex.esp_rx(esp_con)
         print(f"Get Time: unable to get time from {host} retry # {retries}")
         time.sleep(3)
