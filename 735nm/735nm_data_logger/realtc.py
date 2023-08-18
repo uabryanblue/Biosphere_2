@@ -23,15 +23,16 @@ from ds3231_gen import *
 import gc
 
 
-def formattime(Time):
+def formattime(in_time):
     """produce a date/time format from tuple
     only minute resolution supported"""
 
-    # YY-MM-DD hh:mm:ss
-    return "{}-{:0>2}-{:0>2} {:0>2}:{:0>2}:{:0>2}".format(
-        Time[0], Time[1], Time[2], Time[3], Time[4], Time[5]
-    )
-
+    # YYYY-MM-DD hh:mm:ss
+    date = f'{in_time[0]}-{in_time[1]:0>2}-{in_time[2]:0>2}'
+    time = f'{in_time[3]:0>2}:{in_time[4]:0>2}:{in_time[5]:0>2}'
+    formatted_time = date + ' ' + time
+    
+    return formatted_time, date, time
 
 def rtcinit():
     """get the time from the RTC DS3231 board and set the local RTC"""
