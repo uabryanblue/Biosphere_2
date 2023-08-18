@@ -11,27 +11,73 @@ import gc
 
 # =================== try this?
 
-# from datetime import datetime
-# from time import sleep
+## from datetime import datetime
+## from time import sleep
+# import machine
+# import time
 
-# def run(condition):
-#     while datetime.now().minute not in {0, 15, 30, 45}:  # Wait 1 second until we are synced up with the 'every 15 minutes' clock
-#         sleep(1)
+rtc = machine.RTC()
 
-#     def task():
-#         # Your task goes here
-#         # Functionised because we need to call it twice
-#         temperature_store()
-    
-#     task()
+def task():
+    # Your task goes here
+    # Functionised because we need to call it twice
+    print(f"RUN IN TASK: {rtc.datetime()}")
+    time.sleep(3) # arbitrary time to complete testing
+   # temperature_store()
 
-#     while condition == True:
-#         sleep(60*15)  # Wait for 15 minutes
-#         task()
+def log_data(esp_con, last_min, interval):
+    print(f"LOG THE DATA: {rtc.datetime()} ----------")
+    out = ",".join([str(rtc.datetime()), "LOGGING TEST", str(last_min), str(interval)])
+    [espnowex.esp_tx(logger, esp_con, out) for logger in conf.peers['DATA_LOGGER']]
+    gc.collect()
+
+def run(esp_con):
+    interval = 2
+    t = list()
+    [t.append(value) for value in range(0,60,2)]
+    print(f"interval:{interval}, t:{t}")
+    # last_min = 0
+
+    print(rtc.datetime())
+    # initialize to next valid minute boundary
+    while rtc.datetime()[5] not in t: # or rtc.datetime()[5] <= last_min + interval:
+        time.sleep(1)
+    last_min = rtc.datetime()[5]
+    print(f"the last minute: {rtc.datetime()[5]}, {last_min}, min compared with {(last_min + interval)}")
+
+
+    while True:
+        # run one task before checking the interval in the loop
+        print("run initial task")    
+        task()
+        print("intial task done\n")
+
+        # we started on the correct boundary, not run on every interval
+        # is as accurate as the clock, or how long the task takes to complete
+        # have to shift to 0 to 59, 60 not valid
+        while rtc.datetime()[5] < (last_min + interval) % 60:
+            print(f"{rtc.datetime()[5]} < {(last_min + interval) % 60}")
+            task() # run the collect data/average
+            # print("task done, loop")
+
+        # we took as long or longer than interval, increment interval
+        # to get back to next boundary
+        last_min = last_min + interval
+        # out of look on boundary condition
+        # send data to data logger
+        log_data(esp_con, last_min, interval)
+        print(f"Data Logged {rtc.datetime()} ----------")
+
+        print("=============== END ===================\n\n")
+
+    # while condition == True:
+    #     time.sleep(60*15)  # Wait for 15 minutes
+    #     task()
 # ================================
 
 def trc_main(esp_con, sta, RAW_MAC):
     print("START TEMPERATURE RELAY CONTROL SENSOR")
+    run(esp_con)
 
     # relay control, start in the off state
     D8 = machine.Pin(15, machine.Pin.OUT)
