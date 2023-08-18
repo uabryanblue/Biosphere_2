@@ -43,8 +43,8 @@ def main():
     MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC]).upper() # human readable
     MY_ID = "".join(["{:02x}".format(b) for b in RAW_MAC]).upper() # no delimiters for filenames
     print(f"My MAC addres: {MY_MAC}\n ID: {MY_ID}\n raw: {RAW_MAC}")
-
-    logger.write_log(f"{MY_ID}_{conf.SYSTEM_LOG}", f"{MY_MAC} data logger started")
+    syslog = f"{MY_ID}_{conf.SYSTEM_LOG}d"
+    logger.write_log(syslog, f"{MY_MAC} data logger started")
     gc.collect()
 
     while True:
@@ -60,7 +60,7 @@ def main():
                 print(f"VERIFIED ------- {host} is in my REMOTE list {conf.peers["REMOTE"]}")
         else:
             msg = b"NOT MY MAC"
-            print(f"INVALID host ------- {host} not in my REMOTE list {conf.peers["REMOTE"]}")
+            # print(f"INVALID host ------- {host} not in my REMOTE list {conf.peers["REMOTE"]}")
 
         # assumption data is utf-8, if not, it may fail
         if msg is not None:
@@ -70,7 +70,8 @@ def main():
 
         D0.off()  # turn on indicate a message was received
         if msg == b"NOT MY MAC":
-            print(f"MAC {host} not for me, ignoring.")
+            if host is not None:
+                print(f"Ignoring MAC {host} traffic. REMOTE list {conf.peers["REMOTE"]}.")
         elif msg == b"GET_TIME":
             sys_msg = f"{str_host} requested time"
             log_name = f"{MY_ID}_{conf.SYSTEM_LOG}"
@@ -81,9 +82,9 @@ def main():
             espnowex.esp_tx(host, esp_con, stime)
             gc.collect()
 
-            sys_msg = f"{str_host} time sent {stime}"
+            sys_msg = f"{log_name} time sent {stime}"
             print(sys_msg)
-            logger.write_log(conf.SYSTEM_LOG, sys_msg)
+            logger.write_log(log_name, sys_msg)
             gc.collect()
         elif "CALIBRATE:" in str_msg:
             log_name = f"{MY_ID}_CALIBRATE_{log_host}.log"
@@ -124,7 +125,10 @@ if __name__ == "__main__":
         D0.on() # turn led off
         logger.closeSD(conf.LOG_MOUNT)
     finally:
-        print(f"Fatal error, restarting.  {machine.reset_cause()}")
+        print(f"Fatal error, restarting.  {machine.reset_cause()} !!!!!!!!!!!")
+        time.sleep(1)
+        D0.off() # turn led on
+        time.sleep(1)
         D0.on() # turn led off
         logger.closeSD(conf.LOG_MOUNT)
         machine.reset()
