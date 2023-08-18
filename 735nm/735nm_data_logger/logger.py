@@ -9,10 +9,21 @@ import gc
 
 
 def initSD(mnt):
-    gc.collect()
-    # print(f"mounting {mnt}")
-    sd = sdcard.SDCard(machine.SPI(1), machine.Pin(15))
-    os.mount(sd, mnt)
+    try:
+        # print(f"unmounting {mnt}")
+        sd = sdcard.SDCard(machine.SPI(1), machine.Pin(15))
+        os.mount(sd, mnt)
+        gc.collect()
+    except OSError as e:
+        if e.args[0] == uerrno.ETIMEDOUT:  # standard timeout is okay, ignore it
+            print("ETIMEDOUT found")  # timeout is okay, ignore it
+        else:  # general case, continue processing, prevent hanging
+            print(f"OSError: initSD {e} !!!!!!!!!!")
+
+    # gc.collect()
+    # # print(f"mounting {mnt}")
+    # sd = sdcard.SDCard(machine.SPI(1), machine.Pin(15))
+    # os.mount(sd, mnt)
 
 
 def closeSD(mnt):
@@ -24,7 +35,7 @@ def closeSD(mnt):
         if e.args[0] == uerrno.ETIMEDOUT:  # standard timeout is okay, ignore it
             print("ETIMEDOUT found")  # timeout is okay, ignore it
         else:  # general case, continue processing, prevent hanging
-            print(f"OSError: Connection closed {e}")
+            print(f"OSError: closeSD {e} !!!!!!!!!!")
 
 
 
