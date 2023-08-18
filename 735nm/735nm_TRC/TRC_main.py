@@ -6,6 +6,7 @@ import conf
 import realtc
 import thermocouple
 import espnowex
+import gc
 
 
 # =================== try this?
@@ -45,13 +46,15 @@ def trc_main(esp_con, sta, RAW_MAC):
         temperature_data, internal_data = thermocouple.allReadings(readings)
         org_data, org_inter = thermocouple.allReadings(myReadings)
         date_time, _, _ = realtc.formattime(time.localtime())
+        gc.collect()
         MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC])
 
         out = ','.join([str(sequence), date_time, MY_MAC, temperature_data, internal_data])
         # print(f"Data Packet: {out}")
         # transmit to all conf DATA_LOGGER values
-        [espnowex.esp_tx(val, esp_con, out) for val in conf.peers['DATA_LOGGER']]
+        [espnowex.esp_tx(logger, esp_con, out) for logger in conf.peers['DATA_LOGGER']]
         sequence += 1
+        gc.collect()
         # difference between treatment and control leaf handling
         # also check for heater going out of randge
         # and if temperature above maximum value for heating due to other reasons.

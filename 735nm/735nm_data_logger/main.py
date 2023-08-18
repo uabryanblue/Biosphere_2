@@ -40,7 +40,7 @@ def main():
     MY_ID = "".join(["{:02x}".format(b) for b in RAW_MAC]).upper() # no delimiters for filenames
     print(f"My MAC addres: {MY_MAC}\n ID: {MY_ID}\n raw: {RAW_MAC}")
 
-    logger.write_log(conf.SYSTEM_LOG, f"{MY_MAC} data logger started")
+    logger.write_log(f"{MY_ID}_{conf.SYSTEM_LOG}", f"{MY_MAC} data logger started")
     gc.collect()
 
     while True:
@@ -69,7 +69,8 @@ def main():
             print(f"MAC {host} not for me, ignoring.")
         elif msg == b"GET_TIME":
             sys_msg = f"{str_host} requested time"
-            logger.write_log(conf.SYSTEM_LOG, sys_msg)
+            log_name = f"{MY_ID}_{conf.SYSTEM_LOG}"
+            logger.write_log(log_name, sys_msg)
                         
             # receiver blocked until time is received
             stime = str(rtc.datetime())
@@ -79,27 +80,34 @@ def main():
             sys_msg = f"{str_host} time sent {stime}"
             print(sys_msg)
             logger.write_log(conf.SYSTEM_LOG, sys_msg)
-
+            gc.collect()
         elif "CALIBRATE:" in str_msg:
+            log_name = f"{MY_ID}_CALIBRATE_{log_host}.log"
             print(f"CALIBRATE: storing to {log_name} - {str_msg[10:]}")
             # remove the word CALIBRATE: and store the rest
-            log_name = f"calibrate_{log_host}.log"
+            logger.write_log(log_name, str_msg[10:])
+            D0.on()  # turn led off, finished rquest
+            gc.collect()
+        elif "CLIMATE:" in str_msg:
+            log_name = f"{MY_ID}_CLIMATE_{log_host}.log"
+            print(f"CLIMATE: storing to {log_name} - {str_msg[10:]}")
+            # remove the word CALIBRATE: and store the rest
             logger.write_log(log_name, str_msg[10:])
             D0.on()  # turn led off, finished rquest
             gc.collect()
         else:
-            try:
-                # it is assumed the date/time and record number are part of str_msg
-                log_name = f"{log_host}.log"
-                # each device has it's own log
-                print(f"MAC {host} is for me, storing to {log_name}")
-                logger.write_log(log_name, str_msg)
-                D0.on()  # turn off led
-            except OSError as e:
-                if e.args[0] == uerrno.ETIMEDOUT:  # standard timeout is okay, ignore it
-                    print(f"ETIMEDOUT found")  # timeout is okay, ignore it
-                else:  # general case, continue processing, prevent hanging
-                    print(f"-------------- WRITE LOG ERROR: {e}")
+            # try:
+            # it is assumed the date/time and source MAC are part of str_msg
+            log_name = f"{MY_ID}_TRC_{log_host}.log"
+            print(f"TRC: storing to {log_name} - {str_msg}")
+            logger.write_log(log_name, str_msg)
+            D0.on()  # turn off led
+            gc.collect()
+            # except OSError as e:
+            #     if e.args[0] == uerrno.ETIMEDOUT:  # standard timeout is okay, ignore it
+            #         print(f"ETIMEDOUT found")  # timeout is okay, ignore it
+            #     else:  # general case, continue processing, prevent hanging
+            #         print(f"-------------- WRITE LOG ERROR: {e}")
         D0.on()  # turn led off, finished rquest
 
 

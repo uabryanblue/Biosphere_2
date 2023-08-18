@@ -10,6 +10,10 @@ import espnowex
 # import BME280_main
 import TRC_main
 
+# relay control, start in the off state
+D8 = machine.Pin(15, machine.Pin.OUT)
+D8.off()
+
 # TODO common code, should be abstracted out of main.py
 def init_device():
 
@@ -54,9 +58,9 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt as e:
         print(f"Got ctrl-c {e}")
-        # D8.off() # TODO D8 HAS TO BE SET TO OFF ON ERROR !!!!!!!!!!!!!!!!!!
+        D8.off() # TODO D8 HAS TO BE SET TO OFF ON ERROR !!!!!!!!!!!!!!!!!!
         # sys.exit()  # TODO this falls through and resets???? okay for now
     finally:
         print(f"Fatal error, restarting.  {machine.reset_cause()}")
-        # D8.off() # TODO D8 HAS TO BE SET TO OFF ON ERROR !!!!!!!!!!!!!!!!!!
+        D8.off() # TODO D8 HAS TO BE SET TO OFF ON ERROR !!!!!!!!!!!!!!!!!!
         machine.reset()
