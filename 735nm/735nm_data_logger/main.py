@@ -10,7 +10,10 @@ import espnowex
 
 # status pin for logger, GPIO16/D0
 D0 = machine.Pin(16, machine.Pin.OUT)
-D0.on() # start with pin off
+D0.off() # visual we started
+# slow any restart loops
+time.sleep(5)
+
 
 def init_device():
     # turn off wifi and connect with ESPNow
@@ -33,6 +36,7 @@ def main():
 
     # turn off wifi and ESPNow on
     esp_con, station, RAW_MAC = init_device()
+    D0.on() # visual the intialization is done
     gc.collect()
 
     # RAW_MAC is b"" object
@@ -117,8 +121,10 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt as e:
         print(f"Got ctrl-c {e}")
+        D0.on() # turn led off
         logger.closeSD(conf.LOG_MOUNT)
     finally:
         print(f"Fatal error, restarting.  {machine.reset_cause()}")
+        D0.on() # turn led off
         logger.closeSD(conf.LOG_MOUNT)
         machine.reset()
