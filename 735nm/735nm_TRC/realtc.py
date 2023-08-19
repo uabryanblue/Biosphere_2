@@ -36,7 +36,7 @@ def formattime(in_time):
     time = f'{in_time[3]:0>2}:{in_time[4]:0>2}:{in_time[5]:0>2}'
     formatted_time = date + ' ' + time
     
-    return formatted_time, date, time
+    return formatted_time
 
 
 def rtcinit():
