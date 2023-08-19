@@ -43,7 +43,7 @@ def main():
     MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC]).upper() # human readable
     MY_ID = "".join(["{:02x}".format(b) for b in RAW_MAC]).upper() # no delimiters for filenames
     print(f"My MAC addres: {MY_MAC}\n ID: {MY_ID}\n raw: {RAW_MAC}")
-    syslog = f"{MY_ID}_{conf.SYSTEM_LOG}d"
+    syslog = f"{MY_ID}_{conf.SYSTEM_LOG}"
     logger.write_log(syslog, f"{MY_MAC} data logger started")
     gc.collect()
 
@@ -95,24 +95,24 @@ def main():
             gc.collect()
         elif "CLIMATE:" in str_msg:
             log_name = f"{MY_ID}_CLIMATE_{log_host}.log"
-            print(f"CLIMATE: storing to {log_name} - {str_msg[10:]}")
+            print(f"CLIMATE: storing to {log_name} - {str_msg[7:]}")
             # remove the word CALIBRATE: and store the rest
-            logger.write_log(log_name, str_msg[10:])
+            logger.write_log(log_name, str_msg[7:])
+            D0.on()  # turn led off, finished rquest
+            gc.collect()
+        elif "SYSLOG:" in str_msg:
+            log_name = f"{MY_ID}_SYSLOG_{log_host}.log"
+            print(f"SYSLOG: storing to {log_name} - {str_msg[7:]}")
+            logger.write_log(log_name, str_msg[7:])
             D0.on()  # turn led off, finished rquest
             gc.collect()
         else:
-            # try:
             # it is assumed the date/time and source MAC are part of str_msg
             log_name = f"{MY_ID}_TRC_{log_host}.log"
             print(f"TRC: storing to {log_name} - {str_msg}")
             logger.write_log(log_name, str_msg)
             D0.on()  # turn off led
             gc.collect()
-            # except OSError as e:
-            #     if e.args[0] == uerrno.ETIMEDOUT:  # standard timeout is okay, ignore it
-            #         print(f"ETIMEDOUT found")  # timeout is okay, ignore it
-            #     else:  # general case, continue processing, prevent hanging
-            #         print(f"-------------- WRITE LOG ERROR: {e}")
         D0.on()  # turn led off, finished rquest
 
 
