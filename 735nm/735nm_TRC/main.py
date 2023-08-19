@@ -42,9 +42,8 @@ def main():
         [print(val) for val in conf.peers['TIME']]
         print("================ MY CONFIGURATION ================\n")
 
-        # anything other than a data logger needs to get the remote time
-        if conf.MYROLE != "DATALOGGER":
-            realtc.get_remote_time(esp_con)
+
+        realtc.get_remote_time(esp_con)
         TRC_main.trc_main(esp_con, station, RAW_MAC)
     else:
         print(f'MY ROLE IS {CONF.MYROLE} BUT IT SHOULD BE "TRCCONTROL".')
