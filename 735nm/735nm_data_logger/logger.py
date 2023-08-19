@@ -71,7 +71,7 @@ def write_log(logname, data):
     initSD(conf.LOG_MOUNT)
     # print("card initialized")
     with open(outfile, "a") as f:
-        f.write(f"{realtc.formattime(time.localtime())}, {data}")
+        f.write(f"{realtc.formattime(time.localtime())},{data}")
         f.write("\n")
     closeSD(conf.LOG_MOUNT)
 
