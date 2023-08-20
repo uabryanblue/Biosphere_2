@@ -16,74 +16,63 @@ rtc = machine.RTC()
 random.seed(123)
 
 def task():
-    # Your task goes here
-    # Functionised because we need to call it twice
     print(f"task() run at: {realtc.formattime(time.localtime())}")
     time.sleep(random.getrandbits(4)) # arbitrary time to complete testing
     gc.collect()
-   # temperature_store()
 
 def log_data(esp_con, tsec, interval, boundary):
-    print(f"LOG THE DATA: {realtc.formattime(time.localtime())} ----------")
-    out = "SYSLOG:" + ",".join([realtc.formattime(time.localtime()), "LOGGING TEST", str(tsec), str(interval), str(boundary)])
+    print("\n\n=============== LOG_DATA ===================")
+    print(f"---------- {realtc.formattime(time.localtime())} ----------\n")
+    out = "SYSLOG:" + ",".join([realtc.formattime(time.localtime()), realtc.formattime(time.localtime())[:-3], "LOGGING TEST", str(tsec), str(interval), str(boundary)])
     [espnowex.esp_tx(logger, esp_con, out) for logger in conf.peers['DATA_LOGGER']]
+    print(f"\n---------- {realtc.formattime(time.localtime())} ----------")
+    print("=============== END =========================\n\n")
     gc.collect()
 
 def run(esp_con):
-    interval = 15 * 60 # 15 minutes at (00, 15, 30, 45), value has to be in seconds, 
-    # t = list()
-    # [t.append(value) for value in range(0,60,2)]
-    # print(f"interval:{interval}, t:{t}")
-    # # last_min = 0
-
-    # print(rtc.datetime())
-    # # initialize to next valid minute boundary
-    # print("\nSynchronize timing with the internal clock. This may take a while...")
-    # print(f"The current starting minute is: {rtc.datetime()[5]}.")
-    # print(f"Boundary minutes must start on a value of:{t}")
-    # while rtc.datetime()[5] not in t: 
-    #     time.sleep(1)
-    # last_min = rtc.datetime()[5]
-    # print(f"Synchronized on minute: {rtc.datetime()[5]} and set start of {last_min}")
-    # print(f"It will reset when the minute is:{(last_min + interval)}\n")
-
+    interval = 5 * 60 # 15 minutes at (00, 15, 30, 45), value has to be in seconds, 
 
     while True:
         # run one task before checking the interval in the loop
-        # print("run initial task")    
         task()
-        # print("intial task done\n")
 
-        # we started on the correct boundary, not run on every interval
-        # is as accurate as the clock, or how long the task takes to complete
-        # have to shift to 0 to 59, 60 not valid
-        # while rtc.datetime()[5] < (last_min + interval) % 60:
-        ### need to add in second condition on if the elapsed seconds > interval * 60
-        tsec = ((rtc.datetime()[5] * 60) + rtc.datetime()[6])
+        # this is as accurate as the clock, or how long the task takes to complete
+        # it will run on every 'interval' on the same time as clock
+        # eg; 15 min interval (in seconds) will run every 15 minutes at (00, 15, 30, 45) minutes every hour
+        # when the task copmletes, if the 'interval' is exceded, it runs that alternate log portion 
+        curr_time = rtc.datetime()
+        tsec = ((curr_time[5] * 60) + curr_time[6])
         boundary =  tsec % interval
         last_boundary = boundary
 
-        while  (boundary != 0) and (last_boundary <= boundary):
-            print(f"{realtc.formattime(time.localtime())}  tsec:{tsec}  boundary %:{boundary}  last boundary: {last_boundary}  interval:{interval}")
+        # if the boundary happens to hit 0, or we have not gone over the interval run the task
+        # while  (boundary != 0) and (last_boundary <= boundary):
+        print(f"     BEFORE WHILE: {realtc.formattime(time.localtime())}  tsec:{tsec}  boundary %:{boundary}  last boundary: {last_boundary}  interval:{interval}")
+        while (last_boundary == boundary): # case == 0 very rare, look at exceeding only
+            print(f"LOOP ----- {realtc.formattime(time.localtime())}  tsec:{tsec}  boundary %:{boundary}  last boundary: {last_boundary}  interval:{interval}")
             # print(f"boundary != 0 {boundary != 0} - or - last_boundary <= boundary {last_boundary <= boundary} - total eval: {boundary != 0 or last_boundary <= boundary}")
-            task() # run the collect data/average
-            # print("task done, loop")
+            task() # run the task until interval is hit
 
-            tsec = ((rtc.datetime()[5] * 60) + rtc.datetime()[6])
-            boundary =  tsec % interval
+            curr_time = rtc.datetime()
+            tsec = ((curr_time[5] * 60) + curr_time[6])
+            boundary = tsec % interval
             if boundary > last_boundary:
                 last_boundary = boundary
 
-        # we took as long or longer than interval, increment interval
-        # to get back to next boundary
-        ### last_min = last_min + interval
-        # out of look on boundary condition
-        # send data to data logger
-        log_data(esp_con, tsec, interval, boundary)
-        print(f"Data Logged {realtc.formattime(time.localtime())} ----------")
-        last_boundary = boundary
 
-        print("=============== END ===================\n\n")
+        # interval was exceeded, run alternate code
+        # send data to data logger
+        print(f"NEED TO LOG DATA: {realtc.formattime(time.localtime())}  tsec:{tsec}  boundary %:{boundary}  last boundary: {last_boundary}  interval:{interval}")
+        log_data(esp_con, tsec, interval, boundary)
+
+        # reset interval checking
+        realtc.get_remote_time(esp_con)
+        curr_time = rtc.datetime()
+        tsec = ((curr_time[5] * 60) + curr_time[6])
+        boundary = tsec % interval
+        last_boundary = boundary
+        print(f"     RESET THE TIME: {realtc.formattime(time.localtime())}  tsec:{tsec}  boundary %:{boundary}  last boundary: {last_boundary}  interval:{interval}")
+
 
 # ================================
 
