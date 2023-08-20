@@ -51,6 +51,7 @@ def main():
         print("Data Logger: listen for a message")
         D0.on()  # LED off as a visual aid
         host, msg = espnowex.esp_rx(esp_con, 10000)
+        realtc.rtcinit()
         gc.collect()
         if host is not None:
             str_host = ":".join(["{:02x}".format(b) for b in host]).upper()

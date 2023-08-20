@@ -1,0 +1,140 @@
+---
+title: "time_test1"
+author: "Bryan Blue bryanblue@arizona.edu"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(readr)
+library(ggplot2)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r data_read}
+# South_100_RH = read_csv(
+#   file = 
+#     "~/2022 UA MS - PhD/Thesis/Biosphere2_AIRES_Thesis/data_analysis/testing/initial_thp/Relative humidity (RH)_1561047938.csv",
+#   skip = 4,
+#   col_select = c(1,2), # extra trailing comma
+#   na = c('-9999'),
+#   col_names = c(
+#     "TIMESTAMP",
+#     "RH",
+#     "empty"
+#   ),
+#   col_types = 'cn-'
+#   ) 
+
+
+# 5 minute intervals
+test <- read_csv(
+  file = "~/Biosphere_2/raw_data/Time_Testing/5_min_test2/8CAAB54D7F18_SYSLOG_C45BBEE4FD71.log",
+  col_names = c("log_date",
+                "sensor_date",
+                "short_date",
+                "message",
+                "minute",
+                "interval",
+                "mod_val"
+                ),
+  col_types = cols(`interval` = col_integer(),
+                   `minute` = col_integer(),
+                   `log_date` = col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+                   `sensor_date` = col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+                   `short_date` = col_datetime(format = "%Y-%m-%d %H:%M"),
+                   `message` = col_character(),
+                   `mod_val` = col_integer()
+  ),
+            trim_ws = FALSE)
+
+# looking at time difference between time sensor_date and received by logger_date
+# time is sent from logger to sensor upon setup, therefore their clocks should 
+# be almost identical
+test$diff <- test$log_date - test$sensor_date
+test$log_num <- as.numeric(test$log_date)
+test$sensor_num <- as.numeric(test$sensor_date)
+test$short_num <- as.numeric(test$short_date)
+test$num_diff <- test$log_num - test$sensor_num
+
+```
+
+## Including Plots
+You can also embed plots, for example:
+
+```{r data_graph, echo=TRUE}
+
+ggplot(data = test, aes(x = log_date)) +
+         geom_line(aes(y = diff, color = "Difference vs log_data")) +
+         ggtitle("8/20/2023 Test Time Drift on Remote ESP8266 vs one with RTC module") +
+         xlab("Time (5 minute intervals)") + 
+         ylab("Time Difference (s)")
+
+
+ggplot(data = test, aes(x = sensor_date)) +
+         geom_line(aes(y = diff, color = "Difference vs sensor_data")) +
+         ggtitle("8/20/2023 Test Time Drift on Remote ESP8266 vs one with RTC module") +
+         xlab("Time (5 minute intervals)") + 
+         ylab("Time Difference (s)")
+
+lm_eqn <- function(df){
+    x <- df$sensor_num
+    y <- df$log_num
+    m <- lm(x ~ y, df);
+    eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2, 
+         list(a = format(unname(coef(m)[1]), digits = 2),
+              b = format(unname(coef(m)[2]), digits = 2),
+             r2 = format(summary(m)$r.squared, digits = 3)))
+    as.character(as.expression(eq));
+}
+
+m <- lm(sensor_num ~ log_num, test)
+a <- format(unname(coef(m)[1]), digits = 2)
+b <- format(unname(coef(m)[2]), digits = 2)
+r2 <- format(summary(m)$r.squared, digits = 3)
+summary(t)
+
+max(test$diff)
+max(test$log_date) - min(test$log_date)
+
+ggplot(data = test, aes(x = sensor_num, y = log_num)) +
+         geom_point() +
+         geom_smooth(method=lm,col='blue') +
+         geom_text(x = 25, y = 300, label = lm_eqn(test), parse = TRUE)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+blah
+
+
+
+
+
+
