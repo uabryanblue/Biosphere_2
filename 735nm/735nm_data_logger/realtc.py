@@ -46,6 +46,7 @@ def rtcinit():
     print(f"DS3231 get_time(): {d.get_time()}")
     print(f"time localtime(): {formattime(time.localtime())}")
     print(f"RTC datetime(): {rtc.datetime()}")
+    gc.collect()
 
 
 ###########################
