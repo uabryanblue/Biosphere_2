@@ -13,7 +13,8 @@ STARTED: 2023
 # to set the time on the DS3231 use a tuple as shown here
 # i2c = machine.I2C(sda=machine.Pin(4), scl=machine.Pin(5))
 # d = DS3231(i2c)
-# d.set_time((YY, MM, DD, hh, mm, ss, 0, 0))
+# use ds3231 set time without parameters to set it to esp time
+# d.set_time() # put this time back onto the DS3231
 # example: to set time to 2023, May, 29, 7 am, 11 minutes, 1 second, NA, NA
 # d.set_time((2023, 05, 29, 7, 11, 1, 0, 0))
 
@@ -42,7 +43,7 @@ def rtcinit():
     i2c = I2C(sda=machine.Pin(4), scl=machine.Pin(5))
     d = DS3231(i2c)
     YY, MM, DD, hh, mm, ss, wday, _ = d.get_time()
-    rtc.datetime((YY, MM, DD, wday, hh, mm, ss, 0))
+    rtc.datetime((YY, MM, DD, wday, hh, mm, ss, 0)) # set esp time
     print(f"DS3231 get_time(): {d.get_time()}")
     print(f"time localtime(): {formattime(time.localtime())}")
     print(f"RTC datetime(): {rtc.datetime()}")
