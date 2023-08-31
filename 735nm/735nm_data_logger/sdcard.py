@@ -132,9 +132,7 @@ class SDCard:
             self.cmd(58, 0, 0, 4)
             self.cmd(55, 0, 0)
             if self.cmd(41, 0x40000000, 0) == 0:
-                self.cmd(
-                    58, 0, 0, -4
-                )  # 4-byte response, negative means keep the first byte
+                self.cmd(58, 0, 0, -4)  # 4-byte response, negative means keep the first byte
                 ocr = self.tokenbuf[0]  # get first byte of response, which is OCR
                 if not ocr & 0x40:
                     # SDSC card, uses byte addressing in read/write/erase commands
