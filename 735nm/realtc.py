@@ -40,15 +40,28 @@ def formattime(in_time):
     return formatted_time, date, time
 
 
+def rtcsetup():
+    """get the time from the RTC DS3231 board and set the local RTC"""
+
+    rtc = RTC()
+    i2c = I2C(sda=Pin(4), scl=Pin(5))
+    ds = ds3231_gen.DS3231(i2c)
+    as.tuple(t) = input(" enter date time as tuple (YY, MM, DD, wday, hh, mm, ss, 0) ")
+    # YY, MM, DD, hh, mm, ss, wday, _ = ds.get_time()
+    rtc.datetime(t)
+    ds.set_time()
+    print(f"DS3231 time: {ds.get_time()}")
+    print(f"local time: {formattime(time.localtime())}")
+
 def rtcinit():
     """get the time from the RTC DS3231 board and set the local RTC"""
 
     rtc = RTC()
     i2c = I2C(sda=Pin(4), scl=Pin(5))
-    ds3231 = ds3231_gen.DS3231(i2c)
-    YY, MM, DD, hh, mm, ss, wday, _ = ds3231.get_time()
+    ds = ds3231_gen.DS3231(i2c)
+    YY, MM, DD, hh, mm, ss, wday, _ = ds.get_time()
     rtc.datetime((YY, MM, DD, wday, hh, mm, ss, 0))
-    print(f"DS3231 time: {ds3231.get_time()}")
+    print(f"DS3231 time: {ds.get_time()}")
     print(f"local time: {formattime(time.localtime())}")
 
 
