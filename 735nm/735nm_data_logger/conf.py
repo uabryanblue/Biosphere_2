@@ -55,10 +55,10 @@ peers = {}
 # remote sensor configuration, connect to all data loggers, pick one for time
 # peers["DATA_LOGGER"] = [b'\xc4[\xbe\xe4\xfe\x08', b'\x8c\xaa\xb5M\x7f\x18']  # kist of data loggers
 peers["DATA_LOGGER"] = [ b'\xc4[\xbe\xe4\xfdq']
-peers["TIME"] = [b'\xc4[\xbe\xe4\xfdq'] # try to get time from here
-# peers["CALIBRATE"] = [b'\x8c\xaa\xb5M\x7f\x18'] # store calibration data here
+# peers["TIME"] = [b'\xc4[\xbe\xe4\xfdq'] # try to get time from here
+peers["CALIBRATE"] = [b'\x8c\xaa\xb5M\x7f\x18'] # store calibration data here
 # data logger information
-peers["REMOTE"] = [b'\xc4[\xbe\xe4\xfdq'] # TRC testing 20230731
+peers["REMOTE"] = [b'\xc4[\xbe\xe4\xfdq', b'\xc4[\xbe\xe4\xfe=', b'\x8c\xaa\xb5M\x7f\x18'] # TRC testing 20230731
 # --------------------
 
 
