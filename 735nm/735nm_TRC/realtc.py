@@ -38,6 +38,11 @@ def formattime(in_time):
     
     return formatted_time
 
+def rtc_set():
+    rtc = machine.RTC()
+    i2c = machine.I2C(sda=machine.Pin(4), scl=machine.Pin(5))
+    ds3231 = ds3231_gen.DS3231(i2c)
+    rtc.datetime((YY, MM, DD, wday, hh, mm, ss, 0))
 
 def rtcinit():
     """get the time from the RTC DS3231 board and set the local RTC"""

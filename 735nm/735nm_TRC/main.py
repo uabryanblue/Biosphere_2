@@ -10,10 +10,7 @@ import espnowex
 # import BME280_main
 import TRC_main
 
-# relay control, start in the off state
 D8 = machine.Pin(15, machine.Pin.OUT)
-D8.off()
-
 # TODO common code, should be abstracted out of main.py
 def init_device():
 
@@ -32,6 +29,8 @@ def init_device():
 def main():
     print("--------START DEVICE--------")
     esp_con, station, RAW_MAC = init_device()
+    # relay control, start in the off state
+    D8.off()
 
     # verify that the conf.py file is associated with this code base
     if conf.MYROLE == "TRCCONTROL":
@@ -54,6 +53,7 @@ def main():
 if __name__ == "__main__":
     try:
         print(f"reset code: {machine.reset_cause()}")
+        D8.off() # TODO D8 HAS TO BE SET TO OFF ON ERROR !!!!!!!!!!!!!!!!!!
         main()
     except KeyboardInterrupt as e:
         print(f"Got ctrl-c {e}")
