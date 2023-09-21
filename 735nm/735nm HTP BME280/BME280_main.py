@@ -7,18 +7,18 @@ import espnowex
 import conf
 
 
-def set_clock(ESP_CON):
+def set_clock(esp_con):
 
     # blocking: set the time from the logger
     retries = 0  # visual display on number of retries
     host = ""
-    espnowex.esp_tx(conf.peers["DATA_LOGGER"], ESP_CON, "get_time")
-    host, msg = espnowex.esp_rx(ESP_CON)
+    espnowex.esp_tx(conf.peers["DATA_LOGGER"], esp_con, "get_time")
+    host, msg = espnowex.esp_rx(esp_con)
     while not msg:
         retries += 1
-        espnowex.esp_tx(conf.peers["DATA_LOGGER"], ESP_CON, "get_time")
+        espnowex.esp_tx(conf.peers["DATA_LOGGER"], esp_con, "get_time")
         # print("Time Sensor: wait for time response")
-        host, msg = espnowex.esp_rx(ESP_CON)
+        host, msg = espnowex.esp_rx(esp_con)
         print(f"found host: {host}")
         print(f"Get Time: unable to get time ({retries})")
         time.sleep(3)
@@ -38,20 +38,25 @@ def set_clock(ESP_CON):
     rtc.datetime(et)
     print(f"The new time is: {realtc.formattime(time.localtime())}")
 
+def intAccumulators(temperature, humidity, pressure):
+    temperature = 0.0
+    humidity = 0.0
+    pressure = 0.0
+    return temperature, humidity, pressure
 
-def main():
+def main(esp_con, RAW_MAC):
     print("START SENSOR")
 
-    # turn off WiFi and initalize the ESPNow protocol
-    STATION, AP = espnowex.wifi_reset()
-    ESP_CON = espnowex.init_esp_connection(STATION)
+    # # turn off WiFi and initalize the ESPNow protocol
+    # STATION, AP = espnowex.wifi_reset()
+    # esp_con = espnowex.init_esp_connection(STATION)
 
-    RAW_MAC = espnowex.get_mac(STATION)
-    # convert hex into readable mac address
+    # RAW_MAC = espnowex.get_mac(STATION)
+    # # convert hex into readable mac address
     MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC])
     print(f"My MAC addres:: {MY_MAC} RAW MAC:: {RAW_MAC}")
 
-    set_clock(ESP_CON)
+    set_clock(esp_con)
     time.sleep(5)  # give delay for reading output, not required
 
     # ESP8266 I2C setup pins
@@ -61,13 +66,12 @@ def main():
 
     INTERVAL = conf.AVG_INTERVAL * 60  # number seconds to average readings
     # accumulate reading values that will be averaged
-    temperature = 0.0
-    humidity = 0.0
-    pressure = 0.0
+    temperature, humidity, pressure = intAccumulators(temperature, humidity, pressure)
     counter = 0  # numbe of readings taken used for averaging
-    temptimer = 0  # TODO this needs converted to a timer
+    # temptimer = 0  # TODO this needs converted to a timer
     recordNumber = 1  # record number from the last time the system restarted
     
+    # ######################################## 
     while True:
         temperature += float(BM280_SENSOR.temperature)
         humidity += float(BM280_SENSOR.humidity)
@@ -95,12 +99,10 @@ def main():
                 ]
             )
             print(f"{conf.AVG_INTERVAL} MINUTE AVERAGE: {out}")
-            espnowex.esp_tx(conf.peers["DATA_LOGGER"], ESP_CON, out)
+            espnowex.esp_tx(conf.peers["DATA_LOGGER"], esp_con, out)
             recordNumber += 1
-            temperature = 0.0
-            humidity = 0.0
-            pressure = 0.0
-
+            temperature, humidity, pressure = intAccumulators(temperature, humidity, pressure)
+# ######################################## 
 
 if __name__ == "__main__":
     try:

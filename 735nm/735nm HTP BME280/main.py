@@ -3,9 +3,7 @@ import machine
 import conf
 import realtc
 import espnowex
-
-# import BME280_main
-
+import BME280_main
 
 def init_device():
 
@@ -33,6 +31,8 @@ def main():
     else:
         print("THIS CONFIGURATION FILE IS NOT FOR A TMP BME280!")
 
+    # start the main THP data collection
+    BME280_main.BME280_main(esp_con, RAW_MAC)
 
 if __name__ == "__main__":
     try:
