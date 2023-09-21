@@ -24,15 +24,11 @@ def wifi_reset():   # Reset wifi to AP_IF off, STA_IF on and disconnected
 
 def init_esp_connection(sta):
     """creates and espnow object, wifi_reset() needs called before this"""
-    # create espnow connection
     esp = espnow.ESPNow()
     esp.active(True)
 
     # MAC addresses of peers
-    # example: b'\x5c\xcf\x7f\xf0\x06\xda'
     # values are stored in conf.py
-    # register all define peers
-    # [esp.add_peer(conf.peers[key]) for key in conf.peers.keys()]
     [esp.add_peer(val) for val in conf.peers['DATA_LOGGER']]
 
     return esp
@@ -44,30 +40,18 @@ def get_mac(sta):
 
     binaryMac = sta.config('mac')
     # change binary to human readable:
-    humanMac = ':'.join(['{:02x}'.format(b) for b in binaryMac])
+    # humanMac = ':'.join(['{:02x}'.format(b) for b in binaryMac])
 
-    return binaryMac, humanMac
+    return binaryMac
 
 
 def esp_tx(peer, e, msg):
-    # TODO THIS ONLY WORKS FROM REMOTE SENSORS
-
-    # TODO add support for TX to multiple peers
-    # # MAC address of peer1's wifi interface exmaple:
-    # # peer1 = b'\xe8\x68\xe7\x4e\xbb\x19'
-    # the receiver MAC address
-    # peer = b'\x8c\xaa\xb5M\x7f\x18'  # my #2 esp8266
-    # peer = b'\xec\xfa\xbc\xcb\xab\xce' # 1st datalogger
-
-    # peer = b'\xc4[\xbe\xe4\xfdq'
 
     try:
         # transmit data and check receive status
         res = e.send(conf.peers['TIME'][0], msg, True)  # only one TIME entry should exist
         if not res:
             print(f"DATA NOT RECORDED response:{res} from {peer}")
-        # else:
-            # print(f"DATA TX SUCCESSFUL response:{res}")
 
     except OSError as err:
         if err.args[0] == errno.ETIMEDOUT:  # standard timeout is okay, ignore it

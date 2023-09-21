@@ -58,7 +58,6 @@ def get_remote_time(esp_con):
     
     peer = bytearray()
     peer = conf.peers["TIME"][0]
-    # peer= b'\xc4[\xbe\xe4\xfe=' # TODO debug why not tx work
     espnowex.esp_tx(peer, esp_con, "GET_TIME")
     host, msg = espnowex.esp_rx(esp_con)
 

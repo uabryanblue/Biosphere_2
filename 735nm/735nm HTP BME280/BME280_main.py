@@ -29,7 +29,7 @@ def set_clock(esp_con):
         host, msg = espnowex.esp_rx(esp_con)
         print(f"found host: {host}")
         print(f"Get Time: unable to get time ({retries})")
-        time.sleep(3)
+        # time.sleep(3)
     gc.collect()
 
     str_host = ":".join(["{:02x}".format(b) for b in host])
@@ -60,16 +60,7 @@ def task(BM280_SENSOR, temperature, humidity, pressure, counter):
     return temperature, humidity, pressure, counter
 
 def log_data(esp_con, tsec, interval, boundary, recordNumber, MY_MAC, counter, temperature, humidity, pressure):
-    # print("\n\n=============== LOG_DATA ===================")
-    # print(f"---------- {realtc.formattime(time.localtime())} ----------\n")
-    # out = "SYSLOG:" + ",".join([realtc.formattime(time.localtime()), realtc.formattime(time.localtime())[:-3], "LOGGING TEST", str(tsec), str(interval), str(boundary)])
-    # [espnowex.esp_tx(logger, esp_con, out) for logger in conf.peers['DATA_LOGGER']]
 
-    # print(f"\n---------- {realtc.formattime(time.localtime())} ----------")
-
-    # temperature = temperature / (interval / 30)
-    # humidity = humidity / (interval / 30)
-    # pressure = pressure / (interval / 30)
     temperature = temperature / counter
     humidity = humidity / counter
     pressure = pressure / counter
