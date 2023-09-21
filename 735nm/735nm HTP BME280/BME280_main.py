@@ -16,7 +16,6 @@ def intAccumulators(temperature, humidity, pressure, counter):
 
 
 def set_clock(esp_con):
-
     # blocking: set the time from the logger
     retries = 0  # visual display on number of retries
     host = ""
@@ -25,6 +24,7 @@ def set_clock(esp_con):
     while not msg:
         retries += 1
         espnowex.esp_tx(conf.peers["DATA_LOGGER"], esp_con, "get_time")
+        gc.collect()
         # print("Time Sensor: wait for time response")
         host, msg = espnowex.esp_rx(esp_con)
         print(f"found host: {host}")
@@ -45,6 +45,7 @@ def set_clock(esp_con):
 
     rtc = machine.RTC()
     rtc.datetime(et)
+    gc.collect()
     print(f"The new time is: {realtc.formattime(time.localtime())}")
 
 
@@ -161,72 +162,3 @@ def thp_main(esp_con, RAW_MAC):
 
         print(f"     RESET THE TIME: {realtc.formattime(time.localtime())}  tsec:{tsec}  boundary %:{boundary}  last boundary: {last_boundary}  interval:{interval}")
         gc.collect()
-
-
-
-
-# def main(esp_con, RAW_MAC):
-
-
-#     # # convert hex into readable mac address
-#     MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC])
-#     print(f"My MAC addres:: {MY_MAC} RAW MAC:: {RAW_MAC}")
-
-#     set_clock(esp_con)
-#     time.sleep(5)  # give delay for reading output, not required
-
-#     # ESP8266 I2C setup pins
-#     i2c = machine.I2C(scl=machine.Pin(5), sda=machine.Pin(4), freq=10000)
-#     print("i2c INITIALZED")
-#     BM280_SENSOR = BME280.BME280(i2c=i2c)
-
-#     # interval = conf.AVG_interval * 60  # number seconds to average readings
-#     # accumulate reading values that will be averaged
-#     # temperature, humidity, pressure = intAccumulators(temperature, humidity, pressure)
-#     # counter = 0  # numbe of readings taken used for averaging
-#     # temptimer = 0  # TODO this needs converted to a timer
-#     recordNumber = 1  # record number from the last time the system restarted
-    
-#     # ######################################## 
-#     while True:
-#         temperature += float(BM280_SENSOR.temperature)
-#         humidity += float(BM280_SENSOR.humidity)
-#         pressure += float(BM280_SENSOR.pressure)
-#         counter += 1
-
-
-#         time.sleep(30) # TODO add in power saving code
-#         temptimer += 30 # TODO this needs be a real timer
-#         if temptimer == interval:
-#             # TODO this needs changed into proper math for read interval, avg interval
-#             temptimer = 0
-#             temperature = temperature / (interval / 30)
-#             humidity = humidity / (interval / 30)
-#             pressure = pressure / (interval / 30)
-#             date_time = realtc.formattime(time.localtime())
-#             out = ",".join(
-#                 [
-#                     str(recordNumber),
-#                     date_time,
-#                     MY_MAC,
-#                     str(temperature),
-#                     str(humidity),
-#                     str(pressure),
-#                 ]
-#             )
-#             print(f"{conf.AVG_interval} MINUTE AVERAGE: {out}")
-#             espnowex.esp_tx(conf.peers["DATA_LOGGER"], esp_con, out)
-#             recordNumber += 1
-#             temperature, humidity, pressure = intAccumulators(temperature, humidity, pressure)
-# # ######################################## 
-
-# if __name__ == "__main__":
-#     try:
-#         print(f"reset code: {machine.reset_cause()}")
-#         main(esp_con, RAW_MAC)
-#     except KeyboardInterrupt as e:
-#         print(f"received ctrl-c {e}")
-#         sys.exit()  # this allows a double ctrl-c to stop all execution without restart
-#     finally:
-#         print(f"Fatal error, restarting.  {machine.reset_cause()}")
-#         machine.reset()
