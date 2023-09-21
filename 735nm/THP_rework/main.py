@@ -12,12 +12,12 @@ def set_clock(ESP_CON):
     # blocking: set the time from the logger
     retries = 0  # visual display on number of retries
     host = ""
-    espnowex.esp_tx(conf.peers["TIME"][0], ESP_CON, "get_time")
+    espnowex.esp_tx(conf.peers["TIME"][0], ESP_CON, "GET_TIME")
     gc.collect()
     host, msg = espnowex.esp_rx(ESP_CON)
     while not msg:
         retries += 1
-        espnowex.esp_tx(conf.peers["TIME"][0], ESP_CON, "get_time")
+        espnowex.esp_tx(conf.peers["TIME"][0], ESP_CON, "GET_TIME")
         gc.collect()
         # print("Time Sensor: wait for time response")
         host, msg = espnowex.esp_rx(ESP_CON)

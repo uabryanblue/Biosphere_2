@@ -105,7 +105,7 @@ def esp_rx(esp_con, timeout=1000):
     host, msg = esp_con.recv(timeout) # ms timeout on receive
     # TODO change this to trap for errors, no need to check the msg
     if msg:
-        if msg == b'get_time':
+        if msg == b'GET_TIME':
             # send time to sender
             print("host: {host} requested time")
         else:
