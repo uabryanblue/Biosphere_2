@@ -97,7 +97,7 @@ def main():
         elif "CLIMATE:" in str_msg:
             log_name = f"{MY_ID}_CLIMATE_{log_host}.log"
             print(f"CLIMATE: storing to {log_name} - {str_msg[7:]}")
-            # remove the word CALIBRATE: and store the rest
+            # remove the word CLIMATE: and store the rest
             logger.write_log(log_name, str_msg[7:])
             D0.on()  # turn led off, finished rquest
             gc.collect()

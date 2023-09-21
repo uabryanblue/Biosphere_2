@@ -17,12 +17,33 @@ def task(temperature, humidity, pressure, counter):
     gc.collect()
     return temperature, humidity, pressure, counter
 
-def log_data(esp_con, tsec, interval, boundary, recordNumber, MY_MAC):
+def log_data(esp_con, tsec, interval, boundary, recordNumber, MY_MAC, counter):
     print("\n\n=============== LOG_DATA ===================")
     print(f"---------- {realtc.formattime(time.localtime())} ----------\n")
     out = "SYSLOG:" + ",".join([realtc.formattime(time.localtime()), realtc.formattime(time.localtime())[:-3], "LOGGING TEST", str(tsec), str(interval), str(boundary)])
     [espnowex.esp_tx(logger, esp_con, out) for logger in conf.peers['DATA_LOGGER']]
+
     print(f"\n---------- {realtc.formattime(time.localtime())} ----------")
+
+            # temperature = temperature / (interval / 30)
+            # humidity = humidity / (interval / 30)
+            # pressure = pressure / (interval / 30)
+            temperature = temperature / counter
+            humidity = humidity / counter
+            pressure = pressure / counter
+            date_time = realtc.formattime(time.localtime())
+            out = ",".join(
+                [   'CLIMATE:',
+                    str(recordNumber),
+                    date_time,
+                    MY_MAC,
+                    str(temperature),
+                    str(humidity),
+                    str(pressure),
+                ]
+            )
+            print(f"{conf.AVG_interval} MINUTE AVERAGE: {out}")
+
     print("=============== END =========================\n\n")
     recordNumber += 1
     gc.collect()
@@ -30,8 +51,8 @@ def log_data(esp_con, tsec, interval, boundary, recordNumber, MY_MAC):
 
 def run(esp_con):
     # 15 minutes at (00, 15, 30, 45), value has to be in seconds, 
-    # AVG_INTERVAL can be changed in the conf file to get other boundaries
-    interval = conf.AVG_INTERVAL * 60 
+    # AVG_interval can be changed in the conf file to get other boundaries
+    interval = conf.AVG_interval * 60 
     # counter = 0
     recordNumber = 1
 
@@ -121,14 +142,7 @@ def set_clock(esp_con):
     print(f"The new time is: {realtc.formattime(time.localtime())}")
 
 
-def main(esp_con, RAW_MAC):
-    print("START SENSOR")
-
-    # # turn off WiFi and initalize the ESPNow protocol
-    # STATION, AP = espnowex.wifi_reset()
-    # esp_con = espnowex.init_esp_connection(STATION)
-
-    # RAW_MAC = espnowex.get_mac(STATION)
+def BME280_main():
     # # convert hex into readable mac address
     MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC])
     print(f"My MAC addres:: {MY_MAC} RAW MAC:: {RAW_MAC}")
@@ -141,7 +155,7 @@ def main(esp_con, RAW_MAC):
     print("i2c INITIALZED")
     BM280_SENSOR = BME280.BME280(i2c=i2c)
 
-    # INTERVAL = conf.AVG_INTERVAL * 60  # number seconds to average readings
+    # interval = conf.AVG_interval * 60  # number seconds to average readings
     # accumulate reading values that will be averaged
     # temperature, humidity, pressure = intAccumulators(temperature, humidity, pressure)
     # counter = 0  # numbe of readings taken used for averaging
@@ -158,12 +172,12 @@ def main(esp_con, RAW_MAC):
 
         time.sleep(30) # TODO add in power saving code
         temptimer += 30 # TODO this needs be a real timer
-        if temptimer == INTERVAL:
+        if temptimer == interval:
             # TODO this needs changed into proper math for read interval, avg interval
             temptimer = 0
-            temperature = temperature / (INTERVAL / 30)
-            humidity = humidity / (INTERVAL / 30)
-            pressure = pressure / (INTERVAL / 30)
+            temperature = temperature / (interval / 30)
+            humidity = humidity / (interval / 30)
+            pressure = pressure / (interval / 30)
             date_time = realtc.formattime(time.localtime())
             out = ",".join(
                 [
@@ -175,7 +189,7 @@ def main(esp_con, RAW_MAC):
                     str(pressure),
                 ]
             )
-            print(f"{conf.AVG_INTERVAL} MINUTE AVERAGE: {out}")
+            print(f"{conf.AVG_interval} MINUTE AVERAGE: {out}")
             espnowex.esp_tx(conf.peers["DATA_LOGGER"], esp_con, out)
             recordNumber += 1
             temperature, humidity, pressure = intAccumulators(temperature, humidity, pressure)
