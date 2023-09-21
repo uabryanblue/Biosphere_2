@@ -33,7 +33,7 @@ def main():
 
     print("START DATA LOGGER")
     rtc = machine.RTC()
-
+    gc.collect()
     # turn off wifi and ESPNow on
     esp_con, station, RAW_MAC = init_device()
     D0.on() # visual the intialization is done
@@ -43,6 +43,7 @@ def main():
     MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC]).upper() # human readable
     MY_ID = "".join(["{:02x}".format(b) for b in RAW_MAC]).upper() # no delimiters for filenames
     print(f"My MAC addres: {MY_MAC}\n ID: {MY_ID}\n raw: {RAW_MAC}")
+    gc.collect()
     syslog = f"{MY_ID}_{conf.SYSTEM_LOG}"
     logger.write_log(syslog, f"{MY_MAC} data logger started")
     gc.collect()
@@ -58,7 +59,7 @@ def main():
             log_host = "".join(["{:02x}".format(b) for b in host]).upper() # for log names
             D0.off() # turn on indicate a message was received
             if host in conf.peers["REMOTE"]:
-                print(f"VERIFIED ------- {host} is in my REMOTE list {conf.peers["REMOTE"]}")
+                print(f"VERIFIED ------- {host} is in my remote list") #  {conf.peers["REMOTE"]}")
         else:
             msg = b"NOT MY MAC"
             # print(f"INVALID host ------- {host} not in my REMOTE list {conf.peers["REMOTE"]}")
@@ -97,7 +98,7 @@ def main():
         elif "CLIMATE:" in str_msg:
             log_name = f"{MY_ID}_CLIMATE_{log_host}.log"
             print(f"CLIMATE: storing to {log_name} - {str_msg[7:]}")
-            # remove the word CLIMATE: and store the rest
+            # remove the word CALIBRATE: and store the rest
             logger.write_log(log_name, str_msg[7:])
             D0.on()  # turn led off, finished rquest
             gc.collect()

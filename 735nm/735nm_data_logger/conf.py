@@ -58,7 +58,7 @@ peers["DATA_LOGGER"] = [ b'\xc4[\xbe\xe4\xfdq']
 # peers["TIME"] = [b'\xc4[\xbe\xe4\xfdq'] # try to get time from here
 peers["CALIBRATE"] = [b'\x8c\xaa\xb5M\x7f\x18'] # store calibration data here
 # data logger information
-peers["REMOTE"] = [b'\xc4[\xbe\xe4\xfdq', b'\xc4[\xbe\xe4\xfe=', b'\x8c\xaa\xb5M\x7f\x18'] # TRC testing 20230731
+peers["REMOTE"] = [b'\xc4[\xbe\xe4\xfdq', b'\xc4[\xbe\xe4\xfe=', b'\x8c\xaa\xb5M\x7f\x18', b'HU\x19\xdf(H'] # TRC testing 20230731
 # --------------------
 
 
