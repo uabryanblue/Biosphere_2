@@ -11,7 +11,7 @@ VERSION = "25.1.1"
 # uncomment one of the corresponding lines to change how
 # the code executes. The different configurations are shown here
 # MYROLE = "CALIBRATE" # command line callibration
-MYROLE = "DATALOGGER" # data logger box
+MYROLE = "THP" # data logger box
 # MYROLE = "TRCCONTROL" # multiple thermocouple sensor with relay box
 # MYROLE = "THP" # temperatue humidity pressure aspirated sensor
 
@@ -19,7 +19,7 @@ MYROLE = "DATALOGGER" # data logger box
 # DEVICE IDENTIFICATION
 # Communication identification is done using the MAC address of the ESP8266
 # MYID = "2" # this is a short id and should not be used unless you know what you are doing
-MYNAME = "ESP8266 MicroPython Temperature Sensor and Temperature Control" # long generic description
+MYNAME = "ESP8266 MicroPython Temperature Humidity Pressure Sensor" # long generic description
 # --------------------
 
 # --------------------
