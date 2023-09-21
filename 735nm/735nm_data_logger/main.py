@@ -60,8 +60,8 @@ def main():
             D0.off() # turn on indicate a message was received
             if host in conf.peers["REMOTE"]:
                 print(f"VERIFIED ------- {host} is in my remote list") #  {conf.peers["REMOTE"]}")
-        else:
-            msg = b"NOT MY MAC"
+            else:
+                msg = b"NOT MY MAC"
             # print(f"INVALID host ------- {host} not in my REMOTE list {conf.peers["REMOTE"]}")
 
         # assumption data is utf-8, if not, it may fail
@@ -110,8 +110,8 @@ def main():
             gc.collect()
         else:
             # it is assumed the date/time and source MAC are part of str_msg
-            log_name = f"{MY_ID}_TRC_{log_host}.log"
-            print(f"TRC: storing to {log_name} - {str_msg}")
+            log_name = f"{MY_ID}_{log_host}.log"
+            print(f"storing to {log_name} - {str_msg}")
             logger.write_log(log_name, str_msg)
             D0.on()  # turn off led
             gc.collect()
