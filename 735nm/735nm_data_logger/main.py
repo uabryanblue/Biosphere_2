@@ -97,9 +97,9 @@ def main():
             gc.collect()
         elif "CLIMATE:" in str_msg:
             log_name = f"{MY_ID}_CLIMATE_{log_host}.log"
-            print(f"CLIMATE: storing to {log_name} - {str_msg[7:]}")
-            # remove the word CALIBRATE: and store the rest
-            logger.write_log(log_name, str_msg[7:])
+            print(f"CLIMATE: storing to {log_name} - {str_msg[8:]}")
+            # remove the word CLIMATE: and store the rest
+            logger.write_log(log_name, str_msg[8:])
             D0.on()  # turn led off, finished rquest
             gc.collect()
         elif "SYSLOG:" in str_msg:
@@ -109,12 +109,18 @@ def main():
             D0.on()  # turn led off, finished rquest
             gc.collect()
         else:
-            # it is assumed the date/time and source MAC are part of str_msg
-            log_name = f"{MY_ID}_{log_host}.log"
-            print(f"storing to {log_name} - {str_msg}")
-            logger.write_log(log_name, str_msg)
-            D0.on()  # turn off led
+            # nothing to do, skip
+            D0.on()
             gc.collect()
+        #     print(f"UNKNOWN STATE, STOP PROCESSING: MY_ID: {MY_ID}")
+        #     host = None
+        #     msg = None
+        #     # it is assumed the date/time and source MAC are part of str_msg
+        #     # log_name = f"{MY_ID}_{log_host}.log"
+        #     # print(f"storing to {log_name} - {str_msg}")
+        #     # logger.write_log(log_name, str_msg)
+        #     D0.on()  # turn off led
+        #     gc.collect()
         D0.on()  # turn led off, finished rquest
 
 

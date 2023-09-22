@@ -89,7 +89,7 @@ def main():
             pressure = pressure / (INTERVAL / 30)
             date_time = realtc.formattime(time.localtime())
             out = ",".join(
-                [
+                [    
                     str(recordNumber),
                     date_time,
                     MY_MAC,
@@ -98,8 +98,12 @@ def main():
                     str(pressure),
                 ]
             )
+            out = "CLIMATE:" + out
             print(f"{conf.AVG_INTERVAL} MINUTE AVERAGE: {out}")
-            espnowex.esp_tx(conf.peers["DATA_LOGGER"], ESP_CON, out)
+
+            # espnowex.esp_tx(conf.peers["DATA_LOGGER"], ESP_CON, out)
+            [espnowex.esp_tx(logger, ESP_CON, out) for logger in conf.peers['DATA_LOGGER']]
+
             gc.collect()
             recordNumber += 1
             temperature = 0.0

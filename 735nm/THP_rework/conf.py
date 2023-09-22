@@ -14,21 +14,6 @@ MYNAME = "ESP8266 MicroPython Temperature Sensor and Temperature Control" # long
 # --------------------
 
 # --------------------
-# WiFi NETWORK CONFIGURATION
-# do not use with ESPNow
-# --BIOSPHERE 2 WiFi Atmospheric Lab--
-# publice IP: 150.135.165.93
-# WAP_SSID = "b2science"
-# WAP_PSWD = ""
-# PORT = 80
-
-# --test direct--
-# WAP_SSID = "MicroPython-e37cfc"
-# WAP_PSWD = "micropythoN"
-# PORT = 80
-# --------------------
-
-# --------------------
 # ESPNow CONFIGURATION
 # peers are binary MAC addresses to send to
 # up to 4 can be specified
@@ -48,24 +33,10 @@ peers["TIME"] = [b'\xc4[\xbe\xe4\xfe\x08'] # try to get time from here
 peers["REMOTE"] = [b'\xc4[\xbe\xe4\xfe\x08'] # TRC testing 20230731
 # --------------------
 
-
-# --------------------
-# TIMESERVER
-# NTP_HOST = """3.netbsd.pool.ntp.org"""
-# UTC_OFFSET = -7 * 60 * 60  # -7 arizona time
-# --------------------
-
-# --------------------
-# DATABASE - NOT USED!!!
-# this should be the base url up to, but not including, the "?" character
-# DB_URL = """http://biosphere2.000webhostapp.com/dbwrite.php"""  # intitial test DB location
-# --------------------
-
-
 # --------------------
 # SENSOR READINGS
 # AVG_INTERVAL - number of minutes used to calculate and send an average
-AVG_INTERVAL = 5
+AVG_INTERVAL = 1 # 1 minute for testing
 
 # --------------------
 # DATA LOGGER
