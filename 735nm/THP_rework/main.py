@@ -30,7 +30,7 @@ def set_clock(esp_con):
         gc.collect()
         host, msg = espnowex.esp_rx(esp_con)
         print(f"Get Time: unable to get time {host} ({retries})")
-        time.sleep(3)
+        time.sleep(1)
 
     str_host = ":".join(["{:02x}".format(b) for b in host])
     # assumption data is utf-8, if not, it may fail
