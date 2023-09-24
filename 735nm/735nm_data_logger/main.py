@@ -58,10 +58,10 @@ def main():
             str_host = ":".join(["{:02x}".format(b) for b in host]).upper()
             log_host = "".join(["{:02x}".format(b) for b in host]).upper() # for log names
             D0.off() # turn on indicate a message was received
-            if host in conf.peers["REMOTE"]:
-                print(f"VERIFIED ------- {host} is in my remote list") #  {conf.peers["REMOTE"]}")
-            else:
-                msg = b"NOT MY MAC"
+            # # if host in conf.peers["REMOTE"]:
+            #     print(f"VERIFIED ------- {host} is in my remote list") #  {conf.peers["REMOTE"]}")
+            # else:
+            #     msg = b"NOT MY MAC"
             # print(f"INVALID host ------- {host} not in my REMOTE list {conf.peers["REMOTE"]}")
 
         # assumption data is utf-8, if not, it may fail
@@ -71,10 +71,10 @@ def main():
             str_msg = ''
 
         D0.off()  # turn on indicate a message was received
-        if msg == b"NOT MY MAC":
-            if host is not None:
-                print(f"Ignoring MAC {host} traffic. REMOTE list {conf.peers["REMOTE"]}.")
-        elif msg == b"GET_TIME":
+        # if msg == b"NOT MY MAC":
+            # if host is not None:
+                # print(f"Ignoring MAC {host} traffic. REMOTE list {conf.peers["REMOTE"]}.")
+        if msg == b"GET_TIME":
             sys_msg = f"{str_host} requested time"
             log_name = f"{MY_ID}_{conf.SYSTEM_LOG}"
             logger.write_log(log_name, sys_msg)
@@ -109,6 +109,7 @@ def main():
             D0.on()  # turn led off, finished rquest
             gc.collect()
         else:
+            print(f"NOTHING TO DO, SKIP |{host}|")
             # nothing to do, skip
             D0.on()
             gc.collect()

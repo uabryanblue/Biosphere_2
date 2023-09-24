@@ -58,7 +58,9 @@ peers["DATA_LOGGER"] = [ b'\xc4[\xbe\xe4\xfdq']
 # peers["TIME"] = [b'\xc4[\xbe\xe4\xfdq'] # try to get time from here
 # peers["CALIBRATE"] = [b'\x8c\xaa\xb5M\x7f\x18'] # store calibration data here
 # data logger information
-peers["REMOTE"] = [b'\xc4[\xbe\xe4\xfdq', b'\xc4[\xbe\xe4\xfe=', b'\x8c\xaa\xb5M\x7f\x18', b'HU\x19\xdf(H', b'\xc4[\xbe\xe5\x005'] # TRC testing 20230731
+# bcast = b'\xff' * 6
+# receiver does not need to register remote units, only monitor traffic to it's MAC
+# peers["REMOTE"] = ['\xc4[\xbe\xe4\xfdq', b'\xc4[\xbe\xe4\xfe=', b'\x8c\xaa\xb5M\x7f\x18', b'HU\x19\xdf(H', b'\xc4[\xbe\xe5\x005'] # TRC testing 20230731
 # --------------------
 
 
