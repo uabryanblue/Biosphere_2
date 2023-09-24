@@ -7,20 +7,20 @@ import espnowex
 import conf
 import gc
 
-def set_clock(ESP_CON):
+def set_clock(esp_con):
 
     # blocking: set the time from the logger
     retries = 0  # visual display on number of retries
     host = ""
-    espnowex.esp_tx(conf.peers["TIME"][0], ESP_CON, "GET_TIME")
+    espnowex.esp_tx(conf.peers["TIME"][0], esp_con, "GET_TIME")
     gc.collect()
-    host, msg = espnowex.esp_rx(ESP_CON)
+    host, msg = espnowex.esp_rx(esp_con)
     while not msg:
         retries += 1
-        espnowex.esp_tx(conf.peers["TIME"][0], ESP_CON, "GET_TIME")
+        espnowex.esp_tx(conf.peers["TIME"][0], esp_con, "GET_TIME")
         gc.collect()
         # print("Time Sensor: wait for time response")
-        host, msg = espnowex.esp_rx(ESP_CON)
+        host, msg = espnowex.esp_rx(esp_con)
         print(f"found host: {host}")
         print(f"Get Time: unable to get time ({retries})")
         time.sleep(3)
@@ -40,21 +40,39 @@ def set_clock(ESP_CON):
     rtc.datetime(et)
     print(f"The new time is: {realtc.formattime(time.localtime())}")
 
+def init_device():
+
+    # turn off wifi and connect with ESPNow
+    station, ap = espnowex.wifi_reset()
+    gc.collect()
+    esp_con = espnowex.init_esp_connection(station)
+    gc.collect()
+
+    # convert hex into readable mac address
+    RAW_MAC = espnowex.get_mac(station)
+    gc.collect()
+    # MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC])
+    # print(f"My MAC addres:: {MY_MAC} raw MAC:: {RAW_MAC}")
+
+    return esp_con, station, RAW_MAC
+
+
 
 def main():
     print("START SENSOR")
 
     # turn off WiFi and initalize the ESPNow protocol
-    STATION, AP = espnowex.wifi_reset()
-    ESP_CON = espnowex.init_esp_connection(STATION)
-    RAW_MAC = espnowex.get_mac(STATION)
+    # station, AP = espnowex.wifi_reset()
+    # esp_con = espnowex.init_esp_connection(station)
+    # RAW_MAC = espnowex.get_mac(station)
+    esp_con, station, RAW_MAC = init_device()
     gc.collect()
     # convert hex into readable mac address
     MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC])
     print(f"My MAC addres:: {MY_MAC} RAW MAC:: {RAW_MAC}")
 
-    set_clock(ESP_CON)
-    time.sleep(5)  # give delay for reading output, not required
+    set_clock(esp_con)
+    # time.sleep(5)  # give delay for reading output, not required
 
     # ESP8266 I2C setup pins
     i2c = machine.I2C(scl=machine.Pin(5), sda=machine.Pin(4), freq=10000)
@@ -101,8 +119,8 @@ def main():
             out = "CLIMATE:" + out
             print(f"{conf.AVG_INTERVAL} MINUTE AVERAGE: {out}")
 
-            # espnowex.esp_tx(conf.peers["DATA_LOGGER"], ESP_CON, out)
-            [espnowex.esp_tx(logger, ESP_CON, out) for logger in conf.peers['DATA_LOGGER']]
+            # espnowex.esp_tx(conf.peers["DATA_LOGGER"], esp_con, out)
+            [espnowex.esp_tx(logger, esp_con, out) for logger in conf.peers['DATA_LOGGER']]
             gc.collect()
             recordNumber += 1
             temperature = 0.0
