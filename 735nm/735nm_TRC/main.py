@@ -3,6 +3,7 @@ import machine
 import conf
 import realtc
 import espnowex
+import time
 
 # CHECK THE BLOCK OF ROLES
 # import calibrate
@@ -10,8 +11,16 @@ import espnowex
 # import BME280_main
 import TRC_main
 
+# visual 5 second led on startup
+# status pin for logger, GPIO16/D0
+D0 = machine.Pin(16, machine.Pin.OUT)
+D0.off() # visual we started
+# slow any restart loops
+time.sleep(5)
+D0.on() # turn off
+del D0 
+
 D8 = machine.Pin(15, machine.Pin.OUT)
-# TODO common code, should be abstracted out of main.py
 def init_device():
 
     # turn off wifi and connect with ESPNow

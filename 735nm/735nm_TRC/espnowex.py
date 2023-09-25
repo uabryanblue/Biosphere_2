@@ -55,7 +55,7 @@ def esp_tx(peer, esp_con, msg):
 
     try:
         # transmit data and check receive status
-        res = esp_con.send(peer, msg, True)  # only one TIME entry should exist
+        res = esp_con.send(peer, msg, True)
         print(f"sent to {peer}")
         print(f"{msg}")
 
