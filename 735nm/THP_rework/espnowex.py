@@ -1,7 +1,6 @@
 import espnow
 import network
 import time
-# import network, time
 import conf
 
 def wifi_reset():   # Reset wifi to AP_IF off, STA_IF on and disconnected
