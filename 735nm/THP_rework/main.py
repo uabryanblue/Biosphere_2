@@ -1,3 +1,4 @@
+# memory is an issue, imports need done in order, and gc collect performed
 import gc
 import micropython
 gc.collect()
@@ -5,16 +6,23 @@ gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
 micropython.mem_info()
 import BME280
 gc.collect()
-micropython.mem_info()
 
 import time
-# import sys
 import machine
 import realtc
 gc.collect()
 import espnowex
 import conf
 gc.collect()
+
+# visual 5 second led on startup
+# status pin for logger, GPIO16/D0
+D0 = machine.Pin(16, machine.Pin.OUT)
+D0.off() # visual we started
+# slow any restart loops
+time.sleep(5)
+D0.on()
+del D0
 
 def set_clock(esp_con):
 
@@ -140,10 +148,7 @@ if __name__ == "__main__":
         print(f"reset code: {machine.reset_cause()}")
         main()
     except KeyboardInterrupt as e:
-        print(f"received ctrl-c {e}")
-        gc.collect()
-        # sys.exit()  # this allows a double ctrl-c to stop all execution without restart
-
-    # finally:
-    #     print(f"Fatal error, restarting.  {machine.reset_cause()}")
-    #     # machine.reset()
+        print(f"Got ctrl-c {e}")
+    finally:
+        print(f"Fatal error, restarting.  {machine.reset_cause()} !!!!!!!!!!!")
+        machine.reset()
