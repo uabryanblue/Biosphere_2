@@ -52,6 +52,7 @@ def trc_main(esp_con, sta, RAW_MAC):
         out = ','.join([str(sequence), date_time, MY_MAC, temperature_data, internal_data])
         # print(f"Data Packet: {out}")
         # transmit to all conf DATA_LOGGER values
+        out = "TRC:" + out
         [espnowex.esp_tx(logger, esp_con, out) for logger in conf.peers['DATA_LOGGER']]
         sequence += 1
         gc.collect()

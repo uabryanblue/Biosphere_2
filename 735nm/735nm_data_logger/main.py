@@ -102,6 +102,13 @@ def main():
             logger.write_log(log_name, str_msg[8:])
             D0.on()  # turn led off, finished rquest
             gc.collect()
+        elif "TRC:" in str_msg:
+            log_name = f"{MY_ID}_TRC_{log_host}.log"
+            print(f"TRC: storing to {log_name} - {str_msg[4:]}")
+            # remove the word TRC: and store the rest
+            logger.write_log(log_name, str_msg[4:])
+            D0.on()  # turn led off, finished rquest
+            gc.collect()
         elif "SYSLOG:" in str_msg:
             log_name = f"{MY_ID}_SYSLOG_{log_host}.log"
             print(f"SYSLOG: storing to {log_name} - {str_msg[7:]}")
