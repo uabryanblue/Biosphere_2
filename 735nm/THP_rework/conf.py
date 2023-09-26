@@ -11,6 +11,15 @@ VERSION = "25.3.1"
 MYNAME = "ESP8266 MicroPython Temperature, Humidity, Pressure Sensor" # long generic description
 # --------------------
 
+#----------------------
+# DEVICE ROLE
+# uncomment one of the corresponding lines to change how
+# the code executes. The different configurations are shown here
+# MYROLE = "CALIBRATE" # command line callibration
+# MYROLE = "DATALOGGER" # data logger box
+# MYROLE = "TRCCONTROL" # multiple thermocouple sensor with relay box
+MYROLE = "THP" # temperatue humidity pressure aspirated sensor
+
 # --------------------
 # ESPNow CONFIGURATION
 # peers are binary MAC addresses to send to
