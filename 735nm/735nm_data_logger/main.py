@@ -1,12 +1,13 @@
+import gc
 import time
 import machine
 import uerrno
-import gc
 import logger
 import conf
 import realtc
-
+gc.collect()
 import espnowex
+gc.collect()
 
 # status pin for logger, GPIO16/D0
 D0 = machine.Pin(16, machine.Pin.OUT)
@@ -58,11 +59,6 @@ def main():
             str_host = ":".join(["{:02x}".format(b) for b in host]).upper()
             log_host = "".join(["{:02x}".format(b) for b in host]).upper() # for log names
             D0.off() # turn on indicate a message was received
-            # # if host in conf.peers["REMOTE"]:
-            #     print(f"VERIFIED ------- {host} is in my remote list") #  {conf.peers["REMOTE"]}")
-            # else:
-            #     msg = b"NOT MY MAC"
-            # print(f"INVALID host ------- {host} not in my REMOTE list {conf.peers["REMOTE"]}")
 
         # assumption data is utf-8, if not, it may fail
         if msg is not None:
@@ -89,28 +85,28 @@ def main():
             logger.write_log(log_name, sys_msg)
             gc.collect()
         elif "CALIBRATE:" in str_msg:
-            log_name = f"{MY_ID}_CALIBRATE_{log_host}.log"
+            log_name = f"CALIBRATE_{MY_ID}_{log_host}.log"
             print(f"CALIBRATE: storing to {log_name} - {str_msg[10:]}")
             # remove the word CALIBRATE: and store the rest
             logger.write_log(log_name, str_msg[10:])
             D0.on()  # turn led off, finished rquest
             gc.collect()
         elif "CLIMATE:" in str_msg:
-            log_name = f"{MY_ID}_CLIMATE_{log_host}.log"
+            log_name = f"CLIMATE_{MY_ID}_{log_host}.log"
             print(f"CLIMATE: storing to {log_name} - {str_msg[8:]}")
             # remove the word CLIMATE: and store the rest
             logger.write_log(log_name, str_msg[8:])
             D0.on()  # turn led off, finished rquest
             gc.collect()
         elif "TRC:" in str_msg:
-            log_name = f"{MY_ID}_TRC_{log_host}.log"
+            log_name = f"TRC_{MY_ID}_{log_host}.log"
             print(f"TRC: storing to {log_name} - {str_msg[4:]}")
             # remove the word TRC: and store the rest
             logger.write_log(log_name, str_msg[4:])
             D0.on()  # turn led off, finished rquest
             gc.collect()
         elif "SYSLOG:" in str_msg:
-            log_name = f"{MY_ID}_SYSLOG_{log_host}.log"
+            log_name = f"SYSLOG_{MY_ID}_{log_host}.log"
             print(f"SYSLOG: storing to {log_name} - {str_msg[7:]}")
             logger.write_log(log_name, str_msg[7:])
             D0.on()  # turn led off, finished rquest
