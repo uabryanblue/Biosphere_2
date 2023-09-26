@@ -1,11 +1,13 @@
+import gc 
 import os
 import machine
 import realtc
+gc.collect()
 import time
 import conf
 import uerrno  # error trapping and code values
 import sdcard
-import gc 
+gc.collect()
 
 
 def initSD(mnt):
