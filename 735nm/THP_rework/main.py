@@ -54,6 +54,24 @@ def main():
     print("START SENSOR")
     rtc = machine.RTC()
 
+        # verify that the conf.py file is associated with this code base
+    if conf.MYROLE == "THP":
+        print("\n================ MY CONFIGURATION ================")
+        print("MY DATA LOGGERS")
+        [print(val) for val in conf.peers['DATA_LOGGER']]
+        print("MY TIME SERVER")
+        [print(val) for val in conf.peers['TIME']]
+        print("================ MY CONFIGURATION ================\n")
+
+
+        realtc.get_remote_time(esp_con)
+        TRC_main.trc_main(esp_con, station, RAW_MAC)
+    else:
+        print(f'MY ROLE IS {CONF.MYROLE} BUT IT SHOULD BE "THP".')
+        print('!!!!!!!!invalid conf.py file!!!!!!!!')
+        # TODO send an error message recorded in the datalogger syslog
+
+
     station, ap = espnowex.wifi_reset()
     gc.collect()
     esp_con = espnowex.init_esp_connection(station)
@@ -103,7 +121,8 @@ def main():
         # if the boundary happens to hit 0, or we have not gone over the interval run the task
         print(f"     BEFORE WHILE: {realtc.formattime(time.localtime())}  tsec:{tsec}  boundary %:{boundary}  last boundary: {last_boundary}  interval:{interval}")
         while (last_boundary == boundary): # case == 0 very rare, look at exceeding only
-            
+            # get values every 5 seconds
+            time.sleep(5)
             # run the task
             temperature += float(BM280_SENSOR.temperature)
             humidity += float(BM280_SENSOR.humidity)
