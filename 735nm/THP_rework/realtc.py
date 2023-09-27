@@ -30,15 +30,25 @@ import realtc
 gc.collect()
 import conf
 
-
-
 def formattime(in_time):
-    """produce a date/time format from tuple
+    """time format produce a date/time format from tuple
     only minute resolution supported"""
 
     # YYYY-MM-DD hh:mm:ss
     date = f'{in_time[0]}-{in_time[1]:0>2}-{in_time[2]:0>2}'
     time = f'{in_time[3]:0>2}:{in_time[4]:0>2}:{in_time[5]:0>2}'
+    formatted_time = date + ' ' + time
+    
+    return formatted_time
+
+def formatrtc(in_time):
+    """RTC format time produce a date/time format from tuple
+    only minute resolution supported"""
+    # rtc.datetime((YY, MM, DD, wday, hh, mm, ss, 0))
+
+    # YYYY-MM-DD hh:mm:ss
+    date = f'{in_time[0]}-{in_time[1]:0>2}-{in_time[2]:0>2}'
+    time = f'{in_time[4]:0>2}:{in_time[5]:0>2}:{in_time[6]:0>2}'
     formatted_time = date + ' ' + time
     
     return formatted_time
@@ -53,14 +63,15 @@ def rtcinit():
     rtc.datetime((YY, MM, DD, wday, hh, mm, ss, 0))
     gc.collect()
     print(f"DS3231 time: {ds3231.get_time()}")
-    print(f"local time: {formattime(time.localtime())}")
+    print(f"local time: {realtc.formatrtc(rtc.datetime())}")
 
 
 def get_remote_time(esp_con):
     # set the time from device designated as TIME
     retries = 0
     host = ""
-    
+    rtc = machine.RTC()
+
     peer = bytearray()
     peer = conf.peers["TIME"][0]
     # peer= b'\xc4[\xbe\xe4\xfe=' # TODO debug why not tx work
@@ -89,5 +100,5 @@ def get_remote_time(esp_con):
     rtcObj = machine.RTC()
     rtcObj.datetime(evaltime)
     gc.collect()
-    print(f"The new time is: {realtc.formattime(time.localtime())}")
+    print(f"The new time is: {realtc.formatrtc(rtc.datetime())}") 
     print("------------------------\n")
