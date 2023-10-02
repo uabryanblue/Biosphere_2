@@ -97,6 +97,7 @@ def get_remote_time(esp_con):
     print(f"received a respons from {host} {str_host} of: {msg}")
     evaltime = eval(msg)
 
+    # TODO this should just be rtc from above
     rtcObj = machine.RTC()
     rtcObj.datetime(evaltime)
     gc.collect()

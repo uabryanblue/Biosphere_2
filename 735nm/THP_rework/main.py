@@ -24,31 +24,6 @@ time.sleep(5)
 D0.on()
 del D0
 
-# def set_clock(esp_con):
-
-#     # blocking: set the time from the logger
-#     retries = 0  # visual display on number of retries
-#     host = ""
-#     espnowex.esp_tx(conf.peers["TIME"][0], esp_con, "GET_TIME")
-#     gc.collect()
-#     host, msg = espnowex.esp_rx(esp_con)
-#     while not msg:
-#         retries += 1
-#         espnowex.esp_tx(conf.peers["TIME"][0], esp_con, "GET_TIME")
-#         gc.collect()
-#         host, msg = espnowex.esp_rx(esp_con)
-#         print(f"Get Time: unable to get time {host} ({retries})")
-#         time.sleep(1)
-
-#     str_host = ":".join(["{:02x}".format(b) for b in host])
-#     # assumption data is utf-8, if not, it may fail
-#     str_msg = msg.decode("utf-8")
-
-#     print(f"received a respons from {host} {str_host} of: {str_msg}")
-#     et = eval(msg)
-#     rtc = machine.RTC()
-#     rtc.datetime(et)
-#     print(f"The new time is: {realtc.formattime(time.localtime())}")
 
 def main():
     print("START SENSOR")
@@ -79,8 +54,8 @@ def main():
     MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC])
     print(f"My MAC addres:: {MY_MAC} RAW MAC:: {RAW_MAC}")
     
-    # set_clock(esp_con)
     realtc.get_remote_time(esp_con)
+
     gc.collect()
 
     # BME280 setup on I2C
@@ -132,16 +107,18 @@ def main():
 
             curr_time = rtc.datetime()
             tsec = ((curr_time[5] * 60) + curr_time[6]) # minutes * 60 + seconds
+            msec = curr_time[7]
             boundary = tsec % interval # mod the total elapsed seconds by interval in seconds
+            print(f'------- min: {curr_time[5]} and sec: {curr_time[6]} msec:{msec}')
             print(f'------- tsec {tsec}, boundary% {boundary}, last_boundary {last_boundary}, counter {counter}')
-            if boundary > last_boundary and counter <= interval: 
+            if boundary >= last_boundary: # and counter <= interval: 
                 # print(f'### continue {boundary} > {last_boundary} and {counter} <= {interval}')
                 last_boundary = boundary
 
         # interval was exceeded, run alternate code
         # send data to data logger
         # date_time = realtc.formattime(time.localtime())
-        print(f'\n### BREAK {boundary} > {last_boundary} and {counter} <= {interval}\n')
+        print(f'\n### BREAK ON CONDITION ({boundary} >= {last_boundary})') # and {counter} <= {interval}\n')
 
         date_time = realtc.formatrtc(curr_time)
         # are time and rtc the same? should be as just reset
@@ -169,9 +146,11 @@ def main():
         realtc.get_remote_time(esp_con)
         curr_time = rtc.datetime()
         tsec = ((curr_time[5] * 60) + curr_time[6])
+        msec = curr_time[7]
+
         boundary = tsec % interval
         last_boundary = boundary        # reset interval checking
-        print(f"RESET THE TIME: {realtc.formatrtc(curr_time)}, tsec:{tsec}  boundary %:{boundary}  last boundary: {last_boundary} interval:{interval}")
+        print(f"RESET THE TIME: {realtc.formatrtc(curr_time)}, tsec:{tsec}, msec:{msec}, boundary %:{boundary}  last boundary: {last_boundary} interval:{interval}")
 
         gc.collect()
 
