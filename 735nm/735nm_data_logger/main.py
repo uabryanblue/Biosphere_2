@@ -71,6 +71,8 @@ def main():
             # if host is not None:
                 # print(f"Ignoring MAC {host} traffic. REMOTE list {conf.peers["REMOTE"]}.")
         if msg == b"GET_TIME":
+            realtc.rtcinit()
+            gc.collect()
             sys_msg = f"{str_host} requested time"
             log_name = f"{MY_ID}_{conf.SYSTEM_LOG}"
             logger.write_log(log_name, sys_msg)
