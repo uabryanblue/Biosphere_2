@@ -52,6 +52,7 @@ def main():
 
     # convert hex into readable mac address
     MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC])
+    STR_MAC = "".join(["{:02x}".format(b) for b in RAW_MAC])
     print(f"My MAC addres:: {MY_MAC} RAW MAC:: {RAW_MAC}")
     
     realtc.get_remote_time(esp_con)
@@ -109,8 +110,11 @@ def main():
             tsec = ((curr_time[5] * 60) + curr_time[6]) # minutes * 60 + seconds
             msec = curr_time[7]
             boundary = tsec % interval # mod the total elapsed seconds by interval in seconds
-            print(f'------- min: {curr_time[5]} and sec: {curr_time[6]} msec:{msec}')
-            print(f'------- tsec {tsec}, boundary% {boundary}, last_boundary {last_boundary}, counter {counter}')
+            print('-------')
+            print(f'current date: {realtc.formatrtc(curr_time)}')
+            print(f'min: {curr_time[5]} and sec: {curr_time[6]} msec:{msec}')
+            print(f'tsec {tsec}, boundary% {boundary}, last_boundary {last_boundary}, counter {counter}')
+            print('-------')
             if boundary >= last_boundary: # and counter <= interval: 
                 # print(f'### continue {boundary} > {last_boundary} and {counter} <= {interval}')
                 last_boundary = boundary
@@ -120,21 +124,22 @@ def main():
         # date_time = realtc.formattime(time.localtime())
         print(f'\n### BREAK ON CONDITION ({boundary} >= {last_boundary})') # and {counter} <= {interval}\n')
 
-        date_time = realtc.formatrtc(curr_time)
+        date_time = realtc.formatrtc(curr_time) # curr_time from above
         # are time and rtc the same? should be as just reset
         tm = realtc.formattime(time.localtime())
         rtm = realtc.formatrtc(rtc.datetime())
         print(f"NEED TO LOG DATA: {date_time}, tm: {tm}, rtm: {rtm},\n  tsec: {tsec},  boundary %: {boundary},  last boundary: {last_boundary}, interval: {interval}")
-        out = ",".join([str(recordNumber), date_time, MY_MAC, str(temperature/counter), str(humidity/counter), str(pressure/counter), str(counter)])
+        out = ",".join([str(recordNumber), date_time, STR_MAC, str(temperature/counter), str(humidity/counter), str(pressure/counter), str(counter)])
         out = "CLIMATE:" + out
         print(f"{conf.AVG_INTERVAL} MINUTE AVERAGE: {out}")
         [espnowex.esp_tx(logger, esp_con, out) for logger in conf.peers['DATA_LOGGER']]
+        
+        realtc.get_remote_time(esp_con)
+        curr_time = rtc.datetime()
+        date_time = realtc.formatrtc(curr_time)
+        print(f"updated date_time {date_time}")
 
         # re-initialize variables
-        del date_time
-        del out
-        del tm
-        del rtm
         recordNumber += 1
         counter = 0
         temperature = 0.0
@@ -143,7 +148,6 @@ def main():
         gc.collect()
 
 
-        realtc.get_remote_time(esp_con)
         curr_time = rtc.datetime()
         tsec = ((curr_time[5] * 60) + curr_time[6])
         msec = curr_time[7]
