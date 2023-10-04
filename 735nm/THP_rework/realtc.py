@@ -76,6 +76,7 @@ def get_remote_time(esp_con):
     peer = conf.peers["TIME"][0]
     # peer= b'\xc4[\xbe\xe4\xfe=' # TODO debug why not tx work
     espnowex.esp_tx(peer, esp_con, "GET_TIME")
+    time.sleep(1)
     host, msg = espnowex.esp_rx(esp_con)
     gc.collect()
 
@@ -83,10 +84,11 @@ def get_remote_time(esp_con):
     while not msg:
         retries += 1
         espnowex.esp_tx(peer, esp_con, "GET_TIME")
+        time.sleep(1)
         host, msg = espnowex.esp_rx(esp_con)
         gc.collect()
         print(f"Get Time: unable to get time from {host} retry # {retries}")
-        time.sleep(3)
+        time.sleep(1)
 
     # print(host)
     str_host = ":".join(["{:02x}".format(b) for b in host])
@@ -98,8 +100,9 @@ def get_remote_time(esp_con):
     evaltime = eval(msg)
 
     # TODO this should just be rtc from above
-    rtcObj = machine.RTC()
-    rtcObj.datetime(evaltime)
+    # rtcObj = machine.RTC()
+    print(f":::: BEFORE EVAL value {evaltime}")
+    rtc.datetime(evaltime)
     gc.collect()
     print(f"The new time is: {realtc.formatrtc(rtc.datetime())}") 
     print("------------------------\n")
