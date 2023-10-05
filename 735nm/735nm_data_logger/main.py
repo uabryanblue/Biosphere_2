@@ -71,6 +71,7 @@ def main():
             # if host is not None:
                 # print(f"Ignoring MAC {host} traffic. REMOTE list {conf.peers["REMOTE"]}.")
         if msg == b"GET_TIME":
+            print(f"=========GET_TIME============")
             realtc.rtcinit()
             gc.collect()
             sys_msg = f"{str_host} requested time"
@@ -86,6 +87,7 @@ def main():
             print(sys_msg)
             logger.write_log(log_name, sys_msg)
             gc.collect()
+            print(f"=============================")
         elif "CALIBRATE:" in str_msg:
             log_name = f"CALIBRATE_{MY_ID}_{log_host}.log"
             print(f"CALIBRATE: storing to {log_name} - {str_msg[10:]}")
@@ -114,7 +116,7 @@ def main():
             D0.on()  # turn led off, finished rquest
             gc.collect()
         else:
-            print(f"NOTHING TO DO, SKIP |{host}|")
+            # print(f"NOTHING TO DO, SKIP |{host}|")
             # nothing to do, skip
             D0.on()
             gc.collect()
