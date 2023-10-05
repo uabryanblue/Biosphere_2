@@ -1,5 +1,5 @@
 {
-  "name": "735nm_TRC",
+  "name": "OLD 735nm HTP BME280",
   "py_ignore": [
       "pymakr.conf",
       ".vscode",

@@ -13,10 +13,9 @@ HiLetgo DS3231 + AT24C32N
 
 # TODO this could benefit from trying to initialzie from NTP not available when using ESPNow
 # to set the time on the DS3231 use a tuple as shown here
-# i2c = machine.I2C(sda=machine.Pin(4), scl=machine.Pin(5))
+# i2c = I2C(sda=machine.Pin(4), scl=machine.Pin(5))
 # d = DS3231(i2c)
-# use ds3231 set time without parameters to set it to esp time
-# d.set_time() # put this time back onto the DS3231
+# d.set_time((YY, MM, DD, hh, mm, ss, 0, 0))
 # example: to set time to 2023, May, 29, 7 am, 11 minutes, 1 second, NA, NA
 # d.set_time((2023, 05, 29, 7, 11, 1, 0, 0))
 
@@ -77,6 +76,7 @@ def get_remote_time(esp_con):
     peer = conf.peers["TIME"][0]
     # peer= b'\xc4[\xbe\xe4\xfe=' # TODO debug why not tx work
     espnowex.esp_tx(peer, esp_con, "GET_TIME")
+    time.sleep(1)
     host, msg = espnowex.esp_rx(esp_con)
     gc.collect()
 
@@ -84,10 +84,11 @@ def get_remote_time(esp_con):
     while not msg:
         retries += 1
         espnowex.esp_tx(peer, esp_con, "GET_TIME")
+        time.sleep(1)
         host, msg = espnowex.esp_rx(esp_con)
         gc.collect()
         print(f"Get Time: unable to get time from {host} retry # {retries}")
-        time.sleep(3)
+        time.sleep(1)
 
     # print(host)
     str_host = ":".join(["{:02x}".format(b) for b in host])
@@ -98,8 +99,10 @@ def get_remote_time(esp_con):
     print(f"received a respons from {host} {str_host} of: {msg}")
     evaltime = eval(msg)
 
-    rtcObj = machine.RTC()
-    rtcObj.datetime(evaltime)
+    # TODO this should just be rtc from above
+    # rtcObj = machine.RTC()
+    print(f":::: BEFORE EVAL value {evaltime}")
+    rtc.datetime(evaltime)
     gc.collect()
     print(f"The new time is: {realtc.formatrtc(rtc.datetime())}") 
     print("------------------------\n")

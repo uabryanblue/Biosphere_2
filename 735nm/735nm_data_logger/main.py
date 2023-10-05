@@ -52,7 +52,7 @@ def main():
     while True:
         print("Data Logger: listen for a message")
         D0.on()  # LED off as a visual aid
-        host, msg = espnowex.esp_rx(esp_con, 10000)
+        host, msg = espnowex.esp_rx(esp_con, 30000)
         realtc.rtcinit()
         gc.collect()
         if host is not None:
@@ -71,6 +71,9 @@ def main():
             # if host is not None:
                 # print(f"Ignoring MAC {host} traffic. REMOTE list {conf.peers["REMOTE"]}.")
         if msg == b"GET_TIME":
+            print(f"=========GET_TIME============")
+            realtc.rtcinit()
+            gc.collect()
             sys_msg = f"{str_host} requested time"
             log_name = f"{MY_ID}_{conf.SYSTEM_LOG}"
             logger.write_log(log_name, sys_msg)
@@ -83,6 +86,9 @@ def main():
             sys_msg = f"{log_name} time sent {stime}"
             print(sys_msg)
             logger.write_log(log_name, sys_msg)
+            gc.collect()
+            print(f"=============================")
+            D0.on()  # turn led off, finished rquest
             gc.collect()
         elif "CALIBRATE:" in str_msg:
             log_name = f"CALIBRATE_{MY_ID}_{log_host}.log"
@@ -112,20 +118,11 @@ def main():
             D0.on()  # turn led off, finished rquest
             gc.collect()
         else:
-            print(f"NOTHING TO DO, SKIP |{host}|")
+            # print(f"NOTHING TO DO, SKIP |{host}|")
             # nothing to do, skip
-            D0.on()
+            D0.on()  # turn led off, finished rquest
             gc.collect()
-        #     print(f"UNKNOWN STATE, STOP PROCESSING: MY_ID: {MY_ID}")
-        #     host = None
-        #     msg = None
-        #     # it is assumed the date/time and source MAC are part of str_msg
-        #     # log_name = f"{MY_ID}_{log_host}.log"
-        #     # print(f"storing to {log_name} - {str_msg}")
-        #     # logger.write_log(log_name, str_msg)
-        #     D0.on()  # turn off led
-        #     gc.collect()
-        D0.on()  # turn led off, finished rquest
+
 
 
 if __name__ == "__main__":
