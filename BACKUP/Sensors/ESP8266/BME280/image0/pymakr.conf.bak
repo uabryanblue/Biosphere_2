@@ -1,0 +1,13 @@
+{
+  "py_ignore": [
+    "pymakr.conf",
+    "BME280_test.zip",
+    "BME280_test",
+    ".vscode",
+    ".gitignore",
+    ".git",
+    "env",
+    "venv"
+  ],
+  "name": "BME280_Aspirated"
+}

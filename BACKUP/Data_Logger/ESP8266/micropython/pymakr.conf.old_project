@@ -1,0 +1,13 @@
+{
+  "name": "Data_Logger",
+  "py_ignore": [
+      "pymakr.conf",
+      ".vscode",
+      ".gitignore",
+      ".git",
+      "project.pymakr",
+      "*-workspace",
+
+      "somefolder"
+  ]
+}
