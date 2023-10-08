@@ -56,17 +56,21 @@ timezone_sec = timezone_hour * 3600
 sec = int(sec + timezone_sec)
 (year, month, day, hours, minutes, seconds, weekday, yearday) = time.localtime(sec)
 
-print ("IST Time: ")
-print((year, month, day, hours, minutes, seconds))
-rtc.datetime((year, month, day, 0, hours, minutes, seconds, 0))
+# print ("IST Time: ")
+
+print(f"IST Time: {(year, month, day, hours, minutes, seconds, weekday, yearday)}")
+rtc.datetime((year, month, day, weekday, hours, minutes, seconds, 0))
+print(f"rtc after being set: {rtc.datetime()}")
 
 # set the external battery backed up ds3231
-(YY, MM, DD, wday, HH, MM, s, ss) = rtc.datetime()
+YY, MM, DD, wday, HH, mm, s, ss = rtc.datetime()
 # YY, MM, DD, hh, mm, ss, wday, _ = ds3231.get_time()
-ds3231.set_time((YY, MM, DD, HH, MM, s, wday, ss))
-
+ds3231.set_time((YY, MM, DD, HH, mm, s, wday, ss))
+print(f"sd3231 after set raw: {(YY, MM, DD, HH, mm, s, wday, ss)}")
 disconnect()
 
 print(f"DS3231 time:     {ds3231.get_time()}")
 print(f"rtc local time:  {rtc.datetime()}")
 print(f'time local time: {time.localtime()}')
+
+print(f"DS3231, rtc, time:     {ds3231.get_time()}  {rtc.datetime()}  {time.localtime()}  ")
