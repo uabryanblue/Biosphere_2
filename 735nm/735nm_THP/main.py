@@ -61,6 +61,8 @@ def main():
 
     # BME280 setup on I2C
     i2c = machine.I2C(scl=machine.Pin(5), sda=machine.Pin(4), freq=10000)
+    gc.collect()
+    print("starting BME280")
     BME280_SENSOR = BME280.BME280(i2c=i2c)
     print("BME280 i2c INITIALZED")
     gc.collect()
@@ -73,13 +75,6 @@ def main():
     pressure = 0.0
     counter = 0  # numbe of readings taken used for averaging
     recordNumber = 1  # record number from the last time the system restarted
-
-    # # run the task
-    # temperature += float(BME280_SENSOR.temperature)
-    # humidity += float(BME280_SENSOR.humidity)
-    # pressure += float(BME280_SENSOR.pressure)
-    # counter += 1
-    # gc.collect()
 
     curr_time = rtc.datetime()
     tsec = ((curr_time[5] * 60) + curr_time[6])
@@ -121,7 +116,6 @@ def main():
 
         # interval was exceeded, run alternate code
         # send data to data logger
-        # date_time = realtc.formattime(time.localtime())
         print(f'\n### BREAK ON CONDITION ({boundary} >= {last_boundary})') # and {counter} <= {interval}\n')
 
         date_time = realtc.formatrtc(curr_time) # curr_time from above
@@ -142,13 +136,11 @@ def main():
         pressure = 0.0
         gc.collect()
 
-
         realtc.get_remote_time(esp_con)
         curr_time = rtc.datetime()
         date_time = realtc.formatrtc(curr_time)
         tsec = ((curr_time[5] * 60) + curr_time[6])
         msec = curr_time[7]
-        # print(f"RE-INIT updated date_time {date_time}")
 
         boundary = tsec % interval
         last_boundary = boundary        # reset interval checking

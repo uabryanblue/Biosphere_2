@@ -1,8 +1,5 @@
-import gc
 import espnow
-gc.collect()
 import network
-gc.collect()
 import time
 import conf
 

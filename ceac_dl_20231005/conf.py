@@ -4,15 +4,15 @@
  """
 
 AUTHOR = "Bryan Blue - bryanblue@arizona.edu"
-VERSION = "25.90.0"
+VERSION = "25.1.1"
 
 #----------------------
 # DEVICE ROLE
 # uncomment one of the corresponding lines to change how
 # the code executes. The different configurations are shown here
 # MYROLE = "CALIBRATE" # command line callibration
-# MYROLE = "DATALOGGER" # data logger box
-MYROLE = "TRCCONTROL" # multiple thermocouple sensor with relay box
+MYROLE = "DATALOGGER" # data logger box
+# MYROLE = "TRCCONTROL" # multiple thermocouple sensor with relay box
 # MYROLE = "THP" # temperatue humidity pressure aspirated sensor
 
 # --------------------
@@ -50,16 +50,37 @@ MYNAME = "ESP8266 MicroPython Temperature Sensor and Temperature Control" # long
 #   TIME - get date/time from this device, should only be ONE entry
 #   REMOTE - data logger to register remote sensors
 #   CALIBRATE - data logger to store calibration data
+# EXAMPLE: peers["DATA_LOGGER"] = [b'\xc4[\xbe\xe4\xfe=']
 peers = {}
 # remote sensor configuration, connect to all data loggers, pick one for time
-peers["DATA_LOGGER"] = [b'\xc4[\xbe\xe4\xfe\x08', b'\x8c\xaa\xb5M\x7f\x18', b'HU\x19\xdf)\x86']  # list of data loggers
-# peers["TIME"] = [b'\xc4[\xbe\xe4\xfe\x08'] # try to get time from here
-peers["TIME"] = [b'HU\x19\xdf)\x86'] # try to get time from M1
+# peers["DATA_LOGGER"] = [b'\xc4[\xbe\xe4\xfe\x08', b'\x8c\xaa\xb5M\x7f\x18']  # kist of data loggers
+peers["DATA_LOGGER"] = [ b'\xc4[\xbe\xe4\xfdq']
+# peers["TIME"] = [b'\xc4[\xbe\xe4\xfdq'] # try to get time from here
+# peers["CALIBRATE"] = [b'\x8c\xaa\xb5M\x7f\x18'] # store calibration data here
+# data logger information
+# bcast = b'\xff' * 6
+# receiver does not need to register remote units, only monitor traffic to it's MAC
+# peers["REMOTE"] = ['\xc4[\xbe\xe4\xfdq', b'\xc4[\xbe\xe4\xfe=', b'\x8c\xaa\xb5M\x7f\x18', b'HU\x19\xdf(H', b'\xc4[\xbe\xe5\x005'] # TRC testing 20230731
+# --------------------
+
+
+# --------------------
+# TIMESERVER
+# NTP_HOST = """3.netbsd.pool.ntp.org"""
+# UTC_OFFSET = -7 * 60 * 60  # -7 arizona time
+# --------------------
+
+# --------------------
+# DATABASE - NOT USED!!!
+# this should be the base url up to, but not including, the "?" character
+# DB_URL = """http://biosphere2.000webhostapp.com/dbwrite.php"""  # intitial test DB location
+# --------------------
+
 
 # --------------------
 # SENSOR READINGS
 # AVG_INTERVAL - number of minutes used to calculate and send an average
-# AVG_INTERVAL = 5
+AVG_INTERVAL = 5
 
 # --------------------
 # DATA LOGGER
@@ -67,8 +88,8 @@ peers["TIME"] = [b'HU\x19\xdf)\x86'] # try to get time from M1
 # on a MicroSD card. Max Card Size: 32 GB
 LOG_MOUNT = "//log" # must start with "//" the root folder
 CAL_FILENAME = "callibration.dat"
-LOG_FILENAME = "logger.dat" # no leading / depricated
-SYSTEM_LOG = "sys.log" # no leading / depricated
+LOG_FILENAME = "logger.dat" # no leading /
+SYSTEM_LOG = "sys.log" # no leading /
 # --------------------
 
 # --------------------
@@ -91,9 +112,6 @@ TMAX = 50 # 122 F
 # Value must be greater than TMAX !!!
 TMAX_HEATER = 60 # 140 F
 
-# delay in seconds between consecutive readings
-TREAD_INTERVAL = 15
-
 # assign temperature sensors D0 - D4 locations to a data structure
 # first list element: D0 - D4 correspond to the physical pins on the ESP8266
 # second list element: GPIO number corresponding to D0 - D4
@@ -105,8 +123,8 @@ readings = {}
 #   CONTROL - control leaf temperature
 #   TREATMENT - leaf that is being heated
 #   D3, D4 - 2 extra sensors
-#   Define each dictionary element as a PIN, GPIO, TempValue, SensorID, 0.0
-# EXAMPLE:  readings['HEATER'] = [1, 16, 0.0, 101, 0.0]
+#   Define each dictionary element as a PIN, GPIO, TempValue
+# EXAMPLE:  readings['HEATER'] = [1, 16, 0.0]
 # key = HEATER, PIN = D0, GPIO 16, initial temp value = 0.0
 # SensorID = a unique ID used for identification of the thermocouple in that position
 # Internal Temperature - cold junction on the amplifier board
@@ -122,7 +140,6 @@ readings['D4'] = [5, 2, 0.0, 105, 0.0]
 # this controls the 5 temperature sensor readings' output order
 # output will be a CSV with values corresponding to this order
 # readingsOrder = ['TREATMENT', 'CONTROL', 'HEATER', 'D3', 'D4']
-# the values are the "key" values from the readings[key] = []
 readingsOrder = ['HEATER', 'CONTROL', 'TREATMENT', 'D3', 'D4']
 
 # CALLIBRATION TABLE
