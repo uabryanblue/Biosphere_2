@@ -28,30 +28,6 @@ rtc = machine.RTC()
 
 curr_time = rtc.datetime()
 
-# cur_minutes = curr_time[5]
-# boundary = cur_minutes % conf.LOG_INTERVAL 
-# last_boundary = boundary
-# b_hit = (cur_minutes % conf.LOG_INTERVAL) == 0
-
-# while True:
-#     if (b_hit == True):
-#         print(f"***\nboundary hit, log: {realtc.formatrtc(curr_time)}, rtc time {realtc.formatrtc(rtc.datetime())}")
-#         print(f"{boundary}\n***")
-#         b_hit = False
-#     else:
-#         curr_time = rtc.datetime()
-#         cur_minutes = curr_time[5]
-#         boundary = cur_minutes % conf.LOG_INTERVAL 
-#         if boundary == last_boundary:
-#             print(f"{realtc.formatrtc(curr_time)} SKIP on {boundary} == {last_boundary}")
-#         else:
-#             b_hit = (cur_minutes % conf.LOG_INTERVAL) == 0
-#             last_boundary = boundary
-#             print(f"---{realtc.formatrtc(curr_time)} RESET to {boundary} == {last_boundary}")
-
-#     time.sleep(5)
-
-
 
 def main():
     print("START SENSOR")
@@ -101,7 +77,7 @@ def main():
     humidity = 0.0
     pressure = 0.0
     counter = 0  # numbe of readings taken used for averaging
-    recordNumber = 0  # record number from the last time the system restarted
+    recordNumber = 1  # record number from the last time the system restarted
     curr_time = rtc.datetime()
 
     # handle the logging in minutes
