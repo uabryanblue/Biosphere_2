@@ -46,6 +46,19 @@ i2c = machine.I2C(sda=machine.Pin(4), scl=machine.Pin(5))
 ds3231 = ds3231_gen.DS3231(i2c)
 
 ntptime.settime()
+
+#######################
+
+
+# def set_time():
+#     ntptime.settime()
+#     tm = utime.localtime()
+#     tm = tm[0:3] + (0,) + tm[3:6] + (0,)
+#     machine.RTC().datetime(tm)
+#     print('current time: {}'.format(utime.localtime())) 
+
+######################
+
 (year, month, day, weekday, hours, minutes, seconds, subseconds) = rtc.datetime()
 print ("UTC Time: ")
 print((year, month, day, hours, minutes, seconds))
