@@ -43,7 +43,8 @@ peers["TIME"] = [b'\xc4[\xbe\xe5\x03R'] # try to get time from here M1
 
 # --------------------
 # SENSOR READINGS
+# !!!!!!!! LOG_INTERVAl MUST BE GREATER THAN SAMPLE_INTERVAL !!!!!!!
 # LOG_INTERVAL in minutes
 # SAMPLE_INTERVAL in ms e.g. 15 seconds = 15000 ms
-LOG_INTERVAL = 2 # minutes
+LOG_INTERVAL = 15 # minutes, larger than SAMPLE_INTERVAL
 SAMPLE_INTERVAL = 15000 # ms
