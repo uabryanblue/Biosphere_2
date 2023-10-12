@@ -101,33 +101,7 @@ def main():
     humidity = 0.0
     pressure = 0.0
     counter = 0  # numbe of readings taken used for averaging
-    recordNumber = 1  # record number from the last time the system restarted
-
-
-    # now = time.ticks_ms(); deadline = time.ticks_add(time.ticks_ms(), 5000)
-    # if time.ticks_diff(deadline, time.ticks_ms()) <= 0:
-    #     do_a_little_of_something()
-    # now = time.ticks_ms(); deadline = time.ticks_add(time.ticks_ms(), 5000)
-
-    # # This code snippet is not optimized docs.micropython.org
-    # now = time.ticks_ms()
-    # scheduled_time = task.scheduled_time()
-    # if ticks_diff(scheduled_time, now) > 0:
-    #     print("Too early, let's nap")
-    #     sleep_ms(ticks_diff(scheduled_time, now))
-    #     task.run()
-    # elif ticks_diff(scheduled_time, now) == 0:
-    #     print("Right at time!")
-    #     task.run()
-    # elif ticks_diff(scheduled_time, now) < 0:
-    #     print("Oops, running late, tell task to run faster!")
-    #     task.run(run_faster=true)
-
-    # curr_time = rtc.datetime()
-    # tsec = ((curr_time[5] * 60) + curr_time[6])
-    # boundary = tsec % interval
-    # last_boundary = boundary
-
+    recordNumber = 0  # record number from the last time the system restarted
     curr_time = rtc.datetime()
 
     # handle the logging in minutes
@@ -138,9 +112,9 @@ def main():
 
     # handle the sensor reading in ms
     now = time.ticks_ms()
-    logtime  = time.ticks_add(now, log_interval) # log entries
     readtime = time.ticks_add(now, interval) # take readings
-    print(f"STARE OF WHILE {realtc.formatrtc(rtc.datetime())} readtime {readtime}, logtime {logtime}")
+
+    print(f"START OF WHILE {realtc.formatrtc(rtc.datetime())} readtime {readtime}")
     while True:
     
         # collect data at 0 or negative diff, readtime was hit
@@ -156,14 +130,11 @@ def main():
             gc.collect()    
 
 
-
-
         # LOG THE DATA AS NEEDED
         if (b_hit == True) and (counter > 0):
             print(f"***\nboundary hit, log: {realtc.formatrtc(curr_time)}, rtc time {realtc.formatrtc(rtc.datetime())}")
-            print(f"{boundary}\n***")
             print(f"##### BREAK TO LOG DATA #####")
-            date_time = realtc.formatrtc(rtc.datetime()) 
+            date_time = realtc.formatrtc(curr_time) # use the trigger time, not current time
             
             print(f"NEED TO LOG DATA: {date_time} interval: {interval}")
             out = ",".join([str(recordNumber), date_time, STR_MAC, str(temperature/counter), str(humidity/counter), str(pressure/counter), str(counter)])
@@ -197,41 +168,11 @@ def main():
                 print(f"---{realtc.formatrtc(curr_time)} RESET to {boundary} == {last_boundary}")
 
 
-
-
-
-
-
-        # # log data at 0 or negative diff, logtime was hit
-        # if time.ticks_diff(logtime, time.ticks_ms()) <= 0:
-        #     now = time.ticks_ms()
-        #     logtime = time.ticks_add(now, log_interval)
-
-        #     print(f"##### BREAK TO LOG DATA #####")
-        #     date_time = realtc.formatrtc(rtc.datetime()) 
-            
-        #     print(f"NEED TO LOG DATA: {date_time} interval: {interval}")
-        #     out = ",".join([str(recordNumber), date_time, STR_MAC, str(temperature/counter), str(humidity/counter), str(pressure/counter), str(counter)])
-        #     out = "CLIMATE:" + out
-        #     # print(f"LOG:{conf.AVG_INTERVAL} MINUTE AVERAGE: {out}")
-        #     [espnowex.esp_tx(logger, esp_con, out) for logger in conf.peers['DATA_LOGGER']]
-        #     print(f"##### LOGGED DATA #####")
-
-        #     # re-initialize variables
-        #     recordNumber += 1
-        #     counter = 0
-        #     temperature = 0.0
-        #     humidity = 0.0
-        #     pressure = 0.0
-        #     # get the accurate time, not sync, can be off by quite a bit
-        #     realtc.get_remote_time(esp_con)
-        #     print(f"RESET TIME: {realtc.formatrtc(rtc.datetime())}")
-        #     gc.collect()
         # conf.SAMPLE_INTERVAL
-        time.sleep_ms(int(conf.SAMPLE_INTERVAL/4))
+        time.sleep_ms(int(conf.SAMPLE_INTERVAL/3))
         # time.sleep(1) # don't run continuously
-        print(f"LOOP FINISHED counter:{counter}, record number:{recordNumber}")
-        print(f"read:{time.ticks_diff(readtime, time.ticks_ms())} log:{time.ticks_diff(logtime, time.ticks_ms())}")
+        print(f"LOOP FINISHED counter:{counter}, record number:{recordNumber}, read_ticks_ms:{time.ticks_diff(readtime, time.ticks_ms())}")
+        # print(f"read:{time.ticks_diff(readtime, time.ticks_ms())}")
 
         gc.collect()
 
