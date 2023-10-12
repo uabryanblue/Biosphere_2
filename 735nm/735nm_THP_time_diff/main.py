@@ -77,7 +77,7 @@ def main():
     humidity = 0.0
     pressure = 0.0
     counter = 0  # numbe of readings taken used for averaging
-    recordNumber = 1  # record number from the last time the system restarted
+    recordNumber = 1  # record number restart when program restarts
     curr_time = rtc.datetime()
 
     # handle the logging in minutes
