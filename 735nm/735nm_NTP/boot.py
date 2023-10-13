@@ -1,0 +1,3 @@
+import NTP
+
+NTP.main()
