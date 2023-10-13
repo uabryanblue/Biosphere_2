@@ -1,5 +1,5 @@
 {
-  "name": "735nm_THP_time_diff",
+  "name": "735nm_THP_bad_loop",
   "py_ignore": [
       "pymakr.conf",
       ".vscode",

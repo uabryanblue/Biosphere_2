@@ -32,19 +32,16 @@ MYROLE = "THP" # temperatue humidity pressure aspirated sensor
 peers = {}
 # remote sensor configuration, connect to all data loggers, pick one for time
 # peers["DATA_LOGGER"] = [b'\xc4[\xbe\xe4\xfe\x08', b'\x8c\xaa\xb5M\x7f\x18', b'HU\x19\xdf)\x86', b'\xc4[\xbe\xe5\x03R']  # list of data loggers
-peers["DATA_LOGGER"] = [b'\xc4[\xbe\xe4\xfe\x08', b'\x8c\xaa\xb5M\x7f\x18', b'HU\x19\xdf)\x86', b'\xc4[\xbe\xe5\x03R']  # list of data loggers
+peers["DATA_LOGGER"] = [b'\xc4[\xbe\xe4\xfe\x08', b'\x8c\xaa\xb5M\x7f\x18', b'HU\x19\xdf)\x86']  # list of data loggers
 # one entry from DATA_LOGGER needs to be sent as TIME
 # TODO change to look at the DATA_LOGGER entries as they all can send the time
 # peers["TIME"] = [b'\xc4[\xbe\xe5\x03R'] # try to get time from here
 # peers["TIME"] = [b'\xc4[\xbe\xe4\xfe\x08'] # try to get time from here
-peers["TIME"] = [b'\xc4[\xbe\xe5\x03R'] # try to get time from here M1
+peers["TIME"] = [b'HU\x19\xdf)\x86'] # try to get time from here M1
 
 # --------------------
 
 # --------------------
 # SENSOR READINGS
-# !!!!!!!! LOG_INTERVAl MUST BE GREATER THAN SAMPLE_INTERVAL !!!!!!!
-# LOG_INTERVAL in minutes
-# SAMPLE_INTERVAL in ms e.g. 15 seconds = 15000 ms
-LOG_INTERVAL = 15 # minutes, larger than SAMPLE_INTERVAL
-SAMPLE_INTERVAL = 15000 # ms
+# AVG_INTERVAL - number of minutes used to calculate and send an average
+AVG_INTERVAL = 15

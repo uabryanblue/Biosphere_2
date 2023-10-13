@@ -24,10 +24,13 @@ time.sleep(5)
 D0.on()
 del D0
 
+rtc = machine.RTC()
+
+curr_time = rtc.datetime()
+
 
 def main():
     print("START SENSOR")
-    rtc = machine.RTC()
 
     # verify that the conf.py file is associated with this code base
     if conf.MYROLE == "THP":
@@ -40,7 +43,6 @@ def main():
     else:
         print(f'MY ROLE IS {conf.MYROLE} BUT IT SHOULD BE "THP".')
         print('!!!!!!!!invalid conf.py file!!!!!!!!')
-        # TODO send an error message recorded in the datalogger syslog
 
     # turn off WiFi and init espnow
     station, ap = espnowex.wifi_reset()
@@ -55,8 +57,8 @@ def main():
     STR_MAC = "".join(["{:02x}".format(b) for b in RAW_MAC])
     print(f"My MAC addres:: {MY_MAC} RAW MAC:: {RAW_MAC}")
     
+    # sync date/time before starting
     realtc.get_remote_time(esp_con)
-
     gc.collect()
 
     # BME280 setup on I2C
@@ -68,83 +70,85 @@ def main():
     gc.collect()
 
     # initialize variables
-    interval = conf.AVG_INTERVAL * 60  # number seconds to average readings
+    interval = conf.SAMPLE_INTERVAL # number ms to average readings
+    log_interval = conf.LOG_INTERVAL * 60000 # number of ms to log readings
     # accumulate reading values that will be averaged
     temperature = 0.0
     humidity = 0.0
     pressure = 0.0
     counter = 0  # numbe of readings taken used for averaging
-    recordNumber = 1  # record number from the last time the system restarted
-
+    recordNumber = 1  # record number restart when program restarts
     curr_time = rtc.datetime()
-    tsec = ((curr_time[5] * 60) + curr_time[6])
-    boundary = tsec % interval
+
+    # handle the logging in minutes
+    cur_minutes = curr_time[5]
+    boundary = cur_minutes % conf.LOG_INTERVAL 
     last_boundary = boundary
+    b_hit = (cur_minutes % conf.LOG_INTERVAL) == 0
 
+    # handle the sensor reading in ms
+    now = time.ticks_ms()
+    readtime = time.ticks_add(now, interval) # take readings
+
+    print(f"START OF WHILE {realtc.formatrtc(rtc.datetime())} readtime {readtime}")
     while True:
-        # collect data
-        temperature += float(BME280_SENSOR.temperature)
-        humidity += float(BME280_SENSOR.humidity)
-        pressure += float(BME280_SENSOR.pressure)
-        counter += 1
-        gc.collect()
+    
+        # collect data at 0 or negative diff, readtime was hit
+        if time.ticks_diff(readtime, time.ticks_ms()) <= 0:
+            now = time.ticks_ms()
+            readtime = time.ticks_add(now, interval)
 
-        # if the boundary happens to hit 0, or we have not gone over the interval run the task
-        print(f"BEFORE WHILE: {realtc.formatrtc(curr_time)}  tsec:{tsec}  boundary %:{boundary}  last boundary: {last_boundary}  interval:{interval}")
-        while (last_boundary == boundary): # set equal below to trigger logging at the correct time
-            # get values every 5 seconds
-            time.sleep(5)
-            # run the task
             temperature += float(BME280_SENSOR.temperature)
             humidity += float(BME280_SENSOR.humidity)
             pressure += float(BME280_SENSOR.pressure)
             counter += 1
+            print(f"added THP reading {counter}")
+            gc.collect()    
+
+
+        # LOG THE DATA AS NEEDED
+        if (b_hit == True) and (counter > 0):
+            print(f"***\nboundary hit, log: {realtc.formatrtc(curr_time)}, rtc time {realtc.formatrtc(rtc.datetime())}")
+            print(f"##### BREAK TO LOG DATA #####")
+            date_time = realtc.formatrtc(curr_time) # use the trigger time, not current time
+            
+            print(f"NEED TO LOG DATA: {date_time} interval: {interval}")
+            out = ",".join([str(recordNumber), date_time, STR_MAC, str(temperature/counter), str(humidity/counter), str(pressure/counter), str(counter)])
+            out = "CLIMATE:" + out
+            # print(f"LOG:{conf.AVG_INTERVAL} MINUTE AVERAGE: {out}")
+            [espnowex.esp_tx(logger, esp_con, out) for logger in conf.peers['DATA_LOGGER']]
+            print(f"##### LOGGED DATA #####")
+
+            # re-initialize variables
+            recordNumber += 1
+            counter = 0
+            temperature = 0.0
+            humidity = 0.0
+            pressure = 0.0
+
+            # get the accurate time, not sync, can be off by quite a bit
+            realtc.get_remote_time(esp_con)
+            print(f"RESET TIME: {realtc.formatrtc(rtc.datetime())}")
             gc.collect()
-
+            # we logged for this boundary, skip until next boundary
+            b_hit = False
+        else:
             curr_time = rtc.datetime()
-            tsec = ((curr_time[5] * 60) + curr_time[6]) # minutes * 60 + seconds
-            msec = curr_time[7]
-            boundary = tsec % interval # mod the total elapsed seconds by interval in seconds
-            print('-------')
-            print(f'current date: {realtc.formatrtc(curr_time)}')
-            print(f'min: {curr_time[5]} and sec: {curr_time[6]} msec:{msec}')
-            print(f'tsec {tsec}, boundary% {boundary}, last_boundary {last_boundary}, counter {counter}')
-            print('-------')
-            if boundary > last_boundary: # and counter <= interval: 
-                # print(f'### continue {boundary} > {last_boundary} and {counter} <= {interval}')
+            cur_minutes = curr_time[5]
+            boundary = cur_minutes % conf.LOG_INTERVAL 
+            if boundary == last_boundary:
+                print(f"{realtc.formatrtc(curr_time)} SKIP on {boundary} == {last_boundary}")
+            else:
+                b_hit = (cur_minutes % conf.LOG_INTERVAL) == 0
                 last_boundary = boundary
+                print(f"---{realtc.formatrtc(curr_time)} RESET to {boundary} == {last_boundary}")
 
-        # interval was exceeded, run alternate code
-        # send data to data logger
-        print(f'\n### BREAK ON CONDITION ({boundary} >= {last_boundary})') # and {counter} <= {interval}\n')
 
-        date_time = realtc.formatrtc(curr_time) # curr_time from above
-        # are time and rtc the same? should be as just reset
-        tm = realtc.formattime(time.localtime())
-        rtm = realtc.formatrtc(rtc.datetime())
-        print(f"NEED TO LOG DATA: {date_time}, tm: {tm}, rtm: {rtm},\n  tsec: {tsec},  boundary %: {boundary},  last boundary: {last_boundary}, interval: {interval}")
-        out = ",".join([str(recordNumber), date_time, STR_MAC, str(temperature/counter), str(humidity/counter), str(pressure/counter), str(counter)])
-        out = "CLIMATE:" + out
-        print(f"{conf.AVG_INTERVAL} MINUTE AVERAGE: {out}")
-        [espnowex.esp_tx(logger, esp_con, out) for logger in conf.peers['DATA_LOGGER']]
-
-        # re-initialize variables
-        recordNumber += 1
-        counter = 0
-        temperature = 0.0
-        humidity = 0.0
-        pressure = 0.0
-        gc.collect()
-
-        realtc.get_remote_time(esp_con)
-        curr_time = rtc.datetime()
-        date_time = realtc.formatrtc(curr_time)
-        tsec = ((curr_time[5] * 60) + curr_time[6])
-        msec = curr_time[7]
-
-        boundary = tsec % interval
-        last_boundary = boundary        # reset interval checking
-        print(f"RESET VALUES: {realtc.formatrtc(curr_time)}, tsec:{tsec}, msec:{msec}, boundary %:{boundary}  last boundary: {last_boundary} interval:{interval}")
+        # conf.SAMPLE_INTERVAL
+        time.sleep_ms(int(conf.SAMPLE_INTERVAL/3))
+        # time.sleep(1) # don't run continuously
+        print(f"LOOP FINISHED counter:{counter}, record number:{recordNumber}, read_ticks_ms:{time.ticks_diff(readtime, time.ticks_ms())}")
+        # print(f"read:{time.ticks_diff(readtime, time.ticks_ms())}")
 
         gc.collect()
 
