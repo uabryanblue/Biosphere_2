@@ -6,14 +6,22 @@ STARTED: 2023
 """
 
 import esp
+import NTP
 import gc
 # from realtc import rtcsetup
 # decrease space used by esp system logging
 esp.osdebug(None)
 gc.enable()
 gc.collect()
+
+try:
+    print(f"NTP: try to set time")
+    NTP.main()
+except:
+    pass
 # rtcsetup()
 # pushes first real line of output
 # to the line after the terminal garbage finishes
 # "garbage" is due to mismatch in terminal speed on boot, not a bug
+del NTP
 print("booting")
