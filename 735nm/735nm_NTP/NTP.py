@@ -4,6 +4,7 @@ import network
 import ntptime
 # import realtc
 import time
+import sys
 import ds3231_gen
 import gc
 
@@ -20,10 +21,17 @@ def connect(id, pswd):
     return
   station.active(True)
   station.connect(ssid, password)
-  while station.isconnected() == False:
+  counter = 0
+  while (station.isconnected() == False) and (counter < 1000):
+    counter += 1
+    time.sleep_ms(10)
     pass
+  if counter >= 1000:
+    print(f"FAILD ON NTP")
+    sys.exit()
   print("Connection successful")
   print(station.ifconfig())
+ 
  
 def disconnect():
   if station.active() == True: 
