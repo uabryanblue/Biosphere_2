@@ -54,7 +54,7 @@ def main():
 
     # convert hex into readable mac address
     MY_MAC = ":".join(["{:02x}".format(b) for b in RAW_MAC])
-    STR_MAC = "".join(["{:02x}".format(b) for b in RAW_MAC])
+    MY_ID = "".join(["{:02x}".format(b) for b in RAW_MAC]).upper()
     print(f"My MAC addres:: {MY_MAC} RAW MAC:: {RAW_MAC}")
     
     # sync date/time before starting
@@ -113,7 +113,7 @@ def main():
             date_time = realtc.formatrtc(curr_time) # use the trigger time, not current time
             
             print(f"NEED TO LOG DATA: {date_time} interval: {interval}")
-            out = ",".join([str(recordNumber), date_time, STR_MAC, str(temperature/counter), str(humidity/counter), str(pressure/counter), str(counter)])
+            out = ",".join([str(recordNumber), date_time, MY_ID, str(temperature/counter), str(humidity/counter), str(pressure/counter), str(counter)])
             out = "CLIMATE:" + out
             # print(f"LOG:{conf.AVG_INTERVAL} MINUTE AVERAGE: {out}")
             [espnowex.esp_tx(logger, esp_con, out) for logger in conf.peers['DATA_LOGGER']]
@@ -157,7 +157,7 @@ if __name__ == "__main__":
         print(f"reset code: {machine.reset_cause()}")
         main()
     except KeyboardInterrupt as e:
-        print(f"Got ctrl-c {e}")
+        print(f"Got   ctrl-c {e}")
     finally:
         print(f"Fatal error, restarting.  {machine.reset_cause()} !!!!!!!!!!!")
         machine.reset()
