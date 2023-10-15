@@ -17,7 +17,7 @@ MYNAME = "ESP8266 MicroPython Temperature, Humidity, Pressure Sensor" # long gen
 # the code executes. The different configurations are shown here
 # MYROLE = "CALIBRATE" # command line callibration
 # MYROLE = "DATALOGGER" # data logger box
-# MYROLE = "TRCCONTROL" # multiple thermocouple sensor with relay box
+# MYROLE = "TRC" # multiple thermocouple sensor with relay box
 MYROLE = "THP" # temperatue humidity pressure aspirated sensor
 
 # --------------------
