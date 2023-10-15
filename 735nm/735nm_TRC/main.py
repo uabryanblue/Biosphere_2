@@ -42,7 +42,7 @@ def main():
     D8.off()
 
     # verify that the conf.py file is associated with this code base
-    if conf.MYROLE == "TRCCONTROL":
+    if conf.MYROLE == "TRC":
         print("\n================ MY CONFIGURATION ================")
         print("MY DATA LOGGERS")
         [print(val) for val in conf.peers['DATA_LOGGER']]
@@ -54,7 +54,7 @@ def main():
         realtc.get_remote_time(esp_con)
         TRC_main.trc_main(esp_con, station, RAW_MAC)
     else:
-        print(f'MY ROLE IS {CONF.MYROLE} BUT IT SHOULD BE "TRCCONTROL".')
+        print(f'MY ROLE IS {conf.MYROLE} BUT IT SHOULD BE "TRC".')
         print('!!!!!!!!invalid conf.py file!!!!!!!!')
         # TODO send an error message recorded in the datalogger syslog
 
