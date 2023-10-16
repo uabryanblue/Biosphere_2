@@ -64,21 +64,21 @@ peers["TIME"] = [b'\xc4[\xbe\xe5\x03R'] # try to get time from here M1
 # HEAING VALUES
 # --------------------
 # desired degrees celsius differential of warmed leaf vs control leaf
-TDIFF = 3 # number of degees, not a temperature e.g. 3 degrees C above ambient
+TDIFF = 2 # number of degees, not a temperature e.g. 3 degrees C above ambient
 
 # maxiumum celsius temperature of heated leaf
 # this is the highest value that heating should be applied
 # it is a failsafe to prevent scorching, or in case of heater malfunction
 # to cut the power
 # Value must be less than TMAX_HEATER
-TMAX = 50 # 122 F
+TMAX = 52 # 122 F
 
 # maximum degrees celsius that the heating device should achieve
 # this will turn the device off at this setpoint and should be
 # considered a maximum constraint of the heating device
 # safety value, shut the power off
 # Value must be greater than TMAX !!!
-TMAX_HEATER = 60 # 140 F
+TMAX_HEATER = 55 # 140 F
 
 # --------------------
 # SENSOR READINGS
@@ -86,8 +86,8 @@ TMAX_HEATER = 60 # 140 F
 # !!!!!!!! LOG_INTERVAl MUST BE GREATER THAN SAMPLE_INTERVAL !!!!!!!
 # LOG_INTERVAL in minutes
 # SAMPLE_INTERVAL in ms e.g. 15 seconds = 15000 ms
-LOG_INTERVAL = 15 # minutes, larger than SAMPLE_INTERVAL
-SAMPLE_INTERVAL = 15000 # ms
+LOG_INTERVAL = 1.25 # minutes, larger than SAMPLE_INTERVAL
+SAMPLE_INTERVAL = 5000 # ms
 
 # --------------------
 # 5 THERMOCOUPLE CONFIGURATIONS
