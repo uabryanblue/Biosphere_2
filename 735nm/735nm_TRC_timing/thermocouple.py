@@ -162,3 +162,53 @@ def read_thermocouples(readings):
     tspi.deinit()
 
     return readings, myReadings
+
+
+def read_avg_thermocouples():
+    """setup spi connection, read all thermocouples, close spi connection
+    nan values are only given if all values that are read are nan otherwise
+    the average of all readings not nan are returned"""
+    # create variable to do averages based on readings structure
+    myReadings = conf.readings # just for calculations
+    # initialization for those values that need to be reset
+    for key in myReadings.keys():
+        myReadings[key][2] = 0.0 # position is cumulative temp value
+        myReadings[key][3] = 0   # position is reading count for averaging
+        myReadings[key][4] = 0.0 # position is cumulative internal temp value
+    
+    tspi = SPI(1, baudrate=5000000, polarity=0, phase=0)
+    # do one read, main loop for multiple
+    numSamples = 3 # specifiy the number of readings to take and average
+    for i in range(numSamples):
+        for key in myReadings.keys():
+            cs_pin = myReadings[key][0] # first position is pin number
+            temperature, internal_temperature = read_thermocouple(cs_pin, tspi)
+
+            if not isnan(temperature): # only increment true values and ignore nan values
+                myReadings[key][2] += temperature
+                myReadings[key][3] += 1
+                myReadings[key][4] += internal_temperature
+
+
+
+            # sleep(0.50) # delay before next reading, can be modified        
+    gc.collect()
+    for key in myReadings.keys():
+        if myReadings[key][3] > 0:  #  position 3 is number of successful reads for averaging
+            avgReading = round(myReadings[key][2] / myReadings[key][3], 2)
+            avgInternalReading = round(myReadings[key][4] / myReadings[key][3], 2)
+            # calReading = callibrated_re?eading(myReadings[key][3], avgReading)
+            # print(f"data key: {myReadings[key][3]}   key: {key}   avg: {avgReading}   cal: {calReading}")
+            myReadings[key][2] = avgReading
+            myReadings[key][4] = avgInternalReading
+            
+        else: # we didn't take any readings, therefore not a number
+            myReadings[key][2] = float("NaN")
+            myReadings[key][4] = float("NaN")
+                  
+    # turn all of the thermocouple sensors off when not in use
+    thermocouples_off()
+
+    tspi.deinit()
+
+    return  myReadings
