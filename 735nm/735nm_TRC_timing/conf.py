@@ -88,7 +88,7 @@ TMAX_HEATER = 55 # 140 F
 # SAMPLE_INTERVAL (float) in ms e.g. take a sample every 15 seconds = 15000 ms
 # TC_READS (int) number of TC reads averaged together to make 1 sample value
 LOG_INTERVAL = 1.25 # minutes, larger than SAMPLE_INTERVAL
-SAMPLE_INTERVAL = 5000 # ms
+SAMPLE_INTERVAL = 10000 # ms
 TC_READS = 3
 
 # --------------------

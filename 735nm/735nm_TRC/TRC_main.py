@@ -74,4 +74,4 @@ def trc_main(esp_con, sta, RAW_MAC):
         elif diff >= (conf.TDIFF - 0.25):  # higher than required temp control leaf
             D8.off()
 
-        time.sleep_ms(int(conf.SAMPLE_INTERVAL/3))
+        time.sleep_ms(int(conf.SAMPLE_INTERVAL))

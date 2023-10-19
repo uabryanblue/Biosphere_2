@@ -48,7 +48,7 @@ MYNAME = "ESP8266 MicroPython Temperature Sensor and Temperature Control" # long
 peers = {}
 # remote sensor configuration, connect to all data loggers, pick one for time
 peers["DATA_LOGGER"] = [b'\xc4[\xbe\xe4\xfe\x08', b'\x8c\xaa\xb5M\x7f\x18', b'HU\x19\xdf)\x86', b'\xc4[\xbe\xe5\x03R']  # list of data loggers
-peers["TIME"] = [b'\xc4[\xbe\xe5\x03R'] # try to get time from here M1
+peers["TIME"] = [b'\xc4[\xbe\xe4\xfe\x08'] # try to get time from here M1
 
 # --------------------
 # DATA LOGGER

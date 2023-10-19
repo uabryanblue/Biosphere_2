@@ -37,7 +37,7 @@ peers["DATA_LOGGER"] = [b'\xc4[\xbe\xe4\xfe\x08', b'\x8c\xaa\xb5M\x7f\x18', b'HU
 # TODO change to look at the DATA_LOGGER entries as they all can send the time
 # peers["TIME"] = [b'\xc4[\xbe\xe5\x03R'] # try to get time from here
 # peers["TIME"] = [b'\xc4[\xbe\xe4\xfe\x08'] # try to get time from here
-peers["TIME"] = [b'\xc4[\xbe\xe5\x03R'] # try to get time from here M1
+peers["TIME"] = [b'\xc4[\xbe\xe4\xfe\x08'] # try to get time from here M1
 
 # --------------------
 
