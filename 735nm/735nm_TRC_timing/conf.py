@@ -84,10 +84,12 @@ TMAX_HEATER = 55 # 140 F
 # SENSOR READINGS
 # --------------------
 # !!!!!!!! LOG_INTERVAl MUST BE GREATER THAN SAMPLE_INTERVAL !!!!!!!
-# LOG_INTERVAL in minutes
-# SAMPLE_INTERVAL in ms e.g. 15 seconds = 15000 ms
+# LOG_INTERVAL (float) in minutes
+# SAMPLE_INTERVAL (float) in ms e.g. take a sample every 15 seconds = 15000 ms
+# TC_READS (int) number of TC reads averaged together to make 1 sample value
 LOG_INTERVAL = 1.25 # minutes, larger than SAMPLE_INTERVAL
 SAMPLE_INTERVAL = 5000 # ms
+TC_READS = 3
 
 # --------------------
 # 5 THERMOCOUPLE CONFIGURATIONS
