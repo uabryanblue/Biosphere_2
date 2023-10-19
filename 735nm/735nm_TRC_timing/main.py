@@ -42,45 +42,26 @@ def init_device():
     return esp_con, sta, RAW_MAC
 
 def average_readings(myReadings):
-    print(f"\n{myReadings}\numSamples")
     # average out all of the readings for logging
     for key in myReadings.keys():
         if myReadings[key][3] > 0:  #  position 3 is number of successful reads for averaging
-            avgReading = round(myReadings[key][2] / myReadings[key][3], 2)
-            avgInternalReading = round(myReadings[key][4] / myReadings[key][3], 2)
+            print(f"     AVERAGE  # reads{myReadings[key][3]}, temp: {myReadings[key][2]}")
+            myReadings[key][2]  = round(myReadings[key][2] / myReadings[key][3], 2)
+            myReadings[key][4] = round(myReadings[key][4] / myReadings[key][3], 2)
             # calReading = callibrated_re?eading(myReadings[key][3], avgReading)
             # print(f"data key: {myReadings[key][3]}   key: {key}   avg: {avgReading}   cal: {calReading}")
-            myReadings[key][2] = avgReading
-            myReadings[key][4] = avgInternalReading
+            # myReadings[key][2] = avgReading
+            # myReadings[key][4] = avgInternalReading
         else: # we didn't take any readings, therefore not a number
             myReadings[key][2] = float("NaN")
             myReadings[key][4] = float("NaN")
-        print(myReadings)
+        # print(myReadings)
     return myReadings
 
 def update_heating(treatment_temp, reference_temp, heat_temp):
-    # print(f"\n{myReadings}\numSamples")
-    # # average out all of the readings for logging
-    # for key in myReadings.keys():
-    #     if myReadings[key][3] > 0:  #  position 3 is number of successful reads for averaging
-    #         avgReading = round(myReadings[key][2] / myReadings[key][3], 2)
-    #         avgInternalReading = round(myReadings[key][4] / myReadings[key][3], 2)
-    #         # calReading = callibrated_re?eading(myReadings[key][3], avgReading)
-    #         # print(f"data key: {myReadings[key][3]}   key: {key}   avg: {avgReading}   cal: {calReading}")
-    #         myReadings[key][2] = avgReading
-    #         myReadings[key][4] = avgInternalReading
-    #     else: # we didn't take any readings, therefore not a number
-    #         myReadings[key][2] = float("NaN")
-    #         myReadings[key][4] = float("NaN")
-    #     print(myReadings)
 
-    #  myReadings = average_readings(myReadings)
-
-    # TEMPERATURE CONTROL
-    # treatment_avg = round(myReadings['TREATMENT'][2] / myReadings['TREATMENT'][3], 2)
-    # reference_avg = round(myReadings['REFERENCE'][2] / myReadings['REFERENCE'][3], 2)
     if (treatment_temp * reference_temp) == 0:
-        print(f"------------TURN RELAY OFF ref or treat temp 0 --------------")
+        print(f"------------TURN RELAY OFF, 0 found! ref {reference_temp} or treat {treatment_temp} --------------")
         D8.off()
         return        
     diff = treatment_temp - reference_temp
@@ -93,34 +74,24 @@ def update_heating(treatment_temp, reference_temp, heat_temp):
     TurnOn = False
     if diff <= (conf.TDIFF - 0.5):  # lower than required temp above control leaf
         TurnOn = True
-        # D8.on()
     elif diff > (conf.TDIFF):  # higher than required temp control leaf
         TurnOn = False
-        # D8.off()
 
     # check for out of bounds conditions
     ErrorTemp = False
     if math.isnan(diff) is True:
         ErrorTemp = ErrorTemp and True
-        # D8.off()  # trouble reading sensor, turn off for safety TODO generate error in system log
-    # elif myReadings['HEAT'][2] >= conf.TMAX_HEATER:  # error state, shut down heater
     elif heat_temp >= conf.TMAX_HEATER:  # error state, shut down heater
         ErrorTemp = ErrorTemp and True
-        # D8.off()  # TODO record an ERROR in the system log
-    # elif myReadings['TREATMENT'][2] >= conf.TMAX:  # warning leaf temp exceeded threshold, turn off heater
     elif treatment_temp >= conf.TMAX:  # warning leaf temp exceeded threshold, turn off heater
         ErrorTemp = ErrorTemp and True
-        # D8.off()  # TODO record a WARNING in the system log
 
-    # print(f"TurnOn {TurnOn} ErrorTemp {ErrorTemp}")
     if TurnOn == True and ErrorTemp == False:
-        print(f"TURN REALY ON")
+        print(f"            TURN REALY ON  {diff}")
         D8.on()
     else:
-        print(f"TURN RELAY OFF")
+        print(f"            TURN RELAY OFF  {diff}")
         D8.off()
-
-    # time.sleep_ms(500) # pause to ignore relay "noise" on TC read
     
 
 
@@ -182,13 +153,13 @@ def main():
     now = time.ticks_ms()
     readtime = time.ticks_add(now, interval) # take readings
 
-    # create variable to do TC averages based
+    # create variable to do TC accumulation
     myReadings = conf.readings
-    # initialization for those values that need to be reset
-    for key in myReadings.keys():
-        myReadings[key][2] = 0.0 # position is cumulative temp value
-        myReadings[key][3] = 0   # position is reading count for averaging
-        myReadings[key][4] = 0.0 # position is cumulative internal temp value
+    myReadings = thermocouple.initReadings(myReadings)
+
+    # create variable to do TC accumulation
+    avg_readings = conf.readings
+    avg_readings = thermocouple.initReadings(avg_readings)
 
     # ########################################################
     #               START RUNNING TRC
@@ -196,76 +167,32 @@ def main():
     print(f"START OF WHILE {realtc.formatrtc(rtc.datetime())} readtime {readtime}")
     while True:
     
+        # BEGIN SAMPLING LOOP
         # collect data when diff is <= 0, timer ran out
         if time.ticks_diff(readtime, time.ticks_ms()) <= 0:
             now = time.ticks_ms()
             readtime = time.ticks_add(now, interval)
 
+            avg_readings = thermocouple.initReadings(avg_readings)
             # read TC values
-            # readings = thermocouple.initReadings(conf.readings)
-            # readings, myReadings = thermocouple.read_thermocouples(readings)
-            # READ TC and add to myReadings, the accumulator for calculations
-            treatment_temp = 0
-            reference_temp = 0
-            heat_temp = 0
+            avg_readings = thermocouple.readThermocouples(tspi) 
 
-            avg_readings = thermocouple.read_avg_thermocouples()
-
-            # TODO used later on, could be changed to direct references below
-            treatment_temp = avg_readings["TREATMENT"][2]
-            reference_temp = avg_readings["REFERENCE"][2]
-            heat_temp = avg_readings["HEAT"][2]     
+            # make relay decisions for heating
+            update_heating(avg_readings["TREATMENT"][2], avg_readings["REFERENCE"][2], avg_readings["HEAT"][2])
 
             for key in avg_readings.keys():
-                if not math.isnan(treatment_temp): # only increment true values and ignore nan values
-                    myReadings[key][2] += treatment_temp
-                    myReadings[key][3] += 1
+                # only increment if treatment has a non-error value, ignore all on nan values
+                if (not math.isnan(avg_readings[key][2])) and (avg_readings[key][3] > 0): 
+                    print(f"Before           key +1 {key} temp my-avg: {myReadings[key][2]} -- {avg_readings[key][2]} # reads:  my-avg {myReadings[key][3]} -- {avg_readings[key][3]}")
+                    myReadings[key][2] += avg_readings[key][2]
+                    myReadings[key][3] += avg_readings[key][3]
                     myReadings[key][4] += avg_readings[key][4]
-
-
-
-            # add AVG_READINGS add to the myreadings structure
-            # for key in conf.readings.keys():
-                # cs_pin = conf.readings[key][0] # first position is pin number
-                # temperature, internal_temperature = thermocouple.read_thermocouple(cs_pin, tspi)
-                # if not math.isnan(temperature): # only increment true values and ignore nan values
-                # myReadings[key][2] += treatment_temp
-                # myReadings[key][2] += 1
-                # myReadings[key][2] += internal_temperature
-
-            # avg_readings = conf.readings()
-            # for key in conf.readings.keys():
-            #     cs_pin = conf.readings[key][0] # first position is pin number
-            #     temperature, internal_temperature = thermocouple.read_thermocouple(cs_pin, tspi)
-            #     if not math.isnan(temperature): # only increment true values and ignore nan values
-            #         avg_readings[key][2] += temperature
-            #         avg_readings[key][3] += 1
-            #         avg_readings[key][4] += internal_temperature
-
-
-                # if not math.isnan(temperature): # only increment true values and ignore nan values
-                #     myReadings[key][2] += temperature
-                #     myReadings[key][3] += 1
-                #     myReadings[key][4] += internal_temperature
-                    # if key == "TREATMENT":
-                # treatment_temp s= avg_readings["TREATMENT"][2]
-                #     # if key == "REFERENCE":
-                # reference_temp = avg_readings["REFERENCE"][2]
-                #     # if key == "HEAT":
-                # heat_temp = avg_readings["HEAT"][2]     
-
-                # print(f"---temp {key}: temp: {myReadings[key][2]}, counter: {myReadings[key][3]}, intern: {myReadings[key][4]}")
- 
+                    print(f"After            key +1 {key} temp: {myReadings[key][2]} -- {avg_readings[key][2]} # reads: {myReadings[key][3]} -- {avg_readings[key][3]}\n")
             print(f"added TC {counter}")
-            
-            # myReadings = update_heating(counter, myReadings)
-            update_heating(treatment_temp, reference_temp, heat_temp)
-            # time.sleep_ms(int(conf.SAMPLE_INTERVAL/5))
 
             counter += 1
-
             gc.collect()    
-        # END OF SAMPLE LOOP
+        # END OF SAMPLING LOOP
 
 
         # ############### LOG THE DATA ############### 
@@ -275,22 +202,11 @@ def main():
             
             print(f"log time: {date_time} log interval: {conf.LOG_INTERVAL} min")
             
+
             # ########## CALCULATE AVERAGES ########## 
-            # # average out all of the readings for logging
-            # for key in myReadings.keys():
-            #     if myReadings[key][3] > 0:  #  position 3 is number of successful reads for averaging
-            #         avgReading = round(myReadings[key][2] / myReadings[key][3], 2)
-            #         avgInternalReading = round(myReadings[key][4] / myReadings[key][3], 2)
-            #         # calReading = callibrated_re?eading(myReadings[key][3], avgReading)
-            #         # print(f"data key: {myReadings[key][3]}   key: {key}   avg: {avgReading}   cal: {calReading}")
-            #         conf.readings[key][2] = avgReading
-            #         conf.readings[key][4] = avgInternalReading
-            #     else: # we didn't take any readings, therefore not a number
-            #         conf.readings[key][2] = float("NaN")
-            #         conf.readings[key][4] = float("NaN")
+            myReadings = average_readings(myReadings)
 
             # ########## FORMAT AND SEND DATA ########## 
-            myReadings = average_readings(myReadings)
             temperature_data, internal_data = thermocouple.allReadings(myReadings)
             # org_data, org_inter = thermocouple.allReadings(myReadings)
             gc.collect()
@@ -312,11 +228,13 @@ def main():
             # ########## RE-INIT VARIABLES ##########  
             # create variable to do averages based on readings structure
             myReadings = conf.readings
-            # initialization for those values that need to be reset
-            for key in myReadings.keys():
-                myReadings[key][2] = 0.0 # position is cumulative temp value
-                myReadings[key][3] = 0   # position is reading count for averaging
-                myReadings[key][4] = 0.0 # position is cumulative internal temp value
+            myReadings = thermocouple.initReadings(myReadings)
+
+            # # initialization for those values that need to be reset
+            # for key in myReadings.keys():
+            #     myReadings[key][2] = 0.0 # position is cumulative temp value
+            #     myReadings[key][3] = 0   # position is reading count for averaging
+            #     myReadings[key][4] = 0.0 # position is cumulative internal temp value
 
             # get the accurate time, not sync, can be off by quite a bit
             realtc.get_remote_time(esp_con)
