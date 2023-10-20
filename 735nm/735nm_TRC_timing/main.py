@@ -48,7 +48,7 @@ def average_readings(myReadings):
 
     for key in myReadings.keys():
         if myReadings[key][3] > 0:  #  position 3 is number of successful reads for averaging
-            print(f"     AVERAGE  # reads{myReadings[key][3]}, temp: {myReadings[key][2]}")
+            print(f"     AVERAGE  # reads {myReadings[key][3]}, temp: {myReadings[key][2]}")
             myReadings[key][2]  = round(myReadings[key][2] / myReadings[key][3], 2)
             myReadings[key][4] = round(myReadings[key][4] / myReadings[key][3], 2)
             # myReadings[key][3] = 1
@@ -69,14 +69,19 @@ def update_heating(treatment_temp, reference_temp, heat_temp):
         return        
     diff = treatment_temp - reference_temp
     # diff = treatment_avg - reference_avg
-    print(f"###### treatment_temp: {treatment_temp} reference_temp: {reference_temp} diff: {diff} ")
-    
+    # on = conf.TDIFF * 0.01 # - 0.5)
+    # off = conf.TDIFF - 0.75
+    on = conf.TDIFF - 0.5
+    off = conf.TDIFF - 0.25 # don't overshoot
+    # print(f"ON: {on}  OFF: {off}")
+
     # deadband to prevent oscillation
     # set relay based on delta T first, then look for out of range errors
     TurnOn = False
-    if diff <= (conf.TDIFF - 0.5):  # lower than required temp above control leaf
+    # if diff <= (conf.TDIFF - 0.5):  # lower than required temp above control leaf
+    if diff <= (off):  # lower than required temp above control leaf
         TurnOn = True
-    elif diff > (conf.TDIFF):  # higher than required temp control leaf
+    elif diff > (on):  # higher than required temp control leaf
         TurnOn = False
 
     # check for out of bounds conditions
@@ -87,14 +92,15 @@ def update_heating(treatment_temp, reference_temp, heat_temp):
         ErrorTemp = ErrorTemp and True
     elif treatment_temp >= conf.TMAX:  # warning leaf temp exceeded threshold, turn off heater
         ErrorTemp = ErrorTemp and True
-
+    print(f"\n#----------------------------#")
     if (TurnOn == True) and (ErrorTemp == False):
-        print(f"            TURN REALY ON  {diff}")
+        print(f"***  ON ***   DIFF: {diff:<5}")
         D8.on()
     else:
-        print(f"            TURN RELAY OFF  {diff}")
+        print(f"***  OFF ***  DIFF: {diff:<5}")
         D8.off()
-    
+    print(f"ON: <= {on:<5}  OFF: > {off:<5}\ntrt: {treatment_temp:5}  ref: {reference_temp:5}")
+    print(f"#----------------------------#\n")
 
 
 def main():
@@ -152,7 +158,7 @@ def main():
 
     # handle the sensor reading in ms
     now = time.ticks_ms()
-    readtime = time.ticks_add(now, conf.SAMPLE_INTERVAL)
+    readtime = time.ticks_add(now, 1) # trigger readings first things
     gc.collect()
     # create variable to do TC accumulation
     # myReadings = conf.readings
@@ -179,30 +185,30 @@ def main():
         if time.ticks_diff(readtime, time.ticks_ms()) <= 0:
             now = time.ticks_ms()
             readtime = time.ticks_add(now, conf.SAMPLE_INTERVAL)    
-            print(f"RESET TICKS {now}, {readtime}")
+            # print(f"RESET TICKS {now}, {readtime}")
 
             # read TC values
             avg_readings = thermocouple.initReadings(avg_readings)
-            print(f'\nMY  {myReadings}')
-            print(f'AVG {avg_readings}')
+            # print(f'\nMY  {myReadings}')
+            # print(f'AVG {avg_readings}')
             avg_readings = thermocouple.readThermocouples(tspi) 
-            print(f'\nMY  {myReadings}')
-            print(f'AVG {avg_readings}\n')
+            # print(f'\nMY  {myReadings}')
+            # print(f'AVG {avg_readings}\n')
             # make relay decisions for heating on current reading
             update_heating(avg_readings["TREATMENT"][2], avg_readings["REFERENCE"][2], avg_readings["HEAT"][2])
 
             for key in avg_readings.keys():
                 # only increment if treatment has a non-error value, ignore all on nan values, or no reads
                 if (not math.isnan(avg_readings[key][2])) and (avg_readings[key][3] > 0): 
-                    print(f"Before           key +1 {key} temp my-avg: {myReadings[key][2]} -- {avg_readings[key][2]} # reads:  my-avg {myReadings[key][3]} -- {avg_readings[key][3]}")
+                    # print(f"Before           key +1 {key} temp my-avg: {myReadings[key][2]} -- {avg_readings[key][2]} # reads:  my-avg {myReadings[key][3]} -- {avg_readings[key][3]}")
                     myReadings[key][2] += avg_readings[key][2]
                     myReadings[key][3] += 1 # avg_readings[key][3] should be 1 added each read
                     myReadings[key][4] += avg_readings[key][4]
-                    print(f"After            key +1 {key} temp: {myReadings[key][2]} -- {avg_readings[key][2]} # reads: {myReadings[key][3]} -- {avg_readings[key][3]}")
+                    # print(f"After            key +1 {key} temp: {myReadings[key][2]} -- {avg_readings[key][2]} # reads: {myReadings[key][3]} -- {avg_readings[key][3]}")
                 else:
-                    print(f"{key} bad TC reading {avg_readings[key][2]} count {avg_readings[key][3] > 0}")
+                    print(f"Bad TC reading. Key: {key:14} {avg_readings[key][2]:<4} cnt read: {avg_readings[key][3]:<4}")
 
-            print(f"added TC reading {counter}")
+            print(f"TC reading: {counter}\n")
             counter += 1
             gc.collect()    
         # END OF SAMPLING LOOP
@@ -210,15 +216,15 @@ def main():
 
         # ############### LOG THE DATA ############### 
         if (b_hit == True): 
-            print(f"##### BREAK TO LOG DATA  {realtc.formatrtc(curr_time)}, rtc time {realtc.formatrtc(rtc.datetime())}")
             date_time = realtc.formatrtc(curr_time) # use the trigger time, not current time
+            print(f"##### BREAK TO LOG DATA  {date_time}, rtc time {realtc.formatrtc(rtc.datetime())} log int (min): {conf.LOG_INTERVAL:4}")
             
-            print(f"log time: {date_time} log interval: {conf.LOG_INTERVAL} min")
+            # print(f"log time: {date_time} log interval: {conf.LOG_INTERVAL} min")
             
 
             # ########## CALCULATE AVERAGES ########## 
             myReadings = average_readings(myReadings)
-            print(f"!!!!!!!!!!!!!!!!!!!!!!!!!! AVERAGED READINGS !!!!!!!!!!!!!!!!!!!!!!!!!!")
+            # print(f"!!!!!!!!!!!!!!!!!!!!!!!!!! AVERAGED READINGS !!!!!!!!!!!!!!!!!!!!!!!!!!")
             # ########## FORMAT AND SEND DATA ########## 
             temperature_data, internal_data = thermocouple.allReadings(myReadings)
             # org_data, org_inter = thermocouple.allReadings(myReadings)
@@ -227,6 +233,8 @@ def main():
             # print(f"Data Packet: {out}")
             # transmit to all conf DATA_LOGGER values
             out = "TRC:" + out
+
+            print(f"##### LOG DATA #####")
             [espnowex.esp_tx(logger, esp_con, out) for logger in conf.peers['DATA_LOGGER']]
             gc.collect()
 
@@ -250,38 +258,38 @@ def main():
             # ########## NO LOGGING, SKIP ########## 
             curr_time = rtc.datetime()
             cur_minutes = curr_time[5]
-            print(f"boundary {boundary} and cur_minutes {cur_minutes}")
+            # print(f"boundary {boundary} and cur_minutes {cur_minutes}")
             boundary = cur_minutes % conf.LOG_INTERVAL 
-            if boundary == last_boundary:
-                print(f"SKIP break? {b_hit} {realtc.formatrtc(curr_time)} - {boundary} == {last_boundary}")
-            else:
+            if boundary != last_boundary:
                 b_hit = (cur_minutes % conf.LOG_INTERVAL) == 0
                 last_boundary = boundary
-                print(f"---BREAK break? {b_hit} {realtc.formatrtc(curr_time)} - {boundary} == {last_boundary}")
+            #     # print(f"---BREAK - break {b_hit}  {realtc.formatrtc(curr_time)} - {boundary:5} == {last_boundary:<5}")
+
+            #     # print(f"SKIP - break {b_hit} {realtc.formatrtc(curr_time)} - {boundary:5} == {last_boundary:<5}")
+            # else:
+            #     b_hit = (cur_minutes % conf.LOG_INTERVAL) == 0
+            #     last_boundary = boundary
+            #     # print(f"---BREAK - break {b_hit}  {realtc.formatrtc(curr_time)} - {boundary:5} == {last_boundary:<5}")
 
         # don't run continuously
-        time.sleep_ms(int(conf.SAMPLE_INTERVAL/3))
-        print(f"LOOP FINISHED {realtc.formatrtc(curr_time)} counter:{counter}, record number:{recordNumber}, read_ticks_ms:{time.ticks_diff(readtime, time.ticks_ms())}")
+        # time.sleep_ms(int(conf.SAMPLE_INTERVAL/3))
+        print(f"LOOP FINISHED {realtc.formatrtc(curr_time)} counter:{counter:4}, record number:{recordNumber:4}, read_ticks_ms:{time.ticks_diff(readtime, time.ticks_ms()):10}")
 
         gc.collect()
 
-
 # ########################################################
-
-
-
 
 
 if __name__ == "__main__":
     try:
         print(f"reset code: {machine.reset_cause()}")
-        D8.off() # TODO D8 HAS TO BE SET TO OFF ON ERROR !!!!!!!!!!!!!!!!!!
-        main()
+        D8.off() 
+        main() # give information on why there was a reset
     except KeyboardInterrupt as e:
-        print(f"Got ctrl-c {e}")
-        D8.off() # TODO D8 HAS TO BE SET TO OFF ON ERROR !!!!!!!!!!!!!!!!!!
-        # sys.exit()  # TODO this falls through and resets???? okay for now
+        print(f"Received <CTRL> C {e}")
+        D8.off() 
+        # This falls through and resets, hit "<CTRL> C" 2 TIMES to get out
     finally:
         print(f"Fatal error, restarting.  {machine.reset_cause()}")
-        D8.off() # TODO D8 HAS TO BE SET TO OFF ON ERROR !!!!!!!!!!!!!!!!!!
+        D8.off()
         machine.reset()

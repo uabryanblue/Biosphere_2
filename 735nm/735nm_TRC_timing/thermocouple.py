@@ -144,13 +144,12 @@ def readThermocouples(tspi):
         for key in tcReadings.keys():
             cs_pin = tcReadings[key][0] # first position is pin number
             temperature, internal_temperature = read_thermocouple(cs_pin, tspi)
-
             # print(f"{key}  TC {temperature}, CJ {internal_temperature}")
             if not isnan(temperature): # only increment true values and ignore nan values
                 tcReadings[key][2] += temperature
                 tcReadings[key][3] += 1 # this only increments when a valid temp is read
                 tcReadings[key][4] += internal_temperature
-
+            # print(f"   read 1 TC {key:12} {tcReadings[key][2]:5}  {tcReadings[key][3]:5}  {tcReadings[key][4]:5}")
             # sleep(0.50) # delay before next reading, can be modified        
     gc.collect()
     for key in tcReadings.keys():
@@ -166,7 +165,7 @@ def readThermocouples(tspi):
             tcReadings[key][3] = 0 # error after avg readings, 0, no readings
                   
     # turn all of the thermocouple sensors off when not in use
-    # thermocouples_off()
+    thermocouples_off()
 
     # tspi.deinit()
 
