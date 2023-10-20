@@ -100,7 +100,7 @@ def update_heating(treatment_temp, reference_temp, heat_temp):
         print(f"***  OFF ***  DIFF: {diff:<5}")
         D8.off()
     print(f"ON: <= {on:<5}  OFF: > {off:<5}\ntrt: {treatment_temp:5}  ref: {reference_temp:5}")
-    print(f"#----------------------------#\n")
+    print(f"#----------------------------#\n")gvfffffffffffffffffffffffftr555555555555555555555555555
 
 
 def main():
