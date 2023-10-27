@@ -1,0 +1,178 @@
+---
+title: "TC Calibration"
+author: "Bryan Blue"
+format: html
+---
+
+## Thermocouple Calibration Coefficients
+
+A program was written in Micropython to take temperature readings from thermocouples for calibration purposes. This setup used the hardware that would also be used in the experiment to ensure consistency. Although there was common hardware, only one thermocouple amplifier board out of five on the circuit board was used for all readings. Data was collected and recorded to a logger that would also be used in the experiment.
+
+Thermocouples (TC) were assigned ids of the form "Tnnn" (n = integer). This value is the key to its calibration information within the temperature reading code. A water bath of different temperatures was used to take multiple, consecutive readings for each TC at three different water bath temperatures. Readings were taken until 30 consecutive readings had values ranging from maximum to minimum of fewer than 0.5 degrees Celsius. A digital thermometer was the reference, and readings from it were recorded.
+
+```{r warning=FALSE, error=FALSE, echo=FALSE}
+library(ggplot2)
+library(lubridate)
+library(tidyr)
+library(dplyr)
+library(readr)
+```
+
+# Data Wrangling
+
+The data logger and calibration software recorded all readings to the same filename. For clarity, after each run at one temperature, the data was copied to a folder with the name of the test temperature on a computer. This resulted in three folders with three CSV files containing related temperature baths. Folders were named 24C, 33C, and 60C representing the reference temperature of the water bath.
+
+**24C**/8CAAB54D7F18_CALIBRATE_C45BBEE4FD71.log
+
+**33C**/8CAAB54D7F18_CALIBRATE_C45BBEE4FD71.log
+
+**60C**/8CAAB54D7F18_CALIBRATE_C45BBEE4FD71.log
+
+These files were loaded into three different R data frames.
+
+## **Column Names**
+
+**date_time** - (POSIXct) date/time of reading\
+**mac** - (chr) MAC address of ESP8266 that took the reading\
+**tc_name** - (chr) the TC name, suffix "t" is test, ignore it, suffix of other character represent multiple readings, ignore all but the first\
+**port** - (int) the position on the board that was used to take the reading; ignore\
+**t_reference** - (double) reference temperature for calculations\
+**X6 - X35** - (comma-separated list of double values) consecutive TC readings made at t_reference.
+
+**Calculated Values**\
+**tc_24_mean, tc_33_mean, tc_60_mean** - (double) calculated means of TC readings in the respective reference files for each TC
+
+## Data Wrangling
+
+-   tc_name values had some test values that were removed. Only records with the values of the form "Tnnn" (n = single integer) were kept.
+
+<!-- -->
+
+-   the X6 - X35 columns came from a comma-delimited list in the raw data. R read these in individual columns.
+
+    -   X6 values started with a '\[' character, which was removed.
+
+    -   X35 values contained extra values, which were removed and ended in a '\]' character which was also removed
+
+```{r load_data, warnings=FALSE, error=FALSE, echo=FALSE}
+
+
+# date_time date/time of reading
+# mac MAC address of ESP8266 that took the reading
+# tc_name it the TC name, suffix "t" is test, ignore. suffix of other character represent multiple readings
+# port the position on the board that was used to take the reading, ignore
+# t_reference reference temperature for calculations
+# X6 - X35 consecutive TC readings
+
+# 24c file are readings taken around a 24 degrees Celsius reference
+cal_24c <- read_csv("data_raw/TC_Calibration/24C/8CAAB54D7F18_CALIBRATE_C45BBEE4FD71.log", 
+              col_names = c("date_time", "mac", "tc_name", "port", "t_24_reference"),
+              col_types = cols(date_time = col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+              port = col_integer(),
+              X6 = col_character(),
+              X35 = col_character()))
+
+# list is converted to their own variables, remove "[" or "]"
+cal_24c$X6  <- as.numeric(gsub("[^0-9\\.]*", "", cal_24c$X6))
+cal_24c$X35 <- as.numeric(gsub("[^0-9\\.]*", "", cal_24c$X35))
+# all readings should be T### T and 3 digits, remove the rest
+cal_24c <-  cal_24c[grepl("^T[0-9]+$", cal_24c$tc_name), (invert = TRUE), ]
+
+# 24c file are readings taken around a 33 degrees Celsius reference
+cal_33c <- read_csv("data_raw/TC_Calibration/33C/8CAAB54D7F18_CALIBRATE_C45BBEE4FD71.log", 
+              col_names = c("date_time", "mac", "tc_name", "port", "t_33_reference"),
+              col_types = cols(date_time = col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+              port = col_integer(),
+              X6 = col_character(),
+              X35 = col_character()))
+
+# an extra column created when read, bad data, remove it
+cal_33c$X36 <- NULL
+# list is converted to their own variables, remove "[" or "]"
+cal_33c$X6 <- as.numeric(gsub("[^0-9\\.]*", "", cal_33c$X6))
+cal_33c$X35 <- as.numeric(gsub("[^0-9\\.]*", "", cal_33c$X35))
+cal_33c <-  cal_33c[grepl("^T[0-9]+$", cal_33c$tc_name), (invert = TRUE), ]
+
+# 24c file are readings taken around a 60 degrees Celsius reference
+# all TC may not exist in this file due to measurement trouble
+cal_60c <- read_csv("data_raw/TC_Calibration/60C/8CAAB54D7F18_CALIBRATE_C45BBEE4FD71.log", 
+              col_names = c("date_time", "mac", "tc_name", "port", "t_60_reference"),
+              col_types = cols(date_time = col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+              port = col_integer(),
+              X6 = col_character(),
+              X35 = col_character()
+              ))
+
+# list is converted to their own variables, remove "[" or "]"
+# some records have extra value, remove it first and use left most value
+cal_60c$X6 <- as.numeric(gsub("[^0-9\\.]*", "", cal_60c$X6))
+cal_60c$X35 <- gsub("\\,[0-9.]+[]]", "", cal_60c$X35)
+cal_60c$X35 <- as.numeric(gsub("[^0-9.]*", "", cal_60c$X35))
+cal_60c <-  cal_60c[grepl("^T[0-9]+$", cal_60c$tc_name), (invert = TRUE), ]
+
+
+```
+
+A single data frame is created with the TC name and the three reference and average temperature readings. These are then used with lm() to get the coefficients for each TC.
+
+```{r create_data_stats, warnings=FALSE, error=FALSE, echo=FALSE}
+# calculate the mean of the tc readings by tc_name contained within
+# columns 6 through 35
+cal_24c$tc_24_mean <- rowMeans(cal_24c[,6:35])
+cal_33c$tc_33_mean <- rowMeans(cal_33c[,6:35])
+cal_60c$tc_60_mean <- rowMeans(cal_60c[,6:35])
+
+# create a stats table that has just the information needed for coef calcs
+tc24_stats <- cal_24c %>% select(tc_name, t_24_reference, tc_24_mean)
+tc33_stats <- cal_33c %>% select(tc_name, t_33_reference, tc_33_mean)
+tc60_stats <- cal_60c %>% select(tc_name, t_60_reference, tc_60_mean)
+
+tc_stats <- merge(x = tc24_stats, y = tc33_stats, by = "tc_name", all.x=TRUE)
+tc_stats <- merge(x = tc_stats, y = tc60_stats, by = "tc_name", all.x=TRUE)
+
+```
+
+lm() on the three values will give the intercept and three coeficients for the average values. These can then be added to the Micropython code as a configuration table.
+
+```{r lm_data, warnings=FALSE, error=FALSE, echo=FALSE}
+
+#x <-  as.vector(tc_stats %>% select(t_24_reference, t_33_reference, t_60_reference))
+#y <- as.data.frame(tc_stats %>% select(tc_24_mean, tc_33_mean, tc_60_mean))
+r24 <-  as.vector(tc_stats %>% select(t_24_reference))
+r33 <- as.vector(tc_stats %>% select(t_33_reference))
+a24 <- as.vector(tc_stats %>% select(tc_24_mean))
+a33 <- as.vector(tc_stats %>% select(tc_33_mean))
+
+x1 <- a24[[1]][1]
+x2 <- a33[[1]][1]
+y1 <- r24[[1]][1]
+y2 <- r33[[1]][1]
+
+xt <- c(x1, x2)
+yt <- c(y1, y2)
+plot(yt ~ xt, data = df)
+
+# df of one set of readings with y = reference and x = mean values
+# df = data.frame(x=c(24.3, 32.8, 28.3), y=c(23.8, 31.4, 58.4))
+# !!!!!!!!!! ONLY USE 2 POINT CALIBRATION !!!!!!!!!!!!
+df = data.frame(x=c(24.3, 32.8), y=c(23.8, 31.4))
+
+plot(y ~ x, data = df)
+model <- lm(y ~ x, data = df) # not great, but works
+abline(model, col = "red")
+summary(model)
+# Print out the model
+paste('y =', coef(model)[[2]], '* x', '+', coef(model)[[1]])
+
+
+
+# poly is no good!!!
+# plot(y ~ x, data = df)
+# model <- lm(y ~ poly(x,2), data = df)
+# abline(model, col = "red")
+# summary(model)
+# # Print out the model
+# paste('y =', coef(model)[[3]], '* x2', coef(model)[[2]], '* x', '+', coef(model)[[1]])
+# 1.4909**24.3 + 25.673*24.3 + 37.866
+
+```
