@@ -92,15 +92,16 @@ def update_heating(treatment_temp, reference_temp, heat_temp):
         ErrorTemp = ErrorTemp and True
     elif treatment_temp >= conf.TMAX:  # warning leaf temp exceeded threshold, turn off heater
         ErrorTemp = ErrorTemp and True
-    print(f"\n#----------------------------#")
+    print(f"\n")
     if (TurnOn == True) and (ErrorTemp == False):
-        print(f"***  ON ***   DIFF: {diff:<5}")
+        print(f"***  ON ***       DIFF: {diff:<5}")
         D8.on()
     else:
-        print(f"***  OFF ***  DIFF: {diff:<5}")
+        print(f"***  OFF ***      DIFF: {diff:<5}")
         D8.off()
+    print(f"#----------------------------#")
     print(f"ON: <= {on:<5}  OFF: > {off:<5}\ntrt: {treatment_temp:5}  ref: {reference_temp:5}")
-    print(f"#----------------------------#\n")gvfffffffffffffffffffffffftr555555555555555555555555555
+    print(f"#----------------------------#\n")
 
 
 def main():
