@@ -1,12 +1,11 @@
-import gc
+# import machine
 from machine import Pin, SPI
 from math import isnan
-gc.collect()
-import time
+from time import sleep
 import struct
 import conf
 # import max31855
-gc.collect()
+
 
 def parse_max318855(data):
     """translate binary response into degreee C"""
@@ -24,13 +23,12 @@ def parse_max318855(data):
     # Internal temperature
     internal_temperature = struct.unpack(">h", data[2:4])[0] >> 4;  # >h = signed short, big endian. 12 leftmost bits are data.  
     internal_temperature = internal_temperature / (2**4)  # Four binary decimal places
-    gc.collect()
 
     return temperature, internal_temperature
 
 
 
-def calibrate_reading(key, temperature):
+def callibrated_reading(deviceId, temperature):
     """thermocouples may need callibrated
     coefficients should be stored in the config file
     2nd order can be used if non-linear
@@ -38,38 +36,17 @@ def calibrate_reading(key, temperature):
     # TODO need to pass in callibration parameters defined in some config file
     # callibrate each thermocouple using 2nd order polynomial
     # for linear, set first coefficiet to 0
-    # callibrations['TREATMENT'] = ["T118", 1, 28.33, -11.692, 0]
-    # if deviceId == 119:
-    beta0 = conf.callibrations[key][2]
-    beta1 = conf.callibrations[key][3]
-    beta2 = conf.callibrations[key][4]
-    tempCorrected = (beta0 + (beta1 * temperature) + (beta2 ** temperature)) 
-    # else:
-        # return 555
-    gc.collect()
+    beta0 = conf.callibrations[deviceId][1]
+    beta1 = conf.callibrations[deviceId][2]
+    beta2 = conf.callibrations[deviceId][3]
+    tempCorrected = (beta0 + (beta1 * temperature) + (beta2 * temperature * temperature)) 
 
     return tempCorrected
 
-# def initReadings(readings):
-#     for key in readings.keys():
-#         readings[key][2] = 0.0 # position is temp value
-#     return readings
-
 def initReadings(readings):
     for key in readings.keys():
-        readings[key][2] = 0.0 # position is cumulative temp value
-        readings[key][3] = 0   # position is reading count for averaging
-        readings[key][4] = 0.0 # position is cumulative internal temp value
+        readings[key][2] = 0.0 # position is temp value
     return readings
-
-def createReadings(t):   
-    # create a NEW storage location with 0 values
-    t['TREATMENT'] = [1, 16, 0.0, 0, 0.0]
-    t['CONTROL'] = [2, 5, 0.0, 0, 0.0]
-    t['REFERENCE'] = [3, 4, 0.0, 0, 0.0]
-    t['HEAT'] = [4, 0, 0.0, 0, 0.0]
-    t['CONTROL_HEAT'] = [5, 2, 0.0, 0, 0.0]
-    return t
 
 def catReadings(readings):
     strReadings = ''
@@ -114,10 +91,9 @@ def read_thermocouple(cs_pin, spi):
         S4 = Pin(2, Pin.OUT)
         S4.off()
 
-    time.sleep_ms(250) # 250 ms
+    sleep(0.250) # 250 ms
     spi.readinto(raw_data)
     temperature, internal = parse_max318855(raw_data)
-    gc.collect()
 
     # turn off all thermocouples
     thermocouples_off()
@@ -128,55 +104,54 @@ def allReadings(readings, prefix=''):
     prefix is the default for the output string and should not contain a delimiter"""
     out = prefix + ","
     for item in conf.readingsOrder:
-        TempOut = ','.join([item + "," + str(readings[item][2]) for item in conf.readingsOrder])  # real temperatures
-        CJOut =  ','.join([str(readings[item][4]) for item in conf.readingsOrder])  # internal temperatures
+        TempOut = ','.join([str(readings[item][2]) for item in conf.readingsOrder])  # real temperatures
+        IntOut =  ','.join([str(readings[item][4]) for item in conf.readingsOrder])  # internal temperatures
+
+    return TempOut, IntOut
 
 
-    return TempOut, CJOut
-
-def readThermocouples(tspi):
-    # print(f"\n        READING TC VALUES           \n")
+def read_thermocouples(readings):
     """setup spi connection, read all thermocouples, close spi connection
     nan values are only given if all values that are read are nan otherwise
     the average of all readings not nan are returned"""
     # create variable to do averages based on readings structure
-    tcReadings = conf.readings # just for calculations
-    tcReadings = initReadings(tcReadings)
+    myReadings = readings
+    # initialization for those values that need to be reset
+    for key in myReadings.keys():
+        myReadings[key][2] = 0.0 # position is cumulative temp value
+        myReadings[key][3] = 0   # position is reading count for averaging
+        myReadings[key][4] = 0.0 # position is cumulative internal temp value
     
-    # do one read, main loop for multiple
-    numSamples = conf.TC_READS # specifiy the number of readings to take and average
+    tspi = SPI(1, baudrate=5000000, polarity=0, phase=0)
+    numSamples = 3 # specifiy the number of readings to take and average
     for i in range(numSamples):
-        for key in tcReadings.keys():
-            cs_pin = tcReadings[key][0] # first position is pin number
+        for key in readings.keys():
+            cs_pin = readings[key][0] # first position is pin number
             temperature, internal_temperature = read_thermocouple(cs_pin, tspi)
-            # print(f"{key}  TC {temperature}, CJ {internal_temperature}")
+
             if not isnan(temperature): # only increment true values and ignore nan values
-                tcReadings[key][2] += temperature
-                tcReadings[key][3] += 1 # this only increments when a valid temp is read
-                tcReadings[key][4] += internal_temperature
-            else:
-                print(f"   bad read 1 TC {key:12} {tcReadings[key][2]:5}  {tcReadings[key][3]:5}  {tcReadings[key][4]:5}")
+                myReadings[key][2] += temperature
+                myReadings[key][3] += 1
+                myReadings[key][4] += internal_temperature
+
             # sleep(0.50) # delay before next reading, can be modified        
-    gc.collect()
-    calReadings = {}
-    for key in tcReadings.keys():
-        if tcReadings[key][3] > 0:  #  position 3 is number of successful reads for averaging
-            tcReadings[key][2] = round(tcReadings[key][2] / tcReadings[key][3], 2)
-            tcReadings[key][4] = round(tcReadings[key][4] / tcReadings[key][3], 2)
-            tcReadings[key][3] = 1 # only one averaged reading is returned
+
+    for key in readings.keys():
+        if myReadings[key][3] > 0:  #  position 3 is number of successful reads for averaging
+            avgReading = round(myReadings[key][2] / myReadings[key][3], 2)
+            avgInternalReading = round(myReadings[key][4] / myReadings[key][3], 2)
+            # calReading = callibrated_re?eading(myReadings[key][3], avgReading)
+            # print(f"data key: {myReadings[key][3]}   key: {key}   avg: {avgReading}   cal: {calReading}")
+            readings[key][2] = avgReading
+            readings[key][4] = avgInternalReading
             
-            calReadings[key] = calibrate_reading(key, tcReadings[key][2])
-            print(f"TC Pos: {conf.callibrations[key][1]} TC: {conf.callibrations[key][0]:6}   key: {key:13}   avg: {conf.readings[key][2]:8}   cal: {calReadings[key]:8}")
-        
         else: # we didn't take any readings, therefore not a number
-            tcReadings[key][2] = float("NaN")
-            tcReadings[key][4] = float("NaN")
-            tcReadings[key][3] = 0 # error after avg readings, 0, no readings
-            calReadings[key] = float("NaN")
+            readings[key][2] = float("NaN")
+            readings[key][4] = float("NaN")
                   
     # turn all of the thermocouple sensors off when not in use
     thermocouples_off()
 
-    # tspi.deinit()
+    tspi.deinit()
 
-    return  tcReadings, calReadings
+    return readings, myReadings

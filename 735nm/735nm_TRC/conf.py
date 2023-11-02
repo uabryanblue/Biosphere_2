@@ -71,23 +71,25 @@ TDIFF = 3 # number of degees, not a temperature e.g. 3 degrees C above ambient
 # it is a failsafe to prevent scorching, or in case of heater malfunction
 # to cut the power
 # Value must be less than TMAX_HEATER
-TMAX = 50 # 122 F
+TMAX = 52 # 122 F
 
 # maximum degrees celsius that the heating device should achieve
 # this will turn the device off at this setpoint and should be
 # considered a maximum constraint of the heating device
 # safety value, shut the power off
 # Value must be greater than TMAX !!!
-TMAX_HEATER = 60 # 140 F
+TMAX_HEATER = 55 # 140 F
 
 # --------------------
 # SENSOR READINGS
 # --------------------
 # !!!!!!!! LOG_INTERVAl MUST BE GREATER THAN SAMPLE_INTERVAL !!!!!!!
-# LOG_INTERVAL in minutes
-# SAMPLE_INTERVAL in ms e.g. 15 seconds = 15000 ms
-LOG_INTERVAL = 15 # minutes, larger than SAMPLE_INTERVAL
-SAMPLE_INTERVAL = 15000 # ms
+# LOG_INTERVAL (float) in minutes
+# SAMPLE_INTERVAL (float) in ms e.g. take a sample every 15 seconds = 15000 ms
+# TC_READS (int) number of TC reads averaged together to make 1 sample value
+LOG_INTERVAL = 3 # minutes, larger than SAMPLE_INTERVAL
+SAMPLE_INTERVAL = 5000 # ms
+TC_READS = 4
 
 # --------------------
 # 5 THERMOCOUPLE CONFIGURATIONS
@@ -108,9 +110,10 @@ readings = {}
 # EXAMPLE:  readings['TREATMENT'] = [1, 16, 0.0, 101, 0.0]
 # key = HEATER, PIN = D0, GPIO 16, initial temp value = 0.0
 # SensorID = a unique ID used for identification of the thermocouple in that position
+#    this may not longer be needed
 # Internal Temperature - cold junction on the amplifier board
 readings['TREATMENT'] = [1, 16, 0.0, 101, 0.0]
-readings['CONTROL'] = [2, 5, 0.0, 102, 0.0]
+readings['CONTROL'] = [2, 5, 0.0, 119, 0.0]
 readings['REFERENCE'] = [3, 4, 0.0, 103, 0.0]
 readings['HEAT'] = [4, 0, 0.0, 104, 0.0]
 readings['CONTROL_HEAT'] = [5, 2, 0.0, 105, 0.0]
@@ -124,16 +127,20 @@ readingsOrder = ['TREATMENT', 'CONTROL', 'REFERENCE', 'HEAT', 'CONTROL_HEAT']
 
 # CALLIBRATION TABLE
 # Each thermocouple must be callibrated
-# A unique value for the ID, and the callibration coefficients need to be supplied
+# key - one of 5 values from readings{} e.g. "TREATMENT"
+# A unique value for the ID
+# the callibration coefficients need to be supplied
 # When taking a temperature reading, if an entry is not found, no adjustment will be applied
-    # Position = 1 through 5 denoting it was callibrated in this position of the board
+    # Position = 1 through 5 is the corresponding port on the board
     # beta0 = -15.35578 - offset
-    # beta1 = 1.90714 - slope
-    # beta2 = -0.01053 - 2nd order, if needed, set to 0 for linear
-# callibrations = {}
+    # beta1 = 1.90714 - slope (beta1 * X)
+    # beta2 = -0.01053 - 2nd order (beta2 * X^2 ), if needed, set to 0 for linear
+callibrations = {}
 # # EXAMPLES ONLY !!!!! these values are not correct
-# callibrations['101'] = [1, 28.5, 0.262, 0]
-# callibrations['102'] = [2, 98.5, 4.20, 0]
-# callibrations['103'] = [3, 22.9, -0.0542, 0]
-# callibrations['104'] = [4, -14.1, -2.14, 0]
-# callibrations['105'] = [5, 21.3, -0.148, 0]
+callibrations['CONTROL'] =      ["T107", 2, 0.3565, 0.9792, 0] # possible recal needed
+callibrations['HEAT'] =         ["T109", 3, -3.4725, 1.1041, 0] # possible recal needed
+callibrations['CONTROL_HEAT'] = ["T110", 1, -2.6096, 1.0795, 0]
+
+callibrations['REFERENCE'] =    ["T105", 5, 2.0515, 0.9091, 0]
+callibrations['TREATMENT'] =    ["T118", 4, 0.5067, 0.9835, 0]
+

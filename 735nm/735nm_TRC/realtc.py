@@ -19,16 +19,19 @@ HiLetgo DS3231 + AT24C32N
 # example: to set time to 2023, May, 29, 7 am, 11 minutes, 1 second, NA, NA
 # d.set_time((2023, 05, 29, 7, 11, 1, 0, 0))
 
+import gc
 import time
 import machine
 import ds3231_gen
+gc.collect()
 import espnowex
+gc.collect()
 import realtc
+gc.collect()
 import conf
 
-
 def formattime(in_time):
-    """produce a date/time format from tuple
+    """time format produce a date/time format from tuple
     only minute resolution supported"""
 
     # YYYY-MM-DD hh:mm:ss
@@ -38,11 +41,17 @@ def formattime(in_time):
     
     return formatted_time
 
-def rtc_set():
-    rtc = machine.RTC()
-    i2c = machine.I2C(sda=machine.Pin(4), scl=machine.Pin(5))
-    ds3231 = ds3231_gen.DS3231(i2c)
-    rtc.datetime((YY, MM, DD, wday, hh, mm, ss, 0))
+def formatrtc(in_time):
+    """RTC format time produce a date/time format from tuple
+    only minute resolution supported"""
+    # rtc.datetime((YY, MM, DD, wday, hh, mm, ss, 0))
+
+    # YYYY-MM-DD hh:mm:ss
+    date = f'{in_time[0]}-{in_time[1]:0>2}-{in_time[2]:0>2}'
+    time = f'{in_time[4]:0>2}:{in_time[5]:0>2}:{in_time[6]:0>2}'
+    formatted_time = date + ' ' + time
+    
+    return formatted_time
 
 def rtcinit():
     """get the time from the RTC DS3231 board and set the local RTC"""
@@ -52,28 +61,34 @@ def rtcinit():
     ds3231 = ds3231_gen.DS3231(i2c)
     YY, MM, DD, hh, mm, ss, wday, _ = ds3231.get_time()
     rtc.datetime((YY, MM, DD, wday, hh, mm, ss, 0))
+    gc.collect()
     print(f"DS3231 time: {ds3231.get_time()}")
-    print(f"local time: {formattime(time.localtime())}")
+    print(f"local time: {realtc.formatrtc(rtc.datetime())}")
 
 
 def get_remote_time(esp_con):
     # set the time from device designated as TIME
     retries = 0
     host = ""
-    
+    rtc = machine.RTC()
+
     peer = bytearray()
     peer = conf.peers["TIME"][0]
     # peer= b'\xc4[\xbe\xe4\xfe=' # TODO debug why not tx work
     espnowex.esp_tx(peer, esp_con, "GET_TIME")
+    time.sleep(1)
     host, msg = espnowex.esp_rx(esp_con)
+    gc.collect()
 
     # if a message was not received, loop until a time is received
     while not msg:
         retries += 1
         espnowex.esp_tx(peer, esp_con, "GET_TIME")
+        time.sleep(1)
         host, msg = espnowex.esp_rx(esp_con)
+        gc.collect()
         print(f"Get Time: unable to get time from {host} retry # {retries}")
-        time.sleep(3)
+        time.sleep(1)
 
     # print(host)
     str_host = ":".join(["{:02x}".format(b) for b in host])
@@ -84,7 +99,10 @@ def get_remote_time(esp_con):
     print(f"received a respons from {host} {str_host} of: {msg}")
     evaltime = eval(msg)
 
-    rtcObj = machine.RTC()
-    rtcObj.datetime(evaltime)
-    print(f"The new time is: {realtc.formattime(time.localtime())}")
+    # TODO this should just be rtc from above
+    # rtcObj = machine.RTC()
+    print(f":::: BEFORE EVAL value {evaltime}")
+    rtc.datetime(evaltime)
+    gc.collect()
+    print(f"The new time is: {realtc.formatrtc(rtc.datetime())}") 
     print("------------------------\n")
