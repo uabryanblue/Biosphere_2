@@ -71,8 +71,8 @@ def update_heating(treatment_temp, reference_temp, heat_temp):
     # diff = treatment_avg - reference_avg
     # on = conf.TDIFF * 0.01 # - 0.5)
     # off = conf.TDIFF - 0.75
-    on = conf.TDIFF - 0.5
-    off = conf.TDIFF - 0.25 # don't overshoot
+    on = conf.TDIFF * 0.8
+    off = conf.TDIFF * 1.05 
     # print(f"ON: {on}  OFF: {off}")
 
     # deadband to prevent oscillation
@@ -187,16 +187,17 @@ def main():
             now = time.ticks_ms()
             readtime = time.ticks_add(now, conf.SAMPLE_INTERVAL)    
             # print(f"RESET TICKS {now}, {readtime}")
-
+            cal_readings = {}
             # read TC values
             avg_readings = thermocouple.initReadings(avg_readings)
             # print(f'\nMY  {myReadings}')
             # print(f'AVG {avg_readings}')
-            avg_readings = thermocouple.readThermocouples(tspi) 
+            avg_readings, cal_readings = thermocouple.readThermocouples(tspi) 
             # print(f'\nMY  {myReadings}')
             # print(f'AVG {avg_readings}\n')
             # make relay decisions for heating on current reading
-            update_heating(avg_readings["TREATMENT"][2], avg_readings["REFERENCE"][2], avg_readings["HEAT"][2])
+            # update_heating(avg_readings["TREATMENT"][2], avg_readings["REFERENCE"][2], avg_readings["HEAT"][2])
+            update_heating(cal_readings["TREATMENT"], cal_readings["REFERENCE"], cal_readings["HEAT"])
 
             for key in avg_readings.keys():
                 # only increment if treatment has a non-error value, ignore all on nan values, or no reads

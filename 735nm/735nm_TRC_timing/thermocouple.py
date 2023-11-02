@@ -30,7 +30,7 @@ def parse_max318855(data):
 
 
 
-def callibrated_reading(deviceId, temperature):
+def calibrate_reading(key, temperature):
     """thermocouples may need callibrated
     coefficients should be stored in the config file
     2nd order can be used if non-linear
@@ -38,10 +38,14 @@ def callibrated_reading(deviceId, temperature):
     # TODO need to pass in callibration parameters defined in some config file
     # callibrate each thermocouple using 2nd order polynomial
     # for linear, set first coefficiet to 0
-    beta0 = conf.callibrations[deviceId][1]
-    beta1 = conf.callibrations[deviceId][2]
-    beta2 = conf.callibrations[deviceId][3]
-    tempCorrected = (beta0 + (beta1 * temperature) + (beta2 * temperature * temperature)) 
+    # callibrations['TREATMENT'] = ["T118", 1, 28.33, -11.692, 0]
+    # if deviceId == 119:
+    beta0 = conf.callibrations[key][2]
+    beta1 = conf.callibrations[key][3]
+    beta2 = conf.callibrations[key][4]
+    tempCorrected = (beta0 + (beta1 * temperature) + (beta2 ** temperature)) 
+    # else:
+        # return 555
     gc.collect()
 
     return tempCorrected
@@ -124,8 +128,9 @@ def allReadings(readings, prefix=''):
     prefix is the default for the output string and should not contain a delimiter"""
     out = prefix + ","
     for item in conf.readingsOrder:
-        TempOut = ','.join([str(readings[item][2]) for item in conf.readingsOrder])  # real temperatures
+        TempOut = ','.join([item + "," + str(readings[item][2]) for item in conf.readingsOrder])  # real temperatures
         CJOut =  ','.join([str(readings[item][4]) for item in conf.readingsOrder])  # internal temperatures
+
 
     return TempOut, CJOut
 
@@ -149,24 +154,29 @@ def readThermocouples(tspi):
                 tcReadings[key][2] += temperature
                 tcReadings[key][3] += 1 # this only increments when a valid temp is read
                 tcReadings[key][4] += internal_temperature
-            # print(f"   read 1 TC {key:12} {tcReadings[key][2]:5}  {tcReadings[key][3]:5}  {tcReadings[key][4]:5}")
+            else:
+                print(f"   bad read 1 TC {key:12} {tcReadings[key][2]:5}  {tcReadings[key][3]:5}  {tcReadings[key][4]:5}")
             # sleep(0.50) # delay before next reading, can be modified        
     gc.collect()
+    calReadings = {}
     for key in tcReadings.keys():
         if tcReadings[key][3] > 0:  #  position 3 is number of successful reads for averaging
             tcReadings[key][2] = round(tcReadings[key][2] / tcReadings[key][3], 2)
             tcReadings[key][4] = round(tcReadings[key][4] / tcReadings[key][3], 2)
             tcReadings[key][3] = 1 # only one averaged reading is returned
-            # calReading = callibrated_re?eading(tcReadings[key][3], avgReading)
-            # print(f"data key: {tcReadings[key][3]}   key: {key}   avg: {avgReading}   cal: {calReading}")
+            
+            calReadings[key] = calibrate_reading(key, tcReadings[key][2])
+            print(f"TC Pos: {conf.callibrations[key][1]} TC: {conf.callibrations[key][0]:6}   key: {key:13}   avg: {conf.readings[key][2]:8}   cal: {calReadings[key]:8}")
+        
         else: # we didn't take any readings, therefore not a number
             tcReadings[key][2] = float("NaN")
             tcReadings[key][4] = float("NaN")
             tcReadings[key][3] = 0 # error after avg readings, 0, no readings
+            calReadings[key] = float("NaN")
                   
     # turn all of the thermocouple sensors off when not in use
     thermocouples_off()
 
     # tspi.deinit()
 
-    return  tcReadings
+    return  tcReadings, calReadings
