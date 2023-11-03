@@ -108,7 +108,7 @@ readings = {}
 #   CONTROL_HEAT - control heating pad temperature, not on or heating
 #   Define each dictionary element as a PIN, GPIO, TempValue, SensorID, 0.0
 # EXAMPLE:  readings['TREATMENT'] = [1, 16, 0.0, 101, 0.0]
-# key = HEATER, PIN = D0, GPIO 16, initial temp value = 0.0
+# key = HEATER, PIN = D0 (T1 port), GPIO 16, initial temp value = 0.0
 # SensorID = a unique ID used for identification of the thermocouple in that position
 #    this may not longer be needed
 # Internal Temperature - cold junction on the amplifier board
@@ -137,10 +137,14 @@ readingsOrder = ['TREATMENT', 'CONTROL', 'REFERENCE', 'HEAT', 'CONTROL_HEAT']
     # beta2 = -0.01053 - 2nd order (beta2 * X^2 ), if needed, set to 0 for linear
 callibrations = {}
 # # EXAMPLES ONLY !!!!! these values are not correct
-callibrations['CONTROL'] =      ["T107", 2, 0.3565, 0.9792, 0] # possible recal needed
-callibrations['HEAT'] =         ["T109", 3, -3.4725, 1.1041, 0] # possible recal needed
-callibrations['CONTROL_HEAT'] = ["T110", 1, -2.6096, 1.0795, 0]
+# callibrations['CONTROL'] =      ["T107", 2, 0.3565, 0.9792, 0] # possible recal needed
+# callibrations['HEAT'] =         ["T109", 3, -3.4725, 1.1041, 0] # possible recal needed
+# callibrations['CONTROL_HEAT'] = ["T110", 1, -2.6096, 1.0795, 0]
+# callibrations['REFERENCE'] =    ["T105", 5, 2.0515, 0.9091, 0]
+# callibrations['TREATMENT'] =    ["T118", 4, 0.5067, 0.9835, 0]
 
-callibrations['REFERENCE'] =    ["T105", 5, 2.0515, 0.9091, 0]
-callibrations['TREATMENT'] =    ["T118", 4, 0.5067, 0.9835, 0]
-
+callibrations['TREATMENT'] =        ["T103", 1, 0, 0, 0] # replaced T110 - bad
+callibrations['CONTROL'] =          ["T105", 2, 2.0515, 0.9091, 0]
+callibrations['REFERENCE'] =        ["T109", 3, -3.4725, 1.1041, 0] # possible recal needed
+callibrations['HEAT'] =             ["T118", 4, 0.5067, 0.9835, 0]
+callibrations['CONTROL_HEAT'] =     ["T107", 5, 0.3565, 0.9792, 0] # possible recal needed
