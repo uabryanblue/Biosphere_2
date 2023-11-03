@@ -126,10 +126,12 @@ def main():
             humidity = 0.0
             pressure = 0.0
 
-            # get the accurate time, not sync, can be off by quite a bit
-            realtc.get_remote_time(esp_con)
-            print(f"RESET TIME: {realtc.formatrtc(rtc.datetime())}")
-            gc.collect()
+            if recordNumber % 4 == 0:
+                # get the accurate time, not sync, can be off by quite a bit
+                realtc.get_remote_time(esp_con)
+                print(f"RESET TIME: {realtc.formatrtc(rtc.datetime())}")
+                time.sleep(0.25)
+                gc.collect()
             # we logged for this boundary, skip until next boundary
             b_hit = False
         else:

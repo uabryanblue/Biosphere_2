@@ -128,7 +128,7 @@ def allReadings(readings, prefix=''):
     prefix is the default for the output string and should not contain a delimiter"""
     out = prefix + ","
     for item in conf.readingsOrder:
-        TempOut = ','.join([item + "," + str(readings[item][2]) for item in conf.readingsOrder])  # real temperatures
+        TempOut = ','.join([str(readings[item][2]) for item in conf.readingsOrder])  # real temperatures
         CJOut =  ','.join([str(readings[item][4]) for item in conf.readingsOrder])  # internal temperatures
 
 
