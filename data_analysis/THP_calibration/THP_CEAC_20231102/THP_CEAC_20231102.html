@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Bryan Blue">
-<meta name="dcterms.date" content="2023-11-06">
+<meta name="dcterms.date" content="2023-11-08">
 
-<title>Test of Aspirated Sensor 2023-07-31 - 2023-08-04</title>
+<title>Test of Aspirated Sensor 2023-10-17</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -82,7 +82,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Test of Aspirated Sensor 2023-07-31 - 2023-08-04</h1>
+<h1 class="title">Test of Aspirated Sensor 2023-10-17</h1>
 </div>
 
 
@@ -99,7 +99,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">November 6, 2023</p>
+      <p class="date">November 8, 2023</p>
     </div>
   </div>
   
@@ -109,22 +109,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </header>
 
-<section id="quarto" class="level2">
-<h2 class="anchored" data-anchor-id="quarto">Quarto</h2>
-<p>Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <a href="https://quarto.org" class="uri">https://quarto.org</a>.</p>
+<section id="experimental-temperature-humidity-pressure-sensor-calibration" class="level2">
+<h2 class="anchored" data-anchor-id="experimental-temperature-humidity-pressure-sensor-calibration">Experimental Temperature, Humidity, Pressure Sensor Calibration</h2>
+<section id="experiment-location-the-university-of-arizona-tucson-controlled-environment-agriculture-center-greenhouse-c" class="level3">
+<h3 class="anchored" data-anchor-id="experiment-location-the-university-of-arizona-tucson-controlled-environment-agriculture-center-greenhouse-c">Experiment Location: The University of Arizona, Tucson, Controlled Environment Agriculture Center, Greenhouse “C”</h3>
+<p>Four experimental BME280 temperature, humidity, pressure aspirated sensors (THP sensors) were placed adjacent to an existing CEAC Vaisala HMP60 aspirated sensor (CEAC sensor). The CEAC sensor had been recently calibrated but on an unknown specific date. The THP sensors were covered with an expanded foam packaging packet that gave at least 2 inches of insulation on top as well as part way down the sides to shield them from direct sunlight. The THP sensors will be used in a shaded, outdoor conditions, not a greenhouse environment. This insulation reduces the direct sunlight and associated absorbed engery by the case. The goal is to compare how well the THP sensors respond in relation to the CEAC sensor under the same conditions. This can then be used to create a calibration equation for each of the four THP sensors.</p>
+<p>The THP sensors had aspirated readings taken from a Hiletgo BME280 breakout board inside an aspiration chamber. Specifications for the BME280 sensor can be found here: http://www.hiletgo.com/ProductDetail/1953483.html. Measurements were recorded for Temperature (C), Relative Humidity (%), and Pressure (hPa) at 15 minute intervals of 00,15,30,45 of each hour. Each reading had a variable amount of seconds past the boundary due to reading processing timing that did not affect reading accuracy.</p>
+<p>Readings were taken every 15,000 ms (15 seconds) and averaged over 15 minutes. That value was then assembled into a CSV data record that was transmitted to a data logger and recorded to a microSD card. These four CSV log files were collected for this analysis.</p>
+<p>The CEAC supplied a Microsoft Excel (XLSX) file with the CEAC sensor data for this analysis.</p>
 </section>
-<section id="location-controlled-environment-agriculture-center-ceac---greenhouse-c" class="level2">
-<h2 class="anchored" data-anchor-id="location-controlled-environment-agriculture-center-ceac---greenhouse-c">Location: Controlled Environment Agriculture Center (CEAC) - Greenhouse C</h2>
-<p><strong>Lowest CEAC Sensor Above Drainage Tray at Approximately 3 feet (~1 m) From the Ground:</strong><br>
-<strong>Midpoint in The North/South Direction,</strong><br>
+</section>
+<section id="location-within-greenhouse" class="level2">
+<h2 class="anchored" data-anchor-id="location-within-greenhouse">Location Within Greenhouse</h2>
+<p><strong>Lowest CEAC Sensor Above an Existing Experiments Drainage Tray at Approximately 3 feet (~1 m) From the Ground</strong><br>
+<strong>Midpoint in The North/South Direction</strong><br>
 <strong>One Quarter of The Width From The West Side</strong></p>
-<p>An experimental BME280 based aspirated sensor (refereed to as “THP”) was placed adjacent to an existing CEAC Vaisala HMP60 aspirated sensor (CEAC sensor). The CEAC sensor had been recently calibrated but on an unknown specific date. The experimental sensor was covered with an expanded foam packaging packet that gave at least 2 inches of insulation on top as well as part way down the sides to shield it from direct sunlight. The experimental sensor will be used in a shaded, outdoor conditions, not a greenhouse environment. This insulation reduces the direct sunlight. The goal is to compare how well the experimental sensor responds in relation to the CEAC sensor under the same conditions.</p>
-<p>The experimental sensor had aspirated readings taken from a Hiletgo BME280 breakout board inside an aspirated chamber . Specifications for the BME280 sensor can be found here: http://www.hiletgo.com/ProductDetail/1953483.html. Measurements were recorded for Temperature (C), Relative Humidity (%), and Pressure (hPa) at approximately 5 minute intervals (00:04:50 +/- 1 second). The variation from exactly 5 minute intervals was due to the incomplete program that was written for timing the interval. A future version will record 15 minute averages.</p>
 <section id="load-data" class="level3">
 <h3 class="anchored" data-anchor-id="load-data">Load Data</h3>
 <p><strong>THP Experiment Sensors</strong></p>
-<p>Each sensor .log file has previously recorded data at the top of the file. The lines are skipped until the first record of this test data is sequential starting with a record number of 1.</p>
-<p>Date/Time values start: 2023-10-17 at 16:15:xx or 16:30:xx with the start time variation due to differing sensor start up times.</p>
+<p>Each sensors <filename>.log file had previously recorded data at the top of the file. These lines are skipped until the first record of this test data. Record numbering in this data starts at 1.</filename></p>
+<p>Date/Time values start on 2023-10-17 at 16:15:xx or 16:30:xx with the start time variation due to differing sensor start up times.</p>
 <div class="cell">
 <details>
 <summary>Code</summary>
@@ -164,9 +168,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <p><strong>CEAC Campbell Scientific Data</strong><br>
-An XLSX file was supplied by the CEAC that contains data from their calibrated sensor. Raw data from 7/12/2023 14:15 through 11/2/2023 14:15 was included in the file. The file was opened in Excel and saved as a CSV for easier use. Excel added many blank fields to the end of each record in the CSV that were ignored.</p>
-<p>Values of “NAN” and “-7999” in the data were mapped to “na” values.</p>
-<p>TIMESTAMP column was changed to “date” to allow for matching with the experimental sensor data. It was also converted to a standard POSIXct date/time format.<br>
+An Excel XLSX file was supplied by the CEAC that contained data from the CEAC sensor. Raw data from 7/12/2023 14:15 through 11/2/2023 14:15 was included in the file.</p>
+<p>Values of “NAN” and “-7999” in the data were mapped to native “na” values for use in R.</p>
+<p>TIMESTAMP column was changed to “date” to allow for matching with the THP sensor data. It was also converted to a standard POSIXct date/time format.<br>
 The first 4 rows were removed as they are Campbell Scientific header information that is not needed. It’s log file starts with record number 0.</p>
 <div class="cell">
 <details>
@@ -196,12 +200,13 @@ The first 4 rows were removed as they are Campbell Scientific header information
 </details>
 </div>
 </section>
-<section id="data-wrangling" class="level3">
-<h3 class="anchored" data-anchor-id="data-wrangling">Data Wrangling</h3>
+</section>
+<section id="data-wrangling" class="level2">
+<h2 class="anchored" data-anchor-id="data-wrangling">Data Wrangling</h2>
 <p>All dates are standardized to POSIXct. YYYY-MM-DD HH:MM:SS</p>
-<p>The HTP sensor data values needed to be converted to 15-minute averages to match the CEAC data.</p>
-<p>There was a difference in the clock values between the HTP sensor and CEAC sensor. The clocks were not synchronized at the beginning of the test. Through trial and error it was determined that the difference was 30 minutes. This is consistent with previous tests.</p>
-<p>The HTP sensor was set to record on 15 minute boundaries but drifted over the comparison time. The dates/times had some duplication that were averaged together in the THP data to normalize it to 15 minute boundaries.</p>
+<p>There was a difference in the clock values between the THP sensors and CEAC sensor. The clocks were not synchronized at the beginning of the test. Through trial and error it was determined that the difference was ~30 minutes. This is consistent with previous tests at this location. A 30 minute shif was applied to the THP sensor data to align it with the CEAC sensor data.</p>
+<p>The THP sensor was set to record on 15 minute boundaries but had records where they were a time boundary over the expected value. This was sporadic and appeared to have cycles of time jumps forward by one boundary, and then would correct itself. This caused some duplication of the dates/times. These were averaged together in the THP data to normalize it to 15 minute boundaries.<br>
+The Cambpell Scientific logs rounded the timestamp (date fields) to the minutes, so the THP sensor data had the seconds set to 0 values to match this format.</p>
 <div class="cell">
 <details>
 <summary>Code</summary>
@@ -245,28 +250,31 @@ The first 4 rows were removed as they are Campbell Scientific header information
 <span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-</section>
-</section>
-<section id="compute-hourly-stats" class="level1">
-<h1>compute hourly stats</h1>
+<p>Clean logs were created for each the four THP sensor logs. These were then individually joined to the CEAC sensor data on the date. This resulted in four merged logs of each THP sensor data and CEAC sensor data for analysis.</p>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># THP_log_E8D2</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># THP_log_672E</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># THP_log_2848</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># THP_log_0035</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># create the appropriate final logs and identify with a sensor_id</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>final_THP_log_E8D2 <span class="ot">&lt;-</span> <span class="fu">combine_data</span>(THP_log_E8D2, <span class="st">"E8D2"</span>)</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>final_THP_log_672E <span class="ot">&lt;-</span> <span class="fu">combine_data</span>(THP_log_672E, <span class="st">"672E"</span>)</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>final_THP_log_2848 <span class="ot">&lt;-</span> <span class="fu">combine_data</span>(THP_log_2848, <span class="st">"2848"</span>)</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>final_THP_log_0035 <span class="ot">&lt;-</span> <span class="fu">combine_data</span>(THP_log_0035, <span class="st">"0035"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Data Frame Names</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   THP_log_E8D2</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   THP_log_672E</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">#   THP_log_2848</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   THP_log_0035</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># create the appropriate final logs and identify with a sensor_id</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>final_THP_log_E8D2 <span class="ot">&lt;-</span> <span class="fu">combine_data</span>(THP_log_E8D2, <span class="st">"E8D2"</span>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>final_THP_log_672E <span class="ot">&lt;-</span> <span class="fu">combine_data</span>(THP_log_672E, <span class="st">"672E"</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>final_THP_log_2848 <span class="ot">&lt;-</span> <span class="fu">combine_data</span>(THP_log_2848, <span class="st">"2848"</span>)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>final_THP_log_0035 <span class="ot">&lt;-</span> <span class="fu">combine_data</span>(THP_log_0035, <span class="st">"0035"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
+</section>
 <section id="results" class="level2">
 <h2 class="anchored" data-anchor-id="results">RESULTS</h2>
-<p><strong>Temperature</strong><br>
-</p>
+<p><strong>NOTE</strong> Starting October 18th around 10:00 am there appears to be an anomaly with excessive temperatures and low humidity. This normally indicates failure of the wet pad cooling system where water is not flowing over the pad. This needs confirmed, but does give some insight into how the sensors respond to higher temperatures and lower humidity levels. This data helps in the overall analysis when deriving the calibration curve.</p>
+<section id="all-temperature-sensors" class="level3">
+<h3 class="anchored" data-anchor-id="all-temperature-sensors">All Temperature Sensors</h3>
+<p>Each of the four THP sensors and the CEAC sensor data are plotted together.<br>
+The four THP sensor labels are from the last four characters of the MAC address of each microprocessor in each THP sensor. At this time, these are not correlated to the physical THP sensor numbers of 1 - 4.</p>
 <div class="cell">
 <details>
 <summary>Code</summary>
@@ -279,55 +287,48 @@ The first 4 rows were removed as they are Campbell Scientific header information
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>a <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span></span>
 <span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> final_THP_log_E8D2, <span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> temperature, <span class="at">color =</span> sensor_id)) <span class="sc">+</span></span>
 <span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> final_THP_log_672E, <span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> temperature, <span class="at">color =</span> sensor_id)) <span class="sc">+</span></span>
 <span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> final_THP_log_2848, <span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> temperature, <span class="at">color =</span> sensor_id)) <span class="sc">+</span></span>
 <span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> final_THP_log_0035, <span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> temperature, <span class="at">color =</span> sensor_id)) <span class="sc">+</span></span>
 <span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> final_THP_log_0035, <span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> TEMP_THREE_FOOT_HEIGHT, <span class="at">color =</span> <span class="st">"CEAC"</span>)) <span class="sc">+</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="st">"Temperature - CEAC and 4 THP Sensors"</span>) <span class="sc">+</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="st">"Temperature"</span>) <span class="sc">+</span></span>
 <span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">"Date (15 minute Averages)"</span>) <span class="sc">+</span></span>
 <span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="st">"Temperature (C)"</span>) <span class="sc">+</span></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>      <span class="fu">scale_x_datetime</span>(<span class="at">date_labels =</span> (<span class="st">"%b %d %H:%M"</span>),</span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">date_breaks =</span> <span class="st">"6 hours"</span>,  <span class="at">expand =</span> <span class="fu">expand_scale</span>(<span class="dv">0</span>)) <span class="sc">+</span></span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.text.x=</span><span class="fu">element_text</span>(<span class="at">angle=</span><span class="dv">60</span>, <span class="at">hjust=</span><span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_x_datetime</span>(<span class="at">date_labels =</span> (<span class="st">"%b %d %H:%M"</span>),</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">date_breaks =</span> <span class="st">"6 hours"</span>,  <span class="at">expand =</span> <span class="fu">expansion</span>(<span class="dv">0</span>)) <span class="sc">+</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.text.x=</span><span class="fu">element_text</span>(<span class="at">angle=</span><span class="dv">60</span>, <span class="at">hjust=</span><span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning: `expand_scale()` was deprecated in ggplot2 3.3.0.
-ℹ Please use `expansion()` instead.</code></pre>
 </div>
-<div class="cell-output-display">
-<p><img src="THP_CEAC_20231102_files/figure-html/data_plot_temp-1.png" class="img-fluid" width="768"></p>
-</div>
-</div>
-<p><strong>Relative Humidity</strong><br>
-</p>
+</section>
+<section id="all-relative-humidity-sensors" class="level3">
+<h3 class="anchored" data-anchor-id="all-relative-humidity-sensors">All Relative Humidity Sensors</h3>
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">#  </span><span class="al">TODO</span><span class="co"> move badck up as text after data is finalized</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># The readings were taken from `r min(finalStats$date)` to `r max(finalStats$date)`. Readings from the experimental sensor ranged from a minimum of `r round(min(finalStats$RH), digits = 2)` to a maximum of `r round(max(finalStats$RH), digits = 2)` percent.\</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># The mean was `r round(mean(finalStats$RH), digits = 2)` percent.</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Reading for the CEAC sensor ranged from a minimum of `r round(min(finalStats$RH_THREE_FOOT_HEIGHT), digits = 2)` to a maximum of `r round(max(finalStats$RH_THREE_FOOT_HEIGHT), digits = 2)` percent.\</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co"># The mean was `r round(mean(finalStats$RH_THREE_FOOT_HEIGHT), digits = 2)` percent.</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> final_THP_log_E8D2, <span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> rh, <span class="at">color =</span> sensor_id)) <span class="sc">+</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> final_THP_log_672E, <span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> rh, <span class="at">color =</span> sensor_id)) <span class="sc">+</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> final_THP_log_2848, <span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> rh, <span class="at">color =</span> sensor_id)) <span class="sc">+</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> final_THP_log_0035, <span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> rh, <span class="at">color =</span> sensor_id)) <span class="sc">+</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> final_THP_log_0035, <span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> RH_THREE_FOOT_HEIGHT, <span class="at">color =</span> <span class="st">"CEAC"</span>)) <span class="sc">+</span></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="st">"Relative Humidity - CEAC and 4 THP Sensors"</span>) <span class="sc">+</span></span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">"Date (15 minute Averages)"</span>) <span class="sc">+</span></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="st">"Temperature (C)"</span>) <span class="sc">+</span></span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>      <span class="fu">scale_x_datetime</span>(<span class="at">date_labels =</span> (<span class="st">"%b %d %H:%M"</span>),</span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">date_breaks =</span> <span class="st">"6 hours"</span>,  <span class="at">expand =</span> <span class="fu">expand_scale</span>(<span class="dv">0</span>)) <span class="sc">+</span></span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.text.x=</span><span class="fu">element_text</span>(<span class="at">angle=</span><span class="dv">60</span>, <span class="at">hjust=</span><span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">#  </span><span class="al">TODO</span><span class="co"> move back up as text after data is finalized</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># The readings were taken from `r min(finalStats$date)` to `r max(finalStats$date)`. Readings from the experimental sensor ranged from a minimum of `r round(min(finalStats$RH), digits = 2)` to a maximum of `r round(max(finalStats$RH), digits = 2)` percent.\</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># The mean was `r round(mean(finalStats$RH), digits = 2)` percent.</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Reading for the CEAC sensor ranged from a minimum of `r round(min(finalStats$RH_THREE_FOOT_HEIGHT), digits = 2)` to a maximum of `r round(max(finalStats$RH_THREE_FOOT_HEIGHT), digits = 2)` percent.\</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># The mean was `r round(mean(finalStats$RH_THREE_FOOT_HEIGHT), digits = 2)` percent.</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>b <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> final_THP_log_E8D2, <span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> rh, <span class="at">color =</span> sensor_id)) <span class="sc">+</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> final_THP_log_672E, <span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> rh, <span class="at">color =</span> sensor_id)) <span class="sc">+</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> final_THP_log_2848, <span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> rh, <span class="at">color =</span> sensor_id)) <span class="sc">+</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> final_THP_log_0035, <span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> rh, <span class="at">color =</span> sensor_id)) <span class="sc">+</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> final_THP_log_0035, <span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> RH_THREE_FOOT_HEIGHT, <span class="at">color =</span> <span class="st">"CEAC"</span>)) <span class="sc">+</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggtitle</span>(<span class="st">"Relative Humidity"</span>) <span class="sc">+</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="st">"Date (15 minute Averages)"</span>) <span class="sc">+</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylab</span>(<span class="st">"Relative Humidity (%)"</span>) <span class="sc">+</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>      <span class="fu">scale_x_datetime</span>(<span class="at">date_labels =</span> (<span class="st">"%b %d %H:%M"</span>),</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">date_breaks =</span> <span class="st">"6 hours"</span>,  <span class="at">expand =</span> <span class="fu">expansion</span>(<span class="dv">0</span>)) <span class="sc">+</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.text.x=</span><span class="fu">element_text</span>(<span class="at">angle=</span><span class="dv">60</span>, <span class="at">hjust=</span><span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output-display">
-<p><img src="THP_CEAC_20231102_files/figure-html/data_plot_all_rh-1.png" class="img-fluid" width="768"></p>
-</div>
 </div>
 </section>
 </section>
@@ -338,22 +339,18 @@ The first 4 rows were removed as they are Campbell Scientific header information
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> final_THP_log_E8D2, <span class="fu">aes</span>(<span class="at">x =</span> rh, <span class="at">y =</span> RH_THREE_FOOT_HEIGHT)) <span class="sc">+</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_poly_line</span>() <span class="sc">+</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_poly_eq</span>(<span class="fu">use_label</span>(<span class="st">"eq"</span>)) <span class="sc">+</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_poly_eq</span>(<span class="at">label.y =</span> <span class="fl">0.9</span>) <span class="sc">+</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Relative Humidity Linear Regression - CEAC and THP Sensor E8D2"</span>) <span class="sc">+</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">"THP RH (%)"</span>) <span class="sc">+</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"CEAC RH (%)"</span>) <span class="sc">+</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output-display">
-<p><img src="THP_CEAC_20231102_files/figure-html/data_plot_stat_rh-1.png" class="img-fluid" width="768"></p>
-</div>
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>  t_model <span class="ot">=</span> <span class="fu">lm</span>(RH_THREE_FOOT_HEIGHT <span class="sc">~</span> rh, final_THP_log_E8D2)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summary</span>(t_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>c <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> final_THP_log_E8D2, <span class="fu">aes</span>(<span class="at">x =</span> rh, <span class="at">y =</span> RH_THREE_FOOT_HEIGHT)) <span class="sc">+</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_poly_line</span>() <span class="sc">+</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_poly_eq</span>(<span class="fu">use_label</span>(<span class="st">"eq"</span>)) <span class="sc">+</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_poly_eq</span>(<span class="at">label.y =</span> <span class="fl">0.9</span>) <span class="sc">+</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"RH Linear Regression"</span>) <span class="sc">+</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">"THP RH (%)"</span>) <span class="sc">+</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"CEAC RH (%)"</span>) <span class="sc">+</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>t_model <span class="ot">=</span> <span class="fu">lm</span>(RH_THREE_FOOT_HEIGHT <span class="sc">~</span> rh, final_THP_log_E8D2)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(t_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>
@@ -377,35 +374,48 @@ F-statistic:  7161 on 1 and 178 DF,  p-value: &lt; 2.2e-16</code></pre>
 </div>
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">#get list of residuals</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">resid</span>(t_model)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co">#produce residual vs. fitted plot</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">fitted</span>(t_model), res)</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co">#add a horizontal line at 0</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="dv">0</span>,<span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>modf <span class="ot">&lt;-</span> <span class="fu">fortify</span>(t_model)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># this gives a grid of normally looked at residual plots</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># autoplot(t_model)</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co">#produce residual vs. fitted plot</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(modf, <span class="fu">aes</span>(<span class="at">x =</span> .fitted, <span class="at">y =</span> .resid)) <span class="sc">+</span> </span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"RH Residuals"</span>) <span class="sc">+</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">"Fitted"</span>) <span class="sc">+</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"Residuals"</span>) <span class="sc">+</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>()</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="co"># modf &lt;- fortify(t_model)</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>e <span class="ot">&lt;-</span><span class="fu">ggplot</span>(modf, <span class="fu">aes</span>(<span class="at">sample =</span> .resid)) <span class="sc">+</span> </span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_qq</span>() <span class="sc">+</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_qq_line</span>()</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="co"># ggplot(modf, aes(x = .fitted, y = .resid)) + </span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="co">#   # stat_qq() +</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="co">#   # stat_qq_line()</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a><span class="co">#   geom_area(),</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="co">#   stat_density()</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a><span class="co"># #get list of residuals</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a><span class="co"># res &lt;- resid(t_model)</span></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="co"># #produce residual vs. fitted plot</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a><span class="co"># plot(fitted(t_model), res)</span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a><span class="co"># #add a horizontal line at 0</span></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a><span class="co"># abline(0,0)</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a><span class="co"># #Create density plot of residuals</span></span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a><span class="co"># plot(density(res))</span></span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a><span class="co"># #create Q-Q plot for residuals</span></span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a><span class="co"># qqnorm(res)</span></span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a><span class="co"># #add a straight diagonal line to the plot</span></span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a><span class="co"># qqline(res)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
-<div class="cell-output-display">
-<p><img src="THP_CEAC_20231102_files/figure-html/data_plot_stat_rh-2.png" class="img-fluid" width="768"></p>
-</div>
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Create density plot of residuals</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">density</span>(res))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output-display">
-<p><img src="THP_CEAC_20231102_files/figure-html/data_plot_stat_rh-3.png" class="img-fluid" width="768"></p>
-</div>
-<details>
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">#create Q-Q plot for residuals</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">qqnorm</span>(res)</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co">#add a straight diagonal line to the plot</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">qqline</span>(res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output-display">
-<p><img src="THP_CEAC_20231102_files/figure-html/data_plot_stat_rh-4.png" class="img-fluid" width="768"></p>
-</div>
 </div>
 <section id="discussion" class="level2">
 <h2 class="anchored" data-anchor-id="discussion">DISCUSSION</h2>
@@ -419,18 +429,18 @@ The statistics show a very good fit for the model. This provides a calibration e
 <div class="cell">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ggplot(data = finalStats, aes(x = date)) +</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co">#          geom_line(aes(y = rh, color = "THP Sensor")) +</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co">#          geom_line(aes(y = RH_THREE_FOOT_HEIGHT, color = "CEAC Sensor")) +</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">#          ggtitle("RH CEAC vs THP") +</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co">#          xlab("Date (15 minute Averages)") +</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co">#          ylab("Temperature (C)") +</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co">#          # theme(panel.grid.minor = element_line(color = 2,</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co">#                                         # size = 0.25,</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="co">#                                         # linetype = 1)) +</span></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co">#            scale_x_datetime(date_labels = ("%b %d %H:%M"),</span></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="co">#           date_breaks = "6 hours",  expand = expand_scale(0)) +</span></span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co">#           theme(axis.text.x=element_text(angle=60, hjust=1))</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ggplot(data = finalStats, aes(x = date)) +</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">#          geom_line(aes(y = rh, color = "THP Sensor")) +</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">#          geom_line(aes(y = RH_THREE_FOOT_HEIGHT, color = "CEAC Sensor")) +</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">#          ggtitle("RH CEAC vs THP") +</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">#          xlab("Date (15 minute Averages)") +</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">#          ylab("Temperature (C)") +</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">#          # theme(panel.grid.minor = element_line(color = 2,</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">#                                         # size = 0.25,</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">#                                         # linetype = 1)) +</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">#            scale_x_datetime(date_labels = ("%b %d %H:%M"),</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">#           date_breaks = "6 hours",  expand = expand_scale(0)) +</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co">#           theme(axis.text.x=element_text(angle=60, hjust=1))</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>

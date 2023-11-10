@@ -1,5 +1,5 @@
 ---
-title: 'Test of Aspirated Sensor 2023-07-31 - 2023-08-04'
+title: 'Test of Aspirated Sensor 2023-10-17'
 author: "Bryan Blue"
 e-mail: 'bryanblue@arizona.edu'
 date: "Last Generated: `r Sys.Date()`"
@@ -15,9 +15,15 @@ format:
     fig-height: 5
 ---
 
-## Quarto
+## Experimental Temperature, Humidity, Pressure Sensor Calibration  
+### Experiment Location: The University of Arizona, Tucson, Controlled Environment Agriculture Center, Greenhouse "C"  
+Four experimental BME280 temperature, humidity, pressure aspirated sensors (THP sensors) were placed adjacent to an existing CEAC Vaisala HMP60 aspirated sensor (CEAC sensor). The CEAC sensor had been recently calibrated but on an unknown specific date. The THP sensors were covered with an expanded foam packaging packet that gave at least 2 inches of insulation on top as well as part way down the sides to shield them from direct sunlight. The THP sensors will be used in a shaded, outdoor conditions, not a greenhouse environment. This insulation reduces the direct sunlight and associated absorbed engery by the case. The goal is to compare how well the THP sensors respond in relation to the CEAC sensor under the same conditions. This can then be used to create a calibration equation for each of the four THP sensors.
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+The THP sensors had aspirated readings taken from a Hiletgo BME280 breakout board inside an aspiration chamber. Specifications for the BME280 sensor can be found here: http://www.hiletgo.com/ProductDetail/1953483.html. Measurements were recorded for Temperature (C), Relative Humidity (%), and Pressure (hPa) at 15 minute intervals of 00,15,30,45 of each hour. Each reading had a variable amount of seconds past the boundary due to reading processing timing that did not affect reading accuracy.  
+
+Readings were taken every 15,000 ms (15 seconds) and averaged over 15 minutes. That value was then assembled into a CSV data record that was transmitted to a data logger and recorded to a microSD card. These four CSV log files were collected for this analysis.  
+
+The CEAC supplied a Microsoft Excel (XLSX) file with the CEAC sensor data for this analysis.  
 
 ```{r setup}
 #| include: false
@@ -31,30 +37,26 @@ library(lubridate)
 library(readr)
 library(readxl)
 library(ggpmisc) # stats on ggplot graphs
+library(ggfortify) # graphing QQ, residuals with ggplots
 
 # start in the current project directory
 # this ensures relative paths will work
-# independent of the location the script is ran
+# independent of the location the script is run
 here::here()
 ```
 
-## Location: Controlled Environment Agriculture Center (CEAC) - Greenhouse C
-
-**Lowest CEAC Sensor Above Drainage Tray at Approximately 3 feet (\~1 m) From the Ground:**\
-**Midpoint in The North/South Direction,**\
-**One Quarter of The Width From The West Side**
-
-An experimental BME280 based aspirated sensor (refereed to as "THP") was placed adjacent to an existing CEAC Vaisala HMP60 aspirated sensor (CEAC sensor). The CEAC sensor had been recently calibrated but on an unknown specific date. The experimental sensor was covered with an expanded foam packaging packet that gave at least 2 inches of insulation on top as well as part way down the sides to shield it from direct sunlight. The experimental sensor will be used in a shaded, outdoor conditions, not a greenhouse environment. This insulation reduces the direct sunlight. The goal is to compare how well the experimental sensor responds in relation to the CEAC sensor under the same conditions.
-
-The experimental sensor had aspirated readings taken from a Hiletgo BME280 breakout board inside an aspirated chamber . Specifications for the BME280 sensor can be found here: http://www.hiletgo.com/ProductDetail/1953483.html. Measurements were recorded for Temperature (C), Relative Humidity (%), and Pressure (hPa) at approximately 5 minute intervals (00:04:50 +/- 1 second). The variation from exactly 5 minute intervals was due to the incomplete program that was written for timing the interval. A future version will record 15 minute averages.
+## Location Within Greenhouse
+**Lowest CEAC Sensor Above an Existing Experiments Drainage Tray at Approximately 3 feet (\~1 m) From the Ground**  
+**Midpoint in The North/South Direction**  
+**One Quarter of The Width From The West Side**  
 
 ### Load Data
 
 **THP Experiment Sensors**
 
-Each sensor .log file has previously recorded data at the top of the file. The lines are skipped until the first record of this test data is sequential starting with a record number of 1.
+Each sensors <filename>.log file had previously recorded data at the top of the file. These lines are skipped until the first record of this test data. Record numbering in this data starts at 1.
 
-Date/Time values start: 2023-10-17 at 16:15:xx or 16:30:xx with the start time variation due to differing sensor start up times.
+Date/Time values start on 2023-10-17 at 16:15:xx or 16:30:xx with the start time variation due to differing sensor start up times.
 
 ```{r data_load_THP}
 
@@ -95,13 +97,13 @@ THP_log_0035 <- load_THP_data("raw_data/20231019_THP_TRC_last/CLIMATE_C45BBEE4FE
 
 ```
 
-**CEAC Campbell Scientific Data**\
-An XLSX file was supplied by the CEAC that contains data from their calibrated sensor. Raw data from 7/12/2023 14:15 through 11/2/2023 14:15 was included in the file. The file was opened in Excel and saved as a CSV for easier use. Excel added many blank fields to the end of each record in the CSV that were ignored.
+**CEAC Campbell Scientific Data**  
+An Excel XLSX file was supplied by the CEAC that contained data from the CEAC sensor. Raw data from 7/12/2023 14:15 through 11/2/2023 14:15 was included in the file.  
 
-Values of "NAN" and "-7999" in the data were mapped to "na" values.
+Values of "NAN" and "-7999" in the data were mapped to native "na" values for use in R.
 
-TIMESTAMP column was changed to "date" to allow for matching with the experimental sensor data. It was also converted to a standard POSIXct date/time format.\
-The first 4 rows were removed as they are Campbell Scientific header information that is not needed. It's log file starts with record number 0.
+TIMESTAMP column was changed to "date" to allow for matching with the THP sensor data. It was also converted to a standard POSIXct date/time format.  
+The first 4 rows were removed as they are Campbell Scientific header information that is not needed. It's log file starts with record number 0.  
 
 ```{r data_load_CEAC}
 
@@ -131,15 +133,14 @@ Campbell_Data <- read_excel("raw_data/2 Nov Campbell Data.xlsx",
 
 ```
 
-### Data Wrangling
+## Data Wrangling
 
-All dates are standardized to POSIXct. YYYY-MM-DD HH:MM:SS
+All dates are standardized to POSIXct. YYYY-MM-DD HH:MM:SS  
 
-The HTP sensor data values needed to be converted to 15-minute averages to match the CEAC data.
+There was a difference in the clock values between the THP sensors and CEAC sensor. The clocks were not synchronized at the beginning of the test. Through trial and error it was determined that the difference was ~30 minutes. This is consistent with previous tests at this location. A 30 minute shif was applied to the THP sensor data to align it with the CEAC sensor data.
 
-There was a difference in the clock values between the HTP sensor and CEAC sensor. The clocks were not synchronized at the beginning of the test. Through trial and error it was determined that the difference was 30 minutes. This is consistent with previous tests.
-
-The HTP sensor was set to record on 15 minute boundaries but drifted over the comparison time. The dates/times had some duplication that were averaged together in the THP data to normalize it to 15 minute boundaries.
+The THP sensor was set to record on 15 minute boundaries but had records where they were a time boundary over the expected value. This was sporadic and appeared to have cycles of time jumps forward by one boundary, and then would correct itself. This caused some duplication of the dates/times. These were averaged together in the THP data to normalize it to 15 minute boundaries.  
+The Cambpell Scientific logs rounded the timestamp (date fields) to the minutes, so the THP sensor data had the seconds set to 0 values to match this format.
 
 ```{r data_wrangle}
 
@@ -183,28 +184,30 @@ combine_data <- function(sensor_df, sensor_name) {
 }
 
 ```
-
-# compute hourly stats
+Clean logs were created for each the four THP sensor logs. These were then individually joined to the CEAC sensor data on the date. This resulted in four merged logs of each THP sensor data and CEAC sensor data for analysis.  
 
 ```{r create_cleaned_logs}
+# Data Frame Names
+#   THP_log_E8D2
+#   THP_log_672E
+#   THP_log_2848
+#   THP_log_0035
 
-# THP_log_E8D2
-# THP_log_672E
-# THP_log_2848
-# THP_log_0035
 # create the appropriate final logs and identify with a sensor_id
 final_THP_log_E8D2 <- combine_data(THP_log_E8D2, "E8D2")
 final_THP_log_672E <- combine_data(THP_log_672E, "672E")
 final_THP_log_2848 <- combine_data(THP_log_2848, "2848")
 final_THP_log_0035 <- combine_data(THP_log_0035, "0035")
-
-
-
 ```
 
 ## RESULTS
 
-**Temperature**\
+**NOTE** Starting October 18th around 10:00 am there appears to be an anomaly with excessive temperatures and low humidity. This normally indicates failure of the wet pad cooling system where water is not flowing over the pad. This needs confirmed, but does give some insight into how the sensors respond to higher temperatures and lower humidity levels. This data helps in the overall analysis when deriving the calibration curve.  
+
+### All Temperature Sensors  
+Each of the four THP sensors and the CEAC sensor data are plotted together.  
+The four THP sensor labels are from the last four characters of the MAC address of each microprocessor in each THP sensor. At this time, these are not correlated to the physical THP sensor numbers of 1 - 4.  
+
 
 ```{r data_plot_temp}
 
@@ -217,44 +220,46 @@ final_THP_log_0035 <- combine_data(THP_log_0035, "0035")
 
 
 
-ggplot() +
+a <- ggplot() +
     geom_line(data = final_THP_log_E8D2, aes(x = date, y = temperature, color = sensor_id)) +
     geom_line(data = final_THP_log_672E, aes(x = date, y = temperature, color = sensor_id)) +
     geom_line(data = final_THP_log_2848, aes(x = date, y = temperature, color = sensor_id)) +
     geom_line(data = final_THP_log_0035, aes(x = date, y = temperature, color = sensor_id)) +
     geom_line(data = final_THP_log_0035, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
-    ggtitle("Temperature - CEAC and 4 THP Sensors") +
+    ggtitle("Temperature") +
     xlab("Date (15 minute Averages)") +
     ylab("Temperature (C)") +
-      scale_x_datetime(date_labels = ("%b %d %H:%M"),
-      date_breaks = "6 hours",  expand = expand_scale(0)) +
+    scale_x_datetime(date_labels = ("%b %d %H:%M"),
+      date_breaks = "6 hours",  expand = expansion(0)) +
+    
     theme(axis.text.x=element_text(angle=60, hjust=1))
 
 ```
 
-**Relative Humidity**\
+### All Relative Humidity Sensors
 
 
 ```{r data_plot_all_rh}
 
-#  TODO move badck up as text after data is finalized
+#  TODO move back up as text after data is finalized
 # The readings were taken from `r min(finalStats$date)` to `r max(finalStats$date)`. Readings from the experimental sensor ranged from a minimum of `r round(min(finalStats$RH), digits = 2)` to a maximum of `r round(max(finalStats$RH), digits = 2)` percent.\
 # The mean was `r round(mean(finalStats$RH), digits = 2)` percent.
 # 
 # Reading for the CEAC sensor ranged from a minimum of `r round(min(finalStats$RH_THREE_FOOT_HEIGHT), digits = 2)` to a maximum of `r round(max(finalStats$RH_THREE_FOOT_HEIGHT), digits = 2)` percent.\
 # The mean was `r round(mean(finalStats$RH_THREE_FOOT_HEIGHT), digits = 2)` percent.
         
-ggplot() +
+b <- ggplot() +
+
     geom_line(data = final_THP_log_E8D2, aes(x = date, y = rh, color = sensor_id)) +
     geom_line(data = final_THP_log_672E, aes(x = date, y = rh, color = sensor_id)) +
     geom_line(data = final_THP_log_2848, aes(x = date, y = rh, color = sensor_id)) +
     geom_line(data = final_THP_log_0035, aes(x = date, y = rh, color = sensor_id)) +
     geom_line(data = final_THP_log_0035, aes(x = date, y = RH_THREE_FOOT_HEIGHT, color = "CEAC")) +
-    ggtitle("Relative Humidity - CEAC and 4 THP Sensors") +
+    ggtitle("Relative Humidity") +
     xlab("Date (15 minute Averages)") +
-    ylab("Temperature (C)") +
+    ylab("Relative Humidity (%)") +
       scale_x_datetime(date_labels = ("%b %d %H:%M"),
-      date_breaks = "6 hours",  expand = expand_scale(0)) +
+      date_breaks = "6 hours",  expand = expansion(0)) +
     theme(axis.text.x=element_text(angle=60, hjust=1))
 
 
@@ -268,36 +273,59 @@ A linear relationship was found with an R squared of 0.99, and a slope very near
 
 ```{r data_plot_stat_rh}
 
-ggplot(data = final_THP_log_E8D2, aes(x = rh, y = RH_THREE_FOOT_HEIGHT)) +
+c <- ggplot(data = final_THP_log_E8D2, aes(x = rh, y = RH_THREE_FOOT_HEIGHT)) +
   stat_poly_line() +
   stat_poly_eq(use_label("eq")) +
   stat_poly_eq(label.y = 0.9) +
-  ggtitle("Relative Humidity Linear Regression - CEAC and THP Sensor E8D2") +
+  ggtitle("RH Linear Regression") +
   xlab("THP RH (%)") +
   ylab("CEAC RH (%)") +
   geom_point()
 
 
-  t_model = lm(RH_THREE_FOOT_HEIGHT ~ rh, final_THP_log_E8D2)
-  summary(t_model)
+t_model = lm(RH_THREE_FOOT_HEIGHT ~ rh, final_THP_log_E8D2)
+summary(t_model)
+modf <- fortify(t_model)
 
 
-#get list of residuals
-res <- resid(t_model)
+# this gives a grid of normally looked at residual plots
+# autoplot(t_model)
 
 #produce residual vs. fitted plot
-plot(fitted(t_model), res)
-#add a horizontal line at 0
-abline(0,0)
+d <- ggplot(modf, aes(x = .fitted, y = .resid)) + 
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  ggtitle("RH Residuals") +
+  xlab("Fitted") +
+  ylab("Residuals") +
+  geom_point()
 
-#Create density plot of residuals
-plot(density(res))
-
-#create Q-Q plot for residuals
-qqnorm(res)
-#add a straight diagonal line to the plot
-qqline(res)
+# modf <- fortify(t_model)
+e <-ggplot(modf, aes(sample = .resid)) + 
+  stat_qq() +
+  stat_qq_line()
   
+# ggplot(modf, aes(x = .fitted, y = .resid)) + 
+#   # stat_qq() +
+#   # stat_qq_line()
+#   geom_area(),
+#   stat_density()
+
+# #get list of residuals
+# res <- resid(t_model)
+
+# #produce residual vs. fitted plot
+# plot(fitted(t_model), res)
+# #add a horizontal line at 0
+# abline(0,0)
+
+# 
+# #Create density plot of residuals
+# plot(density(res))
+
+# #create Q-Q plot for residuals
+# qqnorm(res)
+# #add a straight diagonal line to the plot
+# qqline(res)
 
 ```
 
