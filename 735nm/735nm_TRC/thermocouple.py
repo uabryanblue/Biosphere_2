@@ -164,9 +164,9 @@ def readThermocouples(tspi):
             tcReadings[key][2] = round(tcReadings[key][2] / tcReadings[key][3], 2)
             tcReadings[key][4] = round(tcReadings[key][4] / tcReadings[key][3], 2)
             tcReadings[key][3] = 1 # only one averaged reading is returned
-            
             calReadings[key] = calibrate_reading(key, tcReadings[key][2])
-            print(f"TC Pos: {conf.callibrations[key][1]} TC: {conf.callibrations[key][0]:6}   key: {key:13}   avg: {conf.readings[key][2]:8}   cal: {calReadings[key]:8}")
+            # print(f"{calReadings}")
+            print(f"TC Pos: {conf.callibrations[key][1]:4} TC: {conf.callibrations[key][0]:6}   key: {key:13}   avg: {conf.readings[key][2]:8}   cal: {calReadings[key]:8}")
         
         else: # we didn't take any readings, therefore not a number
             tcReadings[key][2] = float("NaN")
