@@ -48,7 +48,8 @@ MYNAME = "ESP8266 MicroPython Temperature Sensor and Temperature Control" # long
 peers = {}
 # remote sensor configuration, connect to all data loggers, pick one for time
 peers["DATA_LOGGER"] = [b'\xc4[\xbe\xe4\xfe\x08', b'\x8c\xaa\xb5M\x7f\x18', b'HU\x19\xdf)\x86', b'\xc4[\xbe\xe5\x03R']  # list of data loggers
-peers["TIME"] = [b'\xc4[\xbe\xe4\xfe\x08'] # try to get time from here M1
+# peers["TIME"] = [b'HU\x19\xdf)\x86'] # try to get time from here M1
+peers["TIME"] = [b'\xc4[\xbe\xe4\xfe\x08'] # TEST BENCH!!!!!!!  M7
 
 # --------------------
 # DATA LOGGER
@@ -137,14 +138,23 @@ readingsOrder = ['TREATMENT', 'CONTROL', 'REFERENCE', 'HEAT', 'CONTROL_HEAT']
     # beta2 = -0.01053 - 2nd order (beta2 * X^2 ), if needed, set to 0 for linear
 callibrations = {}
 # # EXAMPLES ONLY !!!!! these values are not correct
-# callibrations['CONTROL'] =      ["T107", 2, 0.3565, 0.9792, 0] # possible recal needed
-# callibrations['HEAT'] =         ["T109", 3, -3.4725, 1.1041, 0] # possible recal needed
-# callibrations['CONTROL_HEAT'] = ["T110", 1, -2.6096, 1.0795, 0]
-# callibrations['REFERENCE'] =    ["T105", 5, 2.0515, 0.9091, 0]
-# callibrations['TREATMENT'] =    ["T118", 4, 0.5067, 0.9835, 0]
 
-callibrations['TREATMENT'] =        ["T103", 1, 0, 0, 0] # replaced T110 - bad
-callibrations['CONTROL'] =          ["T105", 2, 2.0515, 0.9091, 0]
-callibrations['REFERENCE'] =        ["T109", 3, -3.4725, 1.1041, 0] # possible recal needed
-callibrations['HEAT'] =             ["T118", 4, 0.5067, 0.9835, 0]
-callibrations['CONTROL_HEAT'] =     ["T107", 5, 0.3565, 0.9792, 0] # possible recal needed
+## CALIBRATION THERMOCOUPLE SENSOR TABLE
+# this is a GLOBAL config - do NOT modify unless you know what you are doing
+# assign KEY values to the TC you are using in your installation
+# comment out the lines for those not in use
+#  = [NAME, PORT, INTERCEPT, SLOPE, QUADRATIC (normally 0)]
+
+# TC Configuration 1
+# callibrations['TREATMENT'] =        ["T103", 1, -2.5112, 1.0223, 0] 
+# callibrations['CONTROL'] =          ["T105", 2, -3.6912, 1.0107, 0]
+# callibrations['REFERENCE'] =        ["T109", 3, -4.1935, 1.0625, 0] 
+# callibrations['HEAT'] =             ["T118", 4, -3.6352, 1.0157, 0]
+# callibrations['CONTROL_HEAT'] =     ["T107", 5, -3.7182, 1.0541, 0] 
+# BAD: T116
+# TC Configuration 2
+callibrations['TREATMENT'] =        ["T115", 1, -8.931, 1.3807, 0] 
+callibrations['CONTROL'] =          ["T111", 2, -3.5038, 1.0665, 0]
+callibrations['REFERENCE'] =        ["T104", 3, -2.4965, 1.0401, 0] 
+callibrations['HEAT'] =             ["T106", 4, -12.7429, 1.5676, 0]
+callibrations['CONTROL_HEAT'] =     ["T113", 5, -12.9492, 1.5228, 0] 
