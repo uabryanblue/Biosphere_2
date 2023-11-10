@@ -123,6 +123,15 @@ def main():
 
         realtc.get_remote_time(esp_con)
         gc.collect()
+
+        # visual 3 second led on got remote time
+        # status pin for logger, GPIO16/D0
+        D0 = machine.Pin(16, machine.Pin.OUT)
+        D0.off() # led on
+        time.sleep(3)
+        D0.on() # turn off
+        del D0 
+
     else:
         print(f'MY ROLE IS {conf.MYROLE} BUT IT SHOULD BE "TRC".')
         print('!!!!!!!!invalid conf.py file!!!!!!!!')
@@ -187,7 +196,7 @@ def main():
             now = time.ticks_ms()
             readtime = time.ticks_add(now, conf.SAMPLE_INTERVAL)    
             # print(f"RESET TICKS {now}, {readtime}")
-            cal_readings = {}
+            # # TODO not working cal_readings = {}
             # read TC values
             avg_readings = thermocouple.initReadings(avg_readings)
             # print(f'\nMY  {myReadings}')
@@ -196,8 +205,8 @@ def main():
             # print(f'\nMY  {myReadings}')
             # print(f'AVG {avg_readings}\n')
             # make relay decisions for heating on current reading
-            # update_heating(avg_readings["TREATMENT"][2], avg_readings["REFERENCE"][2], avg_readings["HEAT"][2])
-            update_heating(cal_readings["TREATMENT"], cal_readings["REFERENCE"], cal_readings["HEAT"])
+            update_heating(avg_readings["TREATMENT"][2], avg_readings["REFERENCE"][2], avg_readings["HEAT"][2])
+            # # TODO not working update_heating(cal_readings["TREATMENT"], cal_readings["REFERENCE"], cal_readings["HEAT"])
 
             for key in avg_readings.keys():
                 # only increment if treatment has a non-error value, ignore all on nan values, or no reads
