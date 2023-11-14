@@ -52,7 +52,7 @@ here::here()
 **Midpoint in The North/South Direction**  
 **One Quarter of The Width From The West Side**  
 
-### Load Data
+# Load Data
 
 **THP Experiment Sensors**
 
@@ -200,11 +200,12 @@ final_THP_log_E8D2 <- combine_data(THP_log_E8D2, "E8D2")
 final_THP_log_672E <- combine_data(THP_log_672E, "672E")
 final_THP_log_2848 <- combine_data(THP_log_2848, "2848")
 final_THP_log_0035 <- combine_data(THP_log_0035, "0035")
+
 ```
 
-## RESULTS
+# RESULTS
 
-**NOTE** Starting October 18th around 10:00 am there appears to be an anomaly with excessive temperatures and low humidity. This normally indicates failure of the wet pad cooling system where water is not flowing over the pad. This needs confirmed, but does give some insight into how the sensors respond to higher temperatures and lower humidity levels. This data helps in the overall analysis when deriving the calibration curve.  
+**NOTE** Starting October 18th around 10:00 am there appears to be an anomaly with excessive temperatures and low humidity. This normally indicates failure of the wet pad cooling system where water is not flowing over the pad. The analysis was done including these values but decreased accuracy of the calibration. I decided to keep only data points where relative humidity was > 45 %.  
 
 ### All Temperature Sensors  
 Each of the four THP sensors and the CEAC sensor data are plotted together.  
@@ -219,7 +220,13 @@ The four THP sensor labels are from the last four characters of the MAC address 
 # 
 # Reading differences for the CEAC sensor ranged from a minimum of `r round(min(finalStats$TEMP_THREE_FOOT_HEIGHT), digits = 2)` to a maximum of `r round(max(finalStats$TEMP_THREE_FOOT_HEIGHT), digits = 2)` degrees Celsius.\
 # The mean was `r round(mean(finalStats$TEMP_THREE_FOOT_HEIGHT), digits = 2)` degrees.
+# final_THP_log_672E <- subset(final_THP_log_672E, RH_THREE_FOOT_HEIGHT>45.0 & rh>45.0) 
 
+
+final_THP_log_E8D2 <- subset(final_THP_log_E8D2, rh>40.0) 
+final_THP_log_672E <- subset(final_THP_log_672E, rh>40.0) 
+final_THP_log_2848 <- subset(final_THP_log_2848, rh>40.0) 
+final_THP_log_0035 <- subset(final_THP_log_0035, rh>40.0) 
 
 
 T4 <- ggplot() +
@@ -238,7 +245,7 @@ T4 <- ggplot() +
 
 ```
 
-### All Relative Humidity Sensors
+# All Relative Humidity Sensors
 
 
 ```{r data_plot_all_rh}
@@ -268,9 +275,9 @@ ggplot() +
 
 # LINEAR REGRESSION
 
-A simple linear regression was performed to compare the CEAC sensor data to the THP sensor data. Graphs, output, and equations are shown below. Residuals assumptions for the linear regressions are also shown.
+A linear regression was performed to compare the CEAC sensor data to the THP sensor data. Graphs, output, and equations are shown below. Residuals assumptions for the linear regressions are also shown.
 
-The sensor names are E8D2, 2848, 672E, 0035. Groups of 4 graphs, one set for each THP sensor, are grouped into 2x2 grids. 
+The sensor names are E8D2, 2848, 672E, 0035. Four graphs, one set for each THP sensor, are grouped into 2x2 grids. 
 
 
 ```{r data_plot_stat_rh}
@@ -289,15 +296,14 @@ RH_sensor_plot <- function(RHdata, THPname) {
 }
 
 
-
 RH_lm_plot <- function(RHdata, THPname) {
-    RHlm <- ggplot(data = RHdata, aes(x = rh, y = RH_THREE_FOOT_HEIGHT)) +
+    RHlm <- ggplot(data = RHdata, aes(x = RH_THREE_FOOT_HEIGHT, y = rh)) +
       stat_poly_line() +
       stat_poly_eq(use_label("eq")) +
       stat_poly_eq(label.y = 0.9) +
       ggtitle(paste("RH Linear Regression - THP ", THPname)) +
-      xlab(paste("THP ", THPname, " RH (%)")) +
-      ylab("CEAC RH (%)") +
+      ylab(paste("THP ", THPname, " RH (%)")) +
+      xlab("CEAC RH (%)") +
       geom_point()
   return(RHlm)
 }
@@ -352,33 +358,138 @@ RH_qq_2848 <- RH_qq_plot(final_THP_log_2848, "2848")
 RH_qq_0035 <- RH_qq_plot(final_THP_log_0035, "0035")
 ```
 
-## THP Sensor E8D2
+### THP Sensor E8D2
 ```{r graphs_E8D2}
 my_plots <- list(RH_E8D2, RH_lm_E8D2, RH_residuals_E8D2, RH_qq_E8D2)
 my_layout <- rbind(c(1, 2), c(3, 4))
 grid.arrange(grobs = my_plots, layout_matrix = my_layout)
 ```
-## THP Sensor 672E
+### THP Sensor 672E
 ```{r graphs_672E}
 my_plots <- list(RH_672E, RH_lm_672E, RH_residuals_672E, RH_qq_672E)
 my_layout <- rbind(c(1, 2), c(3, 4))
 grid.arrange(grobs = my_plots, layout_matrix = my_layout)
 ```
-## THP Sensor 2848
+### THP Sensor 2848
 ```{r graphs_2848}
 my_plots <- list(RH_2848, RH_lm_2848, RH_residuals_2848, RH_qq_2848)
 my_layout <- rbind(c(1, 2), c(3, 4))
 grid.arrange(grobs = my_plots, layout_matrix = my_layout)
 ```
-## THP Sensor 0035
+### THP Sensor 0035
 ```{r graphs_0035}
 my_plots <- list(RH_0035, RH_lm_0035, RH_residuals_0035, RH_qq_0035)
 my_layout <- rbind(c(1, 2), c(3, 4))
 grid.arrange(grobs = my_plots, layout_matrix = my_layout)
 ```
 
-## DISCUSSION
 
-The calibration test show that all four THP sensors perform fairly well, with some of the deviation attributed to the original data anomaly of higher temperatures and lower humidity. There was relatively little data collected for this event compared to the rest of the normal data range. It may be interesting to run this analysis on the data with values that exclude this sudden RH drop.
+## TEMPERATURE  
+
+```{r data_plot_stat_t}
+#| include: true
+T_sensor_plot <- function(RHdata, THPname) {
+  T_plot <- ggplot() +
+    geom_line(data = RHdata, aes(x = date, y = temperature, color = sensor_id)) +
+    geom_line(data = RHdata, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
+    ggtitle(paste("T CEAC and THP ", THPname)) +
+    xlab("Date (15 minute Averages)") +
+    ylab("Temperature (C)") +
+      scale_x_datetime(date_labels = ("%b %d %H:%M"),
+      date_breaks = "6 hours",  expand = expansion(0)) +
+    theme(axis.text.x=element_text(angle=60, hjust=1))
+  return(T_plot)
+}
 
 
+T_lm_plot <- function(RHdata, THPname) {
+    Tlm <- ggplot(data = RHdata, aes(x = TEMP_THREE_FOOT_HEIGHT, y = temperature)) +
+      stat_poly_line() +
+      stat_poly_eq(use_label("eq")) +
+      stat_poly_eq(label.y = 0.9) +
+      ggtitle(paste("T Linear Regression - THP ", THPname)) +
+      ylab(paste("THP ", THPname, " T (C)")) +
+      xlab("CEAC T (C)") +
+      geom_point()
+  return(Tlm)
+}
+
+
+T_residual_plot <- function(RHdata, THPname) {
+    t_model = lm(TEMP_THREE_FOOT_HEIGHT ~ temperature, RHdata)
+    summary(t_model)
+    modf <- fortify(t_model)
+    
+      #produce residual vs. fitted plot
+    Tlm_residuals <- ggplot(modf, aes(x = .fitted, y = .resid)) + 
+      geom_hline(yintercept = 0, linetype = "dashed") +
+      ggtitle(paste("T Residuals - THP ", THPname)) +
+      xlab("Fitted") +
+      ylab("Residuals") +
+      geom_point()
+  return(Tlm_residuals)
+}
+
+    
+T_qq_plot <- function(RHdata, THPname) {
+    t_model = lm(TEMP_THREE_FOOT_HEIGHT ~ temperature, RHdata)
+    summary(t_model)
+    modf <- fortify(t_model)
+    
+    Tlm_QQ <-ggplot(modf, aes(sample = .resid)) + 
+      stat_qq() +
+      ggtitle(paste("T QQ - THP ", THPname)) +
+      stat_qq_line()
+  return(Tlm_QQ)
+}
+
+T_E8D2 <- T_sensor_plot(final_THP_log_E8D2, "E8D2")
+T_672E <- T_sensor_plot(final_THP_log_672E, "672E")
+T_2848 <- T_sensor_plot(final_THP_log_2848, "2848")
+T_0035 <- T_sensor_plot(final_THP_log_0035, "0035")  
+
+T_lm_E8D2 <- T_lm_plot(final_THP_log_E8D2, "E8D2")
+T_lm_672E <- T_lm_plot(final_THP_log_672E, "672E")
+T_lm_2848 <- T_lm_plot(final_THP_log_2848, "2848")
+T_lm_0035 <- T_lm_plot(final_THP_log_0035, "0035")  
+
+T_residuals_E8D2 <- T_residual_plot(final_THP_log_E8D2, "E8D2")
+T_residuals_672E <- T_residual_plot(final_THP_log_672E, "672E")
+T_residuals_2848 <- T_residual_plot(final_THP_log_2848, "2848")
+T_residuals_0035 <- T_residual_plot(final_THP_log_0035, "0035")
+  
+T_qq_E8D2 <- T_qq_plot(final_THP_log_E8D2, "E8D2")
+T_qq_672E <- T_qq_plot(final_THP_log_672E, "672E")
+T_qq_2848 <- T_qq_plot(final_THP_log_2848, "2848")
+T_qq_0035 <- T_qq_plot(final_THP_log_0035, "0035")
+```
+
+### THP Sensor E8D2
+```{r graphs_E8D2_T}
+my_plots <- list(T_E8D2, T_lm_E8D2, T_residuals_E8D2, T_qq_E8D2)
+my_layout <- rbind(c(1, 2), c(3, 4))
+grid.arrange(grobs = my_plots, layout_matrix = my_layout)
+```
+### THP Sensor 672E
+```{r graphs_672E_T}
+my_plots <- list(T_672E, T_lm_672E, T_residuals_672E, T_qq_672E)
+my_layout <- rbind(c(1, 2), c(3, 4))
+grid.arrange(grobs = my_plots, layout_matrix = my_layout)
+```
+### THP Sensor 2848
+```{r graphs_2848_T}
+my_plots <- list(T_2848, T_lm_2848, T_residuals_2848, T_qq_2848)
+my_layout <- rbind(c(1, 2), c(3, 4))
+grid.arrange(grobs = my_plots, layout_matrix = my_layout)
+```
+### THP Sensor 0035
+```{r graphs_0035_T}
+my_plots <- list(T_0035, T_lm_0035, T_residuals_0035, T_qq_0035)
+my_layout <- rbind(c(1, 2), c(3, 4))
+grid.arrange(grobs = my_plots, layout_matrix = my_layout)
+```
+# DISCUSSION
+
+The calibration test show that all four THP sensors perform fairly well, with some of the deviation attributed to the original data anomaly of very (relative) higher temperatures and lower humidity. There was little data collected for this event compared to the rest of the expected data range. Dropping these unexpected values did help improve the models.
+
+It should also be noted that these sensors ran for several weeks in a greenhouse that had pesticides applied. The unknown chemicals may have also affected the accuracy of these sensors.
