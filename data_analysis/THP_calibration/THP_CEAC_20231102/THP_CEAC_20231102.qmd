@@ -270,6 +270,8 @@ ggplot() +
 
 A simple linear regression was performed to compare the CEAC sensor data to the THP sensor data. Graphs, output, and equations are shown below. Residuals assumptions for the linear regressions are also shown.
 
+The sensor names are E8D2, 2848, 672E, 0035. Groups of 4 graphs, one set for each THP sensor, are grouped into 2x2 grids. 
+
 
 ```{r data_plot_stat_rh}
 #| include: true
@@ -348,49 +350,35 @@ RH_qq_E8D2 <- RH_qq_plot(final_THP_log_E8D2, "E8D2")
 RH_qq_672E <- RH_qq_plot(final_THP_log_672E, "672E")
 RH_qq_2848 <- RH_qq_plot(final_THP_log_2848, "2848")
 RH_qq_0035 <- RH_qq_plot(final_THP_log_0035, "0035")
+```
 
+## THP Sensor E8D2
+```{r graphs_E8D2}
 my_plots <- list(RH_E8D2, RH_lm_E8D2, RH_residuals_E8D2, RH_qq_E8D2)
 my_layout <- rbind(c(1, 2), c(3, 4))
 grid.arrange(grobs = my_plots, layout_matrix = my_layout)
-
+```
+## THP Sensor 672E
+```{r graphs_672E}
 my_plots <- list(RH_672E, RH_lm_672E, RH_residuals_672E, RH_qq_672E)
 my_layout <- rbind(c(1, 2), c(3, 4))
 grid.arrange(grobs = my_plots, layout_matrix = my_layout)
-
+```
+## THP Sensor 2848
+```{r graphs_2848}
 my_plots <- list(RH_2848, RH_lm_2848, RH_residuals_2848, RH_qq_2848)
 my_layout <- rbind(c(1, 2), c(3, 4))
 grid.arrange(grobs = my_plots, layout_matrix = my_layout)
-
+```
+## THP Sensor 0035
+```{r graphs_0035}
 my_plots <- list(RH_0035, RH_lm_0035, RH_residuals_0035, RH_qq_0035)
 my_layout <- rbind(c(1, 2), c(3, 4))
 grid.arrange(grobs = my_plots, layout_matrix = my_layout)
-
-
 ```
 
 ## DISCUSSION
 
-The test shows a similar response as previous Biosphere 2 sensor tests. Past comparisons to Biosphere 2 data showed the experimental sensor data mirrored various Biosphere 2 sensor readings in the tropical rain forest biome.
-
-The comparison of the experimental sensor with the CEAC sensor shows similar responses.\
-The statistics show a very good fit for the model. This provides a calibration equation that can be used during their future use.
-
-# THP comparison from all 4 sensors
-
-```{r data_plot_rh}
-
-# ggplot(data = finalStats, aes(x = date)) +
-#          geom_line(aes(y = rh, color = "THP Sensor")) +
-#          geom_line(aes(y = RH_THREE_FOOT_HEIGHT, color = "CEAC Sensor")) +
-#          ggtitle("RH CEAC vs THP") +
-#          xlab("Date (15 minute Averages)") +
-#          ylab("Temperature (C)") +
-#          # theme(panel.grid.minor = element_line(color = 2,
-#                                         # size = 0.25,
-#                                         # linetype = 1)) +
-#            scale_x_datetime(date_labels = ("%b %d %H:%M"),
-#           date_breaks = "6 hours",  expand = expand_scale(0)) +
-#           theme(axis.text.x=element_text(angle=60, hjust=1))
+The calibration test show that all four THP sensors perform fairly well, with some of the deviation attributed to the original data anomaly of higher temperatures and lower humidity. There was relatively little data collected for this event compared to the rest of the normal data range. It may be interesting to run this analysis on the data with values that exclude this sudden RH drop.
 
 
-```
