@@ -38,6 +38,8 @@ library(readr)
 library(readxl)
 library(ggpmisc) # stats on ggplot graphs
 library(ggfortify) # graphing QQ, residuals with ggplots
+library(gridExtra) # quick layout of multiple graphs
+
 
 # start in the current project directory
 # this ensures relative paths will work
@@ -220,7 +222,7 @@ The four THP sensor labels are from the last four characters of the MAC address 
 
 
 
-a <- ggplot() +
+T4 <- ggplot() +
     geom_line(data = final_THP_log_E8D2, aes(x = date, y = temperature, color = sensor_id)) +
     geom_line(data = final_THP_log_672E, aes(x = date, y = temperature, color = sensor_id)) +
     geom_line(data = final_THP_log_2848, aes(x = date, y = temperature, color = sensor_id)) +
@@ -248,14 +250,13 @@ a <- ggplot() +
 # Reading for the CEAC sensor ranged from a minimum of `r round(min(finalStats$RH_THREE_FOOT_HEIGHT), digits = 2)` to a maximum of `r round(max(finalStats$RH_THREE_FOOT_HEIGHT), digits = 2)` percent.\
 # The mean was `r round(mean(finalStats$RH_THREE_FOOT_HEIGHT), digits = 2)` percent.
         
-b <- ggplot() +
-
+ggplot() +
     geom_line(data = final_THP_log_E8D2, aes(x = date, y = rh, color = sensor_id)) +
     geom_line(data = final_THP_log_672E, aes(x = date, y = rh, color = sensor_id)) +
     geom_line(data = final_THP_log_2848, aes(x = date, y = rh, color = sensor_id)) +
     geom_line(data = final_THP_log_0035, aes(x = date, y = rh, color = sensor_id)) +
     geom_line(data = final_THP_log_0035, aes(x = date, y = RH_THREE_FOOT_HEIGHT, color = "CEAC")) +
-    ggtitle("Relative Humidity") +
+    ggtitle("Relative Humidity All Sensors") +
     xlab("Date (15 minute Averages)") +
     ylab("Relative Humidity (%)") +
       scale_x_datetime(date_labels = ("%b %d %H:%M"),
@@ -267,65 +268,103 @@ b <- ggplot() +
 
 # LINEAR REGRESSION
 
-A simple linear regression was performed to compare the CEAC sensor data to the experimental sensor data. Graphs, output, and equations are shown below for Temperature and Relative Humidity. Assumptions for a linear regression were not tested in this exploration.
+A simple linear regression was performed to compare the CEAC sensor data to the THP sensor data. Graphs, output, and equations are shown below. Residuals assumptions for the linear regressions are also shown.
 
-A linear relationship was found with an R squared of 0.99, and a slope very near 1.
 
 ```{r data_plot_stat_rh}
+#| include: true
+RH_sensor_plot <- function(RHdata, THPname) {
+  RH_plot <- ggplot() +
+    geom_line(data = RHdata, aes(x = date, y = rh, color = sensor_id)) +
+    geom_line(data = RHdata, aes(x = date, y = RH_THREE_FOOT_HEIGHT, color = "CEAC")) +
+    ggtitle(paste("RH CEAC and THP ", THPname)) +
+    xlab("Date (15 minute Averages)") +
+    ylab("Relative Humidity (%)") +
+      scale_x_datetime(date_labels = ("%b %d %H:%M"),
+      date_breaks = "6 hours",  expand = expansion(0)) +
+    theme(axis.text.x=element_text(angle=60, hjust=1))
+  return(RH_plot)
+}
 
-c <- ggplot(data = final_THP_log_E8D2, aes(x = rh, y = RH_THREE_FOOT_HEIGHT)) +
-  stat_poly_line() +
-  stat_poly_eq(use_label("eq")) +
-  stat_poly_eq(label.y = 0.9) +
-  ggtitle("RH Linear Regression") +
-  xlab("THP RH (%)") +
-  ylab("CEAC RH (%)") +
-  geom_point()
 
 
-t_model = lm(RH_THREE_FOOT_HEIGHT ~ rh, final_THP_log_E8D2)
-summary(t_model)
-modf <- fortify(t_model)
+RH_lm_plot <- function(RHdata, THPname) {
+    RHlm <- ggplot(data = RHdata, aes(x = rh, y = RH_THREE_FOOT_HEIGHT)) +
+      stat_poly_line() +
+      stat_poly_eq(use_label("eq")) +
+      stat_poly_eq(label.y = 0.9) +
+      ggtitle(paste("RH Linear Regression - THP ", THPname)) +
+      xlab(paste("THP ", THPname, " RH (%)")) +
+      ylab("CEAC RH (%)") +
+      geom_point()
+  return(RHlm)
+}
 
 
-# this gives a grid of normally looked at residual plots
-# autoplot(t_model)
+RH_residual_plot <- function(RHdata, THPname) {
+    t_model = lm(RH_THREE_FOOT_HEIGHT ~ rh, RHdata)
+    summary(t_model)
+    modf <- fortify(t_model)
+    
+      #produce residual vs. fitted plot
+    RHlm_residuals <- ggplot(modf, aes(x = .fitted, y = .resid)) + 
+      geom_hline(yintercept = 0, linetype = "dashed") +
+      ggtitle(paste("RH Residuals - THP ", THPname)) +
+      xlab("Fitted") +
+      ylab("Residuals") +
+      geom_point()
+  return(RHlm_residuals)
+}
 
-#produce residual vs. fitted plot
-d <- ggplot(modf, aes(x = .fitted, y = .resid)) + 
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  ggtitle("RH Residuals") +
-  xlab("Fitted") +
-  ylab("Residuals") +
-  geom_point()
+    
+RH_qq_plot <- function(RHdata, THPname) {
+    t_model = lm(RH_THREE_FOOT_HEIGHT ~ rh, RHdata)
+    summary(t_model)
+    modf <- fortify(t_model)
+    
+    RHlm_QQ <-ggplot(modf, aes(sample = .resid)) + 
+      stat_qq() +
+      ggtitle(paste("RH QQ - THP ", THPname)) +
+      stat_qq_line()
+  return(RHlm_QQ)
+}
 
-# modf <- fortify(t_model)
-e <-ggplot(modf, aes(sample = .resid)) + 
-  stat_qq() +
-  stat_qq_line()
+RH_E8D2 <- RH_sensor_plot(final_THP_log_E8D2, "E8D2")
+RH_672E <- RH_sensor_plot(final_THP_log_672E, "672E")
+RH_2848 <- RH_sensor_plot(final_THP_log_2848, "2848")
+RH_0035 <- RH_sensor_plot(final_THP_log_0035, "0035")  
+
+RH_lm_E8D2 <- RH_lm_plot(final_THP_log_E8D2, "E8D2")
+RH_lm_672E <- RH_lm_plot(final_THP_log_672E, "672E")
+RH_lm_2848 <- RH_lm_plot(final_THP_log_2848, "2848")
+RH_lm_0035 <- RH_lm_plot(final_THP_log_0035, "0035")  
+
+RH_residuals_E8D2 <- RH_residual_plot(final_THP_log_E8D2, "E8D2")
+RH_residuals_672E <- RH_residual_plot(final_THP_log_672E, "672E")
+RH_residuals_2848 <- RH_residual_plot(final_THP_log_2848, "2848")
+RH_residuals_0035 <- RH_residual_plot(final_THP_log_0035, "0035")
   
-# ggplot(modf, aes(x = .fitted, y = .resid)) + 
-#   # stat_qq() +
-#   # stat_qq_line()
-#   geom_area(),
-#   stat_density()
+RH_qq_E8D2 <- RH_qq_plot(final_THP_log_E8D2, "E8D2")
+RH_qq_672E <- RH_qq_plot(final_THP_log_672E, "672E")
+RH_qq_2848 <- RH_qq_plot(final_THP_log_2848, "2848")
+RH_qq_0035 <- RH_qq_plot(final_THP_log_0035, "0035")
 
-# #get list of residuals
-# res <- resid(t_model)
+my_plots <- list(RH_E8D2, RH_lm_E8D2, RH_residuals_E8D2, RH_qq_E8D2)
+my_layout <- rbind(c(1, 2), c(3, 4))
+grid.arrange(grobs = my_plots, layout_matrix = my_layout)
 
-# #produce residual vs. fitted plot
-# plot(fitted(t_model), res)
-# #add a horizontal line at 0
-# abline(0,0)
+my_plots <- list(RH_672E, RH_lm_672E, RH_residuals_672E, RH_qq_672E)
+my_layout <- rbind(c(1, 2), c(3, 4))
+grid.arrange(grobs = my_plots, layout_matrix = my_layout)
 
-# 
-# #Create density plot of residuals
-# plot(density(res))
+my_plots <- list(RH_2848, RH_lm_2848, RH_residuals_2848, RH_qq_2848)
+my_layout <- rbind(c(1, 2), c(3, 4))
+grid.arrange(grobs = my_plots, layout_matrix = my_layout)
 
-# #create Q-Q plot for residuals
-# qqnorm(res)
-# #add a straight diagonal line to the plot
-# qqline(res)
+my_plots <- list(RH_0035, RH_lm_0035, RH_residuals_0035, RH_qq_0035)
+my_layout <- rbind(c(1, 2), c(3, 4))
+grid.arrange(grobs = my_plots, layout_matrix = my_layout)
+
 
 ```
 
