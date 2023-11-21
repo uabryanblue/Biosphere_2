@@ -39,42 +39,38 @@ Load LICOR text logs
 #| echo: true
 
 load_data_chunks <- function(filename) {
-  con <- file(filename, "rt") # , blocking = TRUE
+  con <- file(filename, "rt")
   print("start")
-  i = 0
-  # dataLines = data.frame() #list() 
+  i = 0 # used to specify which group of data is being read
   dataLines <- data.frame(matrix(ncol = 1, nrow = 0))
   colnames(dataLines) <- c("original")
   
     while (length(oneLine <- readLines(con, n = 1, skipNul = TRUE, warn = FALSE)) > 0) {
       # print(oneLine)
       if (str_detect(oneLine, regex("\\[Data\\]"))) {
-        print("We found data start")
+        # print("We found data start")
         
         i = i + 1
         groupNumber = paste("group",i, sep = "")
-        j = 1
+        # j = 1
         
         # these three groups appear after [Data] in the file
-        dataGroups <- readLines(con, n = 1, skipNul = TRUE, warn = FALSE)
-        dataVars   <- readLines(con, n = 1, skipNul = TRUE, warn = FALSE)
-        dataUnits  <- readLines(con, n = 1, skipNul = TRUE, warn = FALSE)
+        dataGroups <- paste("data_group", readLines(con, n = 1, skipNul = TRUE, warn = FALSE), sep = "\t")
+        dataVars   <- paste("data_group", readLines(con, n = 1, skipNul = TRUE, warn = FALSE), sep = "\t")
+        dataUnits  <- paste("data_group", readLines(con, n = 1, skipNul = TRUE, warn = FALSE), sep = "\t")
         
         # create an empty list to store all of the data records
         # read lines until it is not longer a data line
 
 
         while (length(dataLine <- readLines(con, n = 1, skipNul = TRUE, warn = FALSE)) > 0) {
-          print(dataLine)
-          if (str_detect(dataLine, regex("^[0-9]?\t"))) { # lines starts with and integer record index and tab
-            # print(dataLine)
-            # dataLines[[1+length(dataLines)]] <- paste(groupNumber, dataLine, sep = "\t")
+          # print(dataLine)
+          # lines starts with and integer record number and tab
+          if (str_detect(dataLine, regex("^[0-9]?\t"))) { 
             finalString <- paste(groupNumber, dataLine, sep = "\t")
             dataLines[nrow(dataLines) + 1,] = finalString
-             # dataLines <- as.data.frame(finalString)
-            
-            # dataLines <- separate_wider_delim(dataLine, delim = "\t")
-            j = j + 1
+
+            # j = j + 1
           } else {
             break
           }
@@ -89,15 +85,17 @@ load_data_chunks <- function(filename) {
   
 }
 
-
+# this will not work for multiple files without the structure, columns
+# create df for each of the chunks of information
 output <- load_data_chunks("data_raw/2023-11-15-b2trf/2023-11-15-1148_logdata")
-
 groupsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[1]]),'\t',fixed=TRUE)))
-
 unitsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[2]]),'\t',fixed=TRUE)))
-
 varsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[3]]),'\t',fixed=TRUE)))
-
 valuesdf <- data.frame(do.call('rbind',strsplit(as.character(output[[4]][,1]),'\t',fixed=TRUE)))
+
+write_excel_csv(groupsdf, "data_raw/2023-11-15-b2trf/new.txt", append = TRUE, col_names = FALSE)
+write_excel_csv(unitsdf, "data_raw/2023-11-15-b2trf/new.txt", append = TRUE, col_names = FALSE)
+write_excel_csv(varsdf, "data_raw/2023-11-15-b2trf/new.txt", append = TRUE, col_names = FALSE)
+write_excel_csv(valuesdf, "data_raw/2023-11-15-b2trf/new.txt", append = TRUE, col_names = FALSE)
 
 ```
