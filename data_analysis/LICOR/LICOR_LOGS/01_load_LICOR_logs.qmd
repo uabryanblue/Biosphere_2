@@ -33,7 +33,13 @@ here::here()
 ```
 
 ## 01_load_LICOR_logs  
-Load LICOR text logs
+Current loads one text log from a LICOR data set. It reads each chunck of data from a line with "[Header]" skipping all lines until a line "[Data]" is found. Once found all data lines are read and assigned a group number to keep the related records together. This repeats until the end of file.  
+The original group names, field names, and units are stored off as text in separate dataframes from the data. There are many special characters that do not convert into column names without loss of uniqueness. The values call all be referenced by the column position.  
+The consolidated data is written out to an Excel CSV type text file.
+
+
+TODO: Check that grouped data records are from the correct data set.
+Averages of the groups are needed, not the raw records for analysis.
 
 ```{r load}
 #| echo: true
@@ -93,6 +99,7 @@ unitsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[2]]),'\t',fi
 varsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[3]]),'\t',fixed=TRUE)))
 valuesdf <- data.frame(do.call('rbind',strsplit(as.character(output[[4]][,1]),'\t',fixed=TRUE)))
 
+# write out a text file that Excel can read
 write_excel_csv(groupsdf, "data_raw/2023-11-15-b2trf/new.txt", append = TRUE, col_names = FALSE)
 write_excel_csv(unitsdf, "data_raw/2023-11-15-b2trf/new.txt", append = TRUE, col_names = FALSE)
 write_excel_csv(varsdf, "data_raw/2023-11-15-b2trf/new.txt", append = TRUE, col_names = FALSE)
