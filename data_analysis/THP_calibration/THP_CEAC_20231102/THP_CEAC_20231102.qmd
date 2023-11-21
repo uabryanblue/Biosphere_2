@@ -15,15 +15,17 @@ format:
     fig-height: 5
 ---
 
-## Experimental Temperature, Humidity, Pressure Sensor Calibration  
-### Experiment Location: The University of Arizona, Tucson, Controlled Environment Agriculture Center, Greenhouse "C"  
-Four experimental BME280 temperature, humidity, pressure aspirated sensors (THP sensors) were placed adjacent to an existing CEAC Vaisala HMP60 aspirated sensor (CEAC sensor). The CEAC sensor had been recently calibrated but on an unknown specific date. The THP sensors were covered with an expanded foam packaging packet that gave at least 2 inches of insulation on top as well as part way down the sides to shield them from direct sunlight. The THP sensors will be used in a shaded, outdoor conditions, not a greenhouse environment. This insulation reduces the direct sunlight and associated absorbed engery by the case. The goal is to compare how well the THP sensors respond in relation to the CEAC sensor under the same conditions. This can then be used to create a calibration equation for each of the four THP sensors.
+## Experimental Temperature, Humidity, Pressure Sensor Calibration
 
-The THP sensors had aspirated readings taken from a Hiletgo BME280 breakout board inside an aspiration chamber. Specifications for the BME280 sensor can be found here: http://www.hiletgo.com/ProductDetail/1953483.html. Measurements were recorded for Temperature (C), Relative Humidity (%), and Pressure (hPa) at 15 minute intervals of 00,15,30,45 of each hour. Each reading had a variable amount of seconds past the boundary due to reading processing timing that did not affect reading accuracy.  
+### Experiment Location: The University of Arizona, Tucson, Controlled Environment Agriculture Center, Greenhouse "C"
 
-Readings were taken every 15,000 ms (15 seconds) and averaged over 15 minutes. That value was then assembled into a CSV data record that was transmitted to a data logger and recorded to a microSD card. These four CSV log files were collected for this analysis.  
+Four experimental BME280 temperature, humidity, pressure aspirated sensors (THP sensors) were placed adjacent to an existing CEAC Vaisala HMP60 aspirated sensor (CEAC sensor). The CEAC sensor had been recently calibrated before the test but on an unknown specific date. The THP sensors were covered with an expanded foam packaging packet that gave at least 2 inches of insulation on top as well as part way down the sides to shield them from direct sunlight. They were also painted white for use in the field. The THP sensors will be used in a shaded, outdoor conditions, not a greenhouse environment. This insulation reduces the direct sunlight and associated absorbed energy by the sensor case. The goal is to compare how well the THP sensors respond in relation to the CEAC sensor under the same conditions. This can then be used to create a calibration equation for each of the four THP sensors.
 
-The CEAC supplied a Microsoft Excel (XLSX) file with the CEAC sensor data for this analysis.  
+The THP sensors had aspirated readings taken from a Hiletgo BME280 breakout board inside an aspiration chamber. Specifications for the BME280 sensor can be found here: http://www.hiletgo.com/ProductDetail/1953483.html. Measurements were recorded for Temperature (C), Relative Humidity (%), and Pressure (hPa) at 15 minute intervals of 00,15,30,45 of each hour. Each THP sensor reading had a variable amount of seconds past the boundary due to reading processing timing that did not affect reading accuracy. The CEAC data was supplied with all seconds set to zero.
+
+Readings were taken every 15,000 ms (15 seconds) and averaged over 15 minutes. That value was then assembled into a CSV data record that was transmitted to a data logger and recorded to a microSD card. These four CSV log files were collected for this analysis.
+
+The CEAC supplied a Microsoft Excel (XLSX) file with the CEAC sensor data for this analysis.
 
 ```{r setup}
 #| include: false
@@ -48,15 +50,18 @@ here::here()
 ```
 
 ## Location Within Greenhouse
-**Lowest CEAC Sensor Above an Existing Experiments Drainage Tray at Approximately 3 feet (\~1 m) From the Ground**  
-**Midpoint in The North/South Direction**  
-**One Quarter of The Width From The West Side**  
+
+**Lowest CEAC Sensor Above an Existing Experiments Drainage Tray at Approximately 3 feet (\~1 m) From the Ground**\
+**Midpoint in The North/South Direction**\
+**One Quarter of The Width From The West Side**
 
 # Load Data
 
-**THP Experiment Sensors**
+**THP Sensors**
 
-Each sensors <filename>.log file had previously recorded data at the top of the file. These lines are skipped until the first record of this test data. Record numbering in this data starts at 1.
+Each sensors <filename>.log file had previously recorded data at the top of the file. These lines were skipped up to the first record of this test data. Record numbering in this data starts at 1.
+
+The THP sensors recorded invalid values as native "na" values for use with R.
 
 Date/Time values start on 2023-10-17 at 16:15:xx or 16:30:xx with the start time variation due to differing sensor start up times.
 
@@ -99,13 +104,13 @@ THP_log_0035 <- load_THP_data("raw_data/20231019_THP_TRC_last/CLIMATE_C45BBEE4FE
 
 ```
 
-**CEAC Campbell Scientific Data**  
-An Excel XLSX file was supplied by the CEAC that contained data from the CEAC sensor. Raw data from 7/12/2023 14:15 through 11/2/2023 14:15 was included in the file.  
+**CEAC Campbell Scientific Data**\
+An Excel XLSX file was supplied by the CEAC that contained data from the CEAC sensor. Raw data from 7/12/2023 14:15 through 11/2/2023 14:15 was included in the file.
 
 Values of "NAN" and "-7999" in the data were mapped to native "na" values for use in R.
 
-TIMESTAMP column was changed to "date" to allow for matching with the THP sensor data. It was also converted to a standard POSIXct date/time format.  
-The first 4 rows were removed as they are Campbell Scientific header information that is not needed. It's log file starts with record number 0.  
+TIMESTAMP column name was changed to "date" to allow for matching with the THP sensor data. It was also converted to a standard POSIXct date/time format.\
+The first 4 rows were removed as they are Campbell Scientific header information that is not needed. It's log file starts with record number 0.
 
 ```{r data_load_CEAC}
 
@@ -137,12 +142,12 @@ Campbell_Data <- read_excel("raw_data/2 Nov Campbell Data.xlsx",
 
 ## Data Wrangling
 
-All dates are standardized to POSIXct. YYYY-MM-DD HH:MM:SS  
+All dates are standardized to POSIXct. YYYY-MM-DD HH:MM:SS
 
-There was a difference in the clock values between the THP sensors and CEAC sensor. The clocks were not synchronized at the beginning of the test. Through trial and error it was determined that the difference was ~30 minutes. This is consistent with previous tests at this location. A 30 minute shif was applied to the THP sensor data to align it with the CEAC sensor data.
+There was a difference in the clock values between the THP sensors and CEAC sensor. The clocks were not synchronized at the beginning of the test. Through trial and error it was determined that the difference was \~30 minutes. This is consistent with previous tests at this location. A 30 minute shift was applied to the THP sensor data to align it with the CEAC sensor data.
 
-The THP sensor was set to record on 15 minute boundaries but had records where they were a time boundary over the expected value. This was sporadic and appeared to have cycles of time jumps forward by one boundary, and then would correct itself. This caused some duplication of the dates/times. These were averaged together in the THP data to normalize it to 15 minute boundaries.  
-The Cambpell Scientific logs rounded the timestamp (date fields) to the minutes, so the THP sensor data had the seconds set to 0 values to match this format.
+The THP sensor was set to record on 15 minute boundaries but had records where the expected value was past a time boundary. This was sporadic and appeared to have cycles of time jumps forward by one 15 minute boundary, and then would correct itself. This caused some duplication of the dates/times. These were averaged together in the THP data to normalize it to 15 minute boundaries. \
+The Cambpell Scientific logs rounded the TIMESTAMP (date fields) to the minute, so the THP sensor data had the seconds set to 0 values to match this format.
 
 ```{r data_wrangle}
 
@@ -186,7 +191,8 @@ combine_data <- function(sensor_df, sensor_name) {
 }
 
 ```
-Clean logs were created for each the four THP sensor logs. These were then individually joined to the CEAC sensor data on the date. This resulted in four merged logs of each THP sensor data and CEAC sensor data for analysis.  
+
+Clean logs were created for each the four THP sensor logs. These were then individually joined to the CEAC sensor data based on the date. This resulted in four merged logs of each THP sensor data and CEAC sensor data for analysis.
 
 ```{r create_cleaned_logs}
 # Data Frame Names
@@ -205,12 +211,14 @@ final_THP_log_0035 <- combine_data(THP_log_0035, "0035")
 
 # RESULTS
 
-**NOTE** Starting October 18th around 10:00 am there appears to be an anomaly with excessive temperatures and low humidity. This normally indicates failure of the wet pad cooling system where water is not flowing over the pad. The analysis was done including these values but decreased accuracy of the calibration. I decided to keep only data points where relative humidity was > 45 %.  
+**NOTE** Starting October 18th around 10:00 am there appears to be an anomaly with high temperatures and low humidity. This normally indicates failure of the wet pad cooling system where water is not flowing over the pad. The analysis was done including these values but decreased accuracy of the calibration model. I decided to keep only data points where relative humidity was \> 45 %.
 
-### All Temperature Sensors  
-Each of the four THP sensors and the CEAC sensor data are plotted together.  
-The four THP sensor labels are from the last four characters of the MAC address of each microprocessor in each THP sensor. At this time, these are not correlated to the physical THP sensor numbers of 1 - 4.  
+Outlier and/or leverage points are seen in the residual graphs. These deserve a closer look to see if those point should be removed from the data. This would improve the overall model.
 
+### All Temperature Sensors
+
+Each of the four THP sensors and the CEAC sensor data are plotted together.\
+The four THP sensor labels are from the last four characters of the MAC address of each microprocessor in each THP sensor. This information is included in the data logs and can be used for future processing of the THP data.
 
 ```{r data_plot_temp}
 
@@ -247,6 +255,7 @@ T4 <- ggplot() +
 
 # All Relative Humidity Sensors
 
+This graph contains all four THP sensors and the CEAC sensor data. It has data truncated to values \> 45 % RH to remove the temperature anomaly. The THP sensors all appear to track the CEAC sensor reasonably well.
 
 ```{r data_plot_all_rh}
 
@@ -275,10 +284,9 @@ ggplot() +
 
 # LINEAR REGRESSION
 
-A linear regression was performed to compare the CEAC sensor data to the THP sensor data. Graphs, output, and equations are shown below. Residuals assumptions for the linear regressions are also shown.
+A simple linear regression was performed to compare the CEAC sensor data to the THP sensor data. Graphs, output, and equations are shown below. Residuals assumptions for the linear regressions are also shown.
 
-The sensor names are E8D2, 2848, 672E, 0035. Four graphs, one set for each THP sensor, are grouped into 2x2 grids. 
-
+The sensor names are E8D2, 2848, 672E, 0035. Four graphs groups, one set for each THP sensor, are shown in 2x2 grids.
 
 ```{r data_plot_stat_rh}
 #| include: true
@@ -359,32 +367,48 @@ RH_qq_0035 <- RH_qq_plot(final_THP_log_0035, "0035")
 ```
 
 ### THP Sensor E8D2
+
+This sensor performed well with fitted residuals showing no recognizable pattern. The QQ plot is reasonable but does show a curve at the lower end. There are a few points that could be an outlier and/or leverage point that should be evaluated and causing this deviation.
+
 ```{r graphs_E8D2}
 my_plots <- list(RH_E8D2, RH_lm_E8D2, RH_residuals_E8D2, RH_qq_E8D2)
 my_layout <- rbind(c(1, 2), c(3, 4))
 grid.arrange(grobs = my_plots, layout_matrix = my_layout)
 ```
+
 ### THP Sensor 672E
+
+This sensor performed the worst of the four THP sensors for RH. The residuals/fitted shows a vary large outlier/leverage point that needs further investigation. This may be skewing the QQ plot as well.
+
 ```{r graphs_672E}
 my_plots <- list(RH_672E, RH_lm_672E, RH_residuals_672E, RH_qq_672E)
 my_layout <- rbind(c(1, 2), c(3, 4))
 grid.arrange(grobs = my_plots, layout_matrix = my_layout)
 ```
+
 ### THP Sensor 2848
+
+The data looks as though there are outlier/leverage points in the data. This data set needs re-evaluated to see if these points can be removed, which should improve the model performance and QQ plot.
+
 ```{r graphs_2848}
 my_plots <- list(RH_2848, RH_lm_2848, RH_residuals_2848, RH_qq_2848)
 my_layout <- rbind(c(1, 2), c(3, 4))
 grid.arrange(grobs = my_plots, layout_matrix = my_layout)
 ```
+
 ### THP Sensor 0035
+
+This sensor appears to have outlier/leverage points that need evaluated. The residual plots do not show proper shapes and should improve with this evaluation.
+
 ```{r graphs_0035}
 my_plots <- list(RH_0035, RH_lm_0035, RH_residuals_0035, RH_qq_0035)
 my_layout <- rbind(c(1, 2), c(3, 4))
 grid.arrange(grobs = my_plots, layout_matrix = my_layout)
 ```
 
+## TEMPERATURE
 
-## TEMPERATURE  
+THP sensor data for temperature comparison are shown for each sensor in groups of four graphs in a 2 x 2 layout.
 
 ```{r data_plot_stat_t}
 #| include: true
@@ -465,31 +489,49 @@ T_qq_0035 <- T_qq_plot(final_THP_log_0035, "0035")
 ```
 
 ### THP Sensor E8D2
+
+This sensor performed well. There is some clustering in the Fitted residuals, and slightly high tail in the QQ plot. This model should suffice for this experiment.
+
 ```{r graphs_E8D2_T}
 my_plots <- list(T_E8D2, T_lm_E8D2, T_residuals_E8D2, T_qq_E8D2)
 my_layout <- rbind(c(1, 2), c(3, 4))
 grid.arrange(grobs = my_plots, layout_matrix = my_layout)
 ```
+
 ### THP Sensor 672E
+
+This sensors residual plots show there are problems in the data. Outlier/leverage points need evaluated and removed if needed.
+
 ```{r graphs_672E_T}
 my_plots <- list(T_672E, T_lm_672E, T_residuals_672E, T_qq_672E)
 my_layout <- rbind(c(1, 2), c(3, 4))
 grid.arrange(grobs = my_plots, layout_matrix = my_layout)
 ```
+
 ### THP Sensor 2848
+
+Overall this model looks good. There may be a few data points that need re-evaluated. Most likely they are from the central peak, left edge discrepancies.
+
 ```{r graphs_2848_T}
 my_plots <- list(T_2848, T_lm_2848, T_residuals_2848, T_qq_2848)
 my_layout <- rbind(c(1, 2), c(3, 4))
 grid.arrange(grobs = my_plots, layout_matrix = my_layout)
 ```
+
 ### THP Sensor 0035
+
+Graphs look good for this sensor. The model should be acceptable for this experiment.
+
 ```{r graphs_0035_T}
 my_plots <- list(T_0035, T_lm_0035, T_residuals_0035, T_qq_0035)
 my_layout <- rbind(c(1, 2), c(3, 4))
 grid.arrange(grobs = my_plots, layout_matrix = my_layout)
 ```
+
 # DISCUSSION
 
-The calibration test show that all four THP sensors perform fairly well, with some of the deviation attributed to the original data anomaly of very (relative) higher temperatures and lower humidity. There was little data collected for this event compared to the rest of the expected data range. Dropping these unexpected values did help improve the models.
+The calibration test show that all four THP sensors perform fairly well, with some of the deviation attributed to the original data anomaly of very (relative) higher temperatures and lower humidity. There was little data collected for this event compared to the rest of the expected data range. Dropping these unexpected values and keeping values \> 45 % did help improve the models, but it may not have been the best judgement call.
 
-It should also be noted that these sensors ran for several weeks in a greenhouse that had pesticides applied. The unknown chemicals may have also affected the accuracy of these sensors.
+As noted in many of the graphs possible outliers and/or leverage points appear. Another pass on the data with this analysis for each sensor needs to be added to see if any improvement can be made to the models. In addition, once this is added, the entire data set can be evaluated to see if the \> 45 % RH decision was needed.
+
+These sensors ran for several weeks in a greenhouse that had pesticides applied. The unknown chemicals may have also affected the accuracy of these sensors. There was a strong smell of sulfur on the sensors when they were retrieved at the completion of the experiment.

@@ -1,0 +1,50 @@
+---
+title: "LICOR Data Processing"
+author: "Bryan Blue"
+e-mail: 'bryanblue@arizona.edu'
+date: "Last Generated: `r Sys.Date()`"
+execute:
+  echo: false
+format: 
+  html:
+    code-fold: true
+    fig-width: 8
+    fig-height: 6
+  pdf:
+    fig-width: 7
+    fig-height: 5
+---
+
+```{r setup, include=FALSE}
+#| echo: false
+knitr::opts_chunk$set(echo = TRUE)
+require(tidyverse)
+library(dplyr)
+library(lubridate)
+require(read_excel)
+# require(readxl)
+library(ggplot2)
+library(here)
+
+# start in the current project directory
+# this ensures relative paths will work
+# independent of the location the script is run
+here::here()
+```
+
+## LI-COR Data Parser  
+This project loads a LI-COR Xlsx file and wrangles it into appropriate table structures for further analysis.  
+
+The LI_COR system outputs an Excel format requires sumstantial data wrangling before it can be analyzed. There are multiple rows containing different groups of data that need to be read in indivdually. The main data set consists of a group name, assoicated data value name, and a third line that contains an optional units designation.  
+
+These different groups are read into their own tables.  
+SysConst, ChambConst, LTConst, LQConst, QConst, LeakConst  
+
+SysObs is a block that requires additional manipulation to get data into a tidy format. 
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).

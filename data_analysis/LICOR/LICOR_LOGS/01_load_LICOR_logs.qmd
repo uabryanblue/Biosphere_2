@@ -1,0 +1,103 @@
+---
+title: "LICOR Data Processing"
+author: "Bryan Blue"
+e-mail: 'bryanblue@arizona.edu'
+date: "Last Generated: `r Sys.Date()`"
+execute:
+  echo: false
+format: 
+  html:
+    code-fold: true
+    fig-width: 8
+    fig-height: 6
+  pdf:
+    fig-width: 7
+    fig-height: 5
+---
+
+```{r setup, include=FALSE}
+#| echo: false
+knitr::opts_chunk$set(echo = TRUE)
+require(tidyverse)
+library(dplyr)
+library(lubridate)
+require(tidyr)
+# require(readxl)
+library(ggplot2)
+library(here)
+
+# start in the current project directory
+# this ensures relative paths will work
+# independent of the location the script is run
+here::here()
+```
+
+## 01_load_LICOR_logs  
+Load LICOR text logs
+
+```{r load}
+#| echo: true
+
+load_data_chunks <- function(filename) {
+  con <- file(filename, "rt") # , blocking = TRUE
+  print("start")
+  i = 0
+  # dataLines = data.frame() #list() 
+  dataLines <- data.frame(matrix(ncol = 1, nrow = 0))
+  colnames(dataLines) <- c("original")
+  
+    while (length(oneLine <- readLines(con, n = 1, skipNul = TRUE, warn = FALSE)) > 0) {
+      # print(oneLine)
+      if (str_detect(oneLine, regex("\\[Data\\]"))) {
+        print("We found data start")
+        
+        i = i + 1
+        groupNumber = paste("group",i, sep = "")
+        j = 1
+        
+        # these three groups appear after [Data] in the file
+        dataGroups <- readLines(con, n = 1, skipNul = TRUE, warn = FALSE)
+        dataVars   <- readLines(con, n = 1, skipNul = TRUE, warn = FALSE)
+        dataUnits  <- readLines(con, n = 1, skipNul = TRUE, warn = FALSE)
+        
+        # create an empty list to store all of the data records
+        # read lines until it is not longer a data line
+
+
+        while (length(dataLine <- readLines(con, n = 1, skipNul = TRUE, warn = FALSE)) > 0) {
+          print(dataLine)
+          if (str_detect(dataLine, regex("^[0-9]?\t"))) { # lines starts with and integer record index and tab
+            # print(dataLine)
+            # dataLines[[1+length(dataLines)]] <- paste(groupNumber, dataLine, sep = "\t")
+            finalString <- paste(groupNumber, dataLine, sep = "\t")
+            dataLines[nrow(dataLines) + 1,] = finalString
+             # dataLines <- as.data.frame(finalString)
+            
+            # dataLines <- separate_wider_delim(dataLine, delim = "\t")
+            j = j + 1
+          } else {
+            break
+          }
+        }
+      }
+    } 
+
+  print("stop")
+  close(con) 
+
+  return(list(dataGroups, dataUnits, dataVars, dataLines))
+  
+}
+
+
+output <- load_data_chunks("data_raw/2023-11-15-b2trf/2023-11-15-1148_logdata")
+
+groupsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[1]]),'\t',fixed=TRUE)))
+
+unitsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[2]]),'\t',fixed=TRUE)))
+
+varsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[3]]),'\t',fixed=TRUE)))
+
+valuesdf <- data.frame(do.call('rbind',strsplit(as.character(output[[4]][,1]),'\t',fixed=TRUE)))
+
+```
