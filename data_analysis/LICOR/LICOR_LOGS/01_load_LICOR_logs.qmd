@@ -58,8 +58,7 @@ load_data_chunks <- function(filename) {
         
         i = i + 1
         groupNumber = paste("group",i, sep = "")
-        # j = 1
-        
+
         # these three groups appear after [Data] in the file
         dataGroups <- paste("data_group", readLines(con, n = 1, skipNul = TRUE, warn = FALSE), sep = "\t")
         dataVars   <- paste("data_group", readLines(con, n = 1, skipNul = TRUE, warn = FALSE), sep = "\t")
@@ -76,7 +75,6 @@ load_data_chunks <- function(filename) {
             finalString <- paste(groupNumber, dataLine, sep = "\t")
             dataLines[nrow(dataLines) + 1,] = finalString
 
-            # j = j + 1
           } else {
             break
           }
@@ -100,9 +98,73 @@ varsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[3]]),'\t',fix
 valuesdf <- data.frame(do.call('rbind',strsplit(as.character(output[[4]][,1]),'\t',fixed=TRUE)))
 
 # write out a text file that Excel can read
-write_excel_csv(groupsdf, "data_raw/2023-11-15-b2trf/new.txt", append = TRUE, col_names = FALSE)
-write_excel_csv(unitsdf, "data_raw/2023-11-15-b2trf/new.txt", append = TRUE, col_names = FALSE)
-write_excel_csv(varsdf, "data_raw/2023-11-15-b2trf/new.txt", append = TRUE, col_names = FALSE)
-write_excel_csv(valuesdf, "data_raw/2023-11-15-b2trf/new.txt", append = TRUE, col_names = FALSE)
+write_excel_csv(groupsdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
+write_excel_csv(unitsdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
+write_excel_csv(varsdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
+write_excel_csv(valuesdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
+# 
+# col_types = cols(SysObs_date = col_datetime(format = "%Y%m%d %H:%M:%S"), 
+# col_types$SysObs_date <- as.Date.POSIXct(col_types$SysObs_date)
+
+
+```
+
+
+```{r header_add}
+#| echo: true
+
+# load the names of the columns of interest
+select_field_list <- read_csv("data_raw/Joost_Analysis_Sample/2023-09-22-1536_logdata_fields.csv", 
+                       col_names = FALSE, 
+                       # skip = 1, 
+                       n_max = 2,
+                       show_col_types = FALSE) 
+# Append new column to front of data, group_name is required as column 1
+select_field_list <- data.frame(col1 = c("data_group"), select_field_list)
+# variable names are not unique, prepend the group to fix it
+new_select_field_list <- paste(select_field_list[1,], select_field_list[2,], sep = "_")
+colnames(select_field_list) <- new_select_field_list
+
+# variable names are not unique, prepend the group to fix it
+new_field_list <- paste(groupsdf[1,], varsdf[1,], sep = "_")
+colnames(valuesdf) <- new_field_list #varsdf[1,]
+
+
+# create a set of data that the user specified in select_field_list
+final_data <- valuesdf %>% select(any_of(new_select_field_list)) 
+# final_data$SysObs_date <- strptime(final_data$SysObs_date, "%Y%m%d %H:%M:%S")
+final_data$SysObs_date <- as.POSIXct(final_data$SysObs_date, format = "%Y%m%d %H:%M:%S")
+final_data$GasEx_gsw <- as.numeric(final_data$GasEx_gsw)
+write_excel_csv(final_data, "data_cleaned/test_licor_selected_data.txt", append = FALSE, col_names = FALSE)
+
+```
+
+
+
+```{r test_graph}
+ggplot() +
+    # geom_point(data = final_data, 
+    geom_point(data=subset(final_data, data_group_data_group=="group4"), 
+               aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
+    # geom_line(data = final_data, aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
+    ggtitle("LICOR Test Graph") +
+    xlab("SysObs_date") +
+    ylab("GasEx_gsw") +
+    scale_y_continuous(limits=c(0.0, 0.2), breaks=c(0, 0.1, 0.2, 0.5)) +
+    scale_x_datetime(date_labels = ("%M:%S"),
+        date_breaks = "10 sec",  expand = expansion(0)) +
+    theme(axis.text.x=element_text(angle=60, hjust=1))
+    # 
+  
+      # scale_x_datetime(labels=date_format("%b %y"))
+    #   date_breaks = "6 hours",  expand = expansion(0)) +
+    
+    # theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
 
 ```
