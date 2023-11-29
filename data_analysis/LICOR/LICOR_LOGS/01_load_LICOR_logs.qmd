@@ -91,7 +91,7 @@ load_data_chunks <- function(filename) {
 
 # this will not work for multiple files without the structure, columns
 # create df for each of the chunks of information
-output <- load_data_chunks("data_raw/2023-11-15-b2trf/2023-11-15-1148_logdata")
+output <- load_data_chunks("data_raw/2023-11-17-btrf/2023-11-17-1144_logdata-tc-heat")
 groupsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[1]]),'\t',fixed=TRUE)))
 unitsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[2]]),'\t',fixed=TRUE)))
 varsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[3]]),'\t',fixed=TRUE)))
@@ -141,17 +141,44 @@ write_excel_csv(final_data, "data_cleaned/test_licor_selected_data.txt", append 
 
 
 
-```{r test_graph}
+```{r test_graph_group2}
 ggplot() +
     # geom_point(data = final_data, 
-    geom_point(data=subset(final_data, data_group_data_group=="group4"), 
+    geom_point(data=subset(final_data, data_group_data_group=="group2"), 
                aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
     # geom_line(data = final_data, aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
     # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
     # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
     # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
     # geom_line(data = final_data, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
-    ggtitle("LICOR Test Graph") +
+    ggtitle("LICOR Test Graph - GasEx gsw CONTROL LEAF") +
+    xlab("SysObs_date") +
+    ylab("GasEx_gsw") +
+    scale_y_continuous(limits=c(0.0, 0.2), breaks=c(0, 0.1, 0.2, 0.5)) +
+    scale_x_datetime(date_labels = ("%M:%S"),
+        date_breaks = "10 sec",  expand = expansion(0)) +
+    theme(axis.text.x=element_text(angle=60, hjust=1))
+    # 
+  
+      # scale_x_datetime(labels=date_format("%b %y"))
+    #   date_breaks = "6 hours",  expand = expansion(0)) +
+    
+    # theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+
+```
+```{r test_graph_group3}
+ggplot() +
+    # geom_point(data = final_data, 
+    geom_point(data=subset(final_data, data_group_data_group=="group3"), 
+               aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
+    # geom_line(data = final_data, aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
+    ggtitle("LICOR Test Graph - GasEx gsw - TREATMENT LEAF") +
     xlab("SysObs_date") +
     ylab("GasEx_gsw") +
     scale_y_continuous(limits=c(0.0, 0.2), breaks=c(0, 0.1, 0.2, 0.5)) +

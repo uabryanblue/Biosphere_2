@@ -1,12 +1,10 @@
 .bak
 .tmp
 *-workspace
-main copy.py
-Sensors/ESP8266/micropython/thermocouple copy.py
-Sensors/ESP8266/micropython/max6675_test.py
 .Rproj.user
-data_analysis/time_testing/.Rhistory
-data_analysis/time_testing/.RData
 figure-files/
 figure-html/
+.Rhistory
+.RData
+.Proj.user
 
