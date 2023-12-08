@@ -14,11 +14,11 @@ HiLetgo DS3231 + AT24C32N
 # TODO this could benefit from trying to initialzie from NTP not available when using ESPNow
 # to set the time on the DS3231 use a tuple as shown here
 # i2c = machine.I2C(sda=machine.Pin(4), scl=machine.Pin(5))
-# d = DS3231(i2c)
+# d = ds3231_gen.DS3231(i2c)
 # use ds3231 set time without parameters to set it to esp time
 # d.set_time() # put this time back onto the DS3231
 # example: to set time to 2023, May, 29, 7 am, 11 minutes, 1 second, NA, NA
-# d.set_time((2023, 05, 29, 7, 11, 1, 0, 0))
+# d.ds3231_gen.set_time((2023, 05, 29, 7, 11, 1, 0, 0))
 
 import gc
 import time

@@ -48,8 +48,8 @@ MYNAME = "ESP8266 MicroPython Temperature Sensor and Temperature Control" # long
 peers = {}
 # remote sensor configuration, connect to all data loggers, pick one for time
 peers["DATA_LOGGER"] = [b'\xc4[\xbe\xe4\xfe\x08', b'\x8c\xaa\xb5M\x7f\x18', b'HU\x19\xdf)\x86', b'\xc4[\xbe\xe5\x03R']  # list of data loggers
-peers["TIME"] = [b'HU\x19\xdf)\x86'] # try to get time from here M1
-# peers["TIME"] = [b'\xc4[\xbe\xe4\xfe\x08'] # TEST BENCH!!!!!!!  M7
+# peers["TIME"] = [b'HU\x19\xdf)\x86'] # try to get time from here M1 (LIVE in TRF)
+peers["TIME"] = [b'\xc4[\xbe\xe4\xfe\x08'] # TEST BENCH!!!!!!!  M7
 
 # --------------------
 # DATA LOGGER
@@ -149,23 +149,26 @@ callibrations = {}
 
 # BAD T116, T111, T110
 
-# TC Configuration 1
-callibrations['TREATMENT'] =        ["T103", 1, -2.5112, 1.0223, 0] 
-callibrations['CONTROL'] =          ["T105", 2, -3.6912, 1.0107, 0]
-callibrations['REFERENCE'] =        ["T109", 3, -4.1935, 1.0625, 0] 
-callibrations['HEAT'] =             ["T118", 4, -3.6352, 1.0157, 0]
-callibrations['CONTROL_HEAT'] =     ["T107", 5, -3.7182, 1.0541, 0] 
+# 3rd elevation
+# TRC Configuration 1 - THP2 M5, BME2; TRC M9, Board #4
+# callibrations['TREATMENT'] =        ["T107", 1, -3.7182, 1.0541, 0] 
+# callibrations['CONTROL'] =          ["T105", 2, -3.6912, 1.0107, 0]
+# callibrations['REFERENCE'] =        ["T109", 3, -4.1935, 1.0625, 0] 
+# callibrations['HEAT'] =             ["T118", 4, -3.6352, 1.0157, 0]
+# callibrations['CONTROL_HEAT'] =     ["T103", 5, -2.5112, 1.0223, 0] 
 
-# TC Configuration 2
-# callibrations['TREATMENT'] =        ["T115", 1, -1.9282, 1.0463, 0] 
-# callibrations['CONTROL'] =          ["T112", 2, -5.574, 1.1665, 0]
-# callibrations['REFERENCE'] =        ["T104", 3, -2.2076, 1.0349, 0] 
-# callibrations['HEAT'] =             ["T106", 4, -3.9144, 1.1191, 0]
-# callibrations['CONTROL_HEAT'] =     ["T113", 5, -3.496, 1.1118, 0] 
+# 2nd elevation
+# TRC Configuration 2 - THP3 M4, BME6; TRC M8, Board #1
+# callibrations['TREATMENT'] =     ["T115", 1, -1.9282, 1.0463, 0] 
+# callibrations['CONTROL'] =       ["T112", 2, -5.5740, 1.1665, 0]
+# callibrations['REFERENCE'] =     ["T113", 3, -2.2076, 1.0349, 0] 
+# callibrations['HEAT'] =          ["T106", 4, -3.9144, 1.1191, 0]
+# callibrations['CONTROL_HEAT'] =  ["T104", 5, -2.2076, 1.0349, 0] 
 
-# # TC Configuration 3
-# callibrations['TREATMENT'] =        ["T119", 1, 0, 1, 0] 
-# callibrations['CONTROL'] =          ["T121", 2, 0, 1, 0]
-# callibrations['REFERENCE'] =        ["T117", 3, 0, 1, 0] 
-# callibrations['HEAT'] =             ["T102", 4, 0, 1, 0]
-# callibrations['CONTROL_HEAT'] =     ["T101", 5, 0, 1, 0] 
+# 1st elevvation
+# TC Configuration 3 = THP5 M10, BME6, THP2, Board #3
+callibrations['TREATMENT'] =        ["T114", 1, 1.3777, 0.9368, 0] 
+callibrations['CONTROL'] =          ["T121", 2, -0.1739, 0.9673, 0]
+callibrations['REFERENCE'] =        ["T117", 3, -0.4836, 0.9549, 0] 
+callibrations['HEAT'] =             ["T102", 4, 1.0631, 0.9375, 0]
+callibrations['CONTROL_HEAT'] =     ["T101", 5, -0.5906, 0.9844, 0] 

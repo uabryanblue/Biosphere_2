@@ -37,15 +37,16 @@ def calibrate_reading(key, temperature):
     set first coeficient to 0 for linear"""
     # TODO need to pass in callibration parameters defined in some config file
     # callibrate each thermocouple using 2nd order polynomial
-    # for linear, set first coefficiet to 0
+    # for linear, set 3rd coefficiet to 0
     # callibrations['TREATMENT'] = ["T118", 1, 28.33, -11.692, 0]
-    # if deviceId == 119:
-    beta0 = conf.callibrations[key][2]
-    beta1 = conf.callibrations[key][3]
-    beta2 = conf.callibrations[key][4]
-    tempCorrected = (beta0 + (beta1 * temperature) + (beta2 ** temperature)) 
-    # else:
-        # return 555
+    # = [TCID, PORT, offset, slope, x^2]
+    if temperature > 0:
+        beta0 = conf.callibrations[key][2]
+        beta1 = conf.callibrations[key][3]
+        beta2 = conf.callibrations[key][4]
+        tempCorrected = (beta0 + (beta1 * temperature) + (beta2 ** temperature)) 
+    else:
+        tempCorrected = temperature
     gc.collect()
 
     return tempCorrected
