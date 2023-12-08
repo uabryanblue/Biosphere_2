@@ -1,0 +1,230 @@
+---
+title: "Biosphere 2 Tower Data"
+author: "Bryan Blue"
+format: html
+editor: visual
+execute:
+  echo: false
+  error: false
+  warning: false
+---
+
+```{r}
+#| include: false
+
+library(readr)
+library(here)
+library(ggplot2)
+library(lubridate)
+library(dplyr)
+here::here()
+```
+
+## Biosphere 2 Tower Sensor Data
+
+Data is collected from the Biosphere 2 data website.
+
+*Logistical support and/or data were provided by the University of Arizona Biosphere 2. Tropical Rain Forest Data, 2023, Biosphere 2, University of Arizona, <https://biosphere2.org/tropical-rain-forest-data>.*
+
+## Load Climate Data
+
+Three locations from two different towers are loaded. Each set of data corresponds to the approximate elevation of the experimental cacao plants. They can be viewed as macro climate data. Aspirated temperature and humidity sensors are installed at each experiment location to record micro-climate data.
+
+Load NE tower, level 100, 1 m.
+
+```{r NE_Level1_100}
+
+# header has 2 names, data has three values, the last is empty
+# col_names and col_select fixes this
+
+T_NE_100 <- read_csv("data_raw/Level1/Temperature (AirTempC)_1696637704.csv", 
+    skip = 4, 
+    col_names = c('date_time', 'ne_100_t'), 
+    col_select = c(1,2), 
+    na = c('-9999'),
+    show_col_types = FALSE,
+    col_types = cols(date_time = col_datetime(format = "%Y/%m/%d %H:%M"), 
+    ne_100_t = col_double())
+)
+
+RH_NE_100 <- read_csv("data_raw/Level1/Relative humidity (RH)_1596634957.csv", 
+    skip = 4, 
+    col_names = c('date_time', 'ne_100_rh'), 
+    col_select = c(1,2), 
+    na = c('-9999'), 
+    show_col_types = FALSE,
+    col_types = cols(date_time = col_datetime(format = "%Y/%m/%d %H:%M"), 
+    ne_100_rh = col_double())
+    )
+
+PAR_NE_100 <- read_csv("data_raw/Level1/Radiation, incoming PAR (PAR)_1296629845.csv", 
+    skip = 4, 
+    col_names = c('date_time', 'ne_100_sq_110'),  
+    col_select = c(1,2), 
+    na = c('-9999'),
+    show_col_types = FALSE,
+    col_types = cols(date_time = col_datetime(format = "%Y/%m/%d %H:%M"), 
+    ne_100_sq_110 = col_double())
+    )
+```
+
+Load NE tower, level 700, 7 m.
+
+```{r NE_Level2_700}
+
+# header has 2 names, data has three values, the last is empty
+# col_names and col_select fixes this
+
+T_NE_700 <- read_csv("data_raw/Level2/NE/Temperature (AirTempC)_1696622039.csv", 
+    skip = 4, 
+    col_names = c('date_time', 'ne_700_t'), 
+    col_select = c(1,2), 
+    na = c('-9999'),  
+    show_col_types = FALSE,
+    col_types = cols(date_time = col_datetime(format = "%Y/%m/%d %H:%M"), 
+    ne_700_t = col_double())
+    )
+
+RH_NE_700 <- read_csv("data_raw/Level2/NE/Relative humidity (RH)_1596616357.csv", 
+    skip = 4, 
+    col_names = c('date_time', 'ne_700_rh'), 
+    col_select = c(1,2), 
+    na = c('-9999'), 
+    show_col_types = FALSE,
+    col_types = cols(date_time = col_datetime(format = "%Y/%m/%d %H:%M"), 
+    ne_700_rh = col_double())
+    )
+
+PAR_NE_700 <- read_csv("data_raw/Level2/NE/Radiation, incoming PAR (PAR)_1296625517.csv", 
+    skip = 4, 
+    col_names = c('date_time', 'ne_700_sq_110', 'a'),  
+    col_select = c(1,2), 
+    na = c('-9999'), 
+    show_col_types = FALSE,
+    col_types = cols(date_time = col_datetime(format = "%Y/%m/%d %H:%M"), 
+    ne_700_sq_110 = col_double())
+    )
+```
+
+Load Mountain tower, level 100, 1 m.
+
+```{r Moutain_100}
+
+# header has 2 names, data has three values, the last is empty
+# col_names and col_select fixes this
+
+T_MNT_100 <- read_csv("data_raw/Level3/Temperature (AirTempC)_1696546970.csv", 
+    skip = 4, 
+    col_names = c('date_time', 'mnt_100_t'), 
+    col_select = c(1,2), 
+    na = c('-9999'),  
+    show_col_types = FALSE,
+    col_types = cols(date_time = col_datetime(format = "%Y/%m/%d %H:%M"), 
+    mnt_100_t = col_double())
+)
+
+RH_MNT_100 <- read_csv("data_raw/Level3/Relative humidity (RH)_1596541679.csv", 
+    skip = 4, 
+    col_names = c('date_time', 'mnt_100_rh'), 
+    col_select = c(1,2), 
+    na = c('-9999'), 
+    show_col_types = FALSE,
+    col_types = cols(date_time = col_datetime(format = "%Y/%m/%d %H:%M"), 
+    mnt_100_rh = col_double())
+)
+
+PAR_MNT_100 <- read_csv("data_raw/Level3/Radiation, incoming PAR (PAR)_1296550480.csv", 
+    skip = 4, 
+    col_names = c('date_time', 'mnt_100_sq_110', 'a'),  
+    col_select = c(1,2), 
+    na = c('-9999'), 
+    show_col_types = FALSE,
+    col_types = cols(date_time = col_datetime(format = "%Y/%m/%d %H:%M"), 
+    mnt_100_sq_110 = col_double())
+    )
+```
+
+## Graph Comparisons of Elevations
+
+### Temperature
+
+Comparison of the three tower temperatures near the experiment locations.
+
+```{R graph_temperature}
+
+mnt_100_avg <- T_MNT_100 %>% group_by(week = week(date_time)) %>% summarise(avg_temp = mean(mnt_100_t))
+ne_700_avg <- T_NE_700 %>% group_by(week = week(date_time)) %>% summarise(avg_temp = mean(ne_700_t))
+ne_100_avg <- T_NE_100 %>% group_by(week = week(date_time)) %>% summarise(avg_temp = mean(ne_100_t))
+
+ggplot() +
+    geom_line(data = mnt_100_avg, aes(x = week, y = avg_temp, color = 'Moutain 1 m')) +
+    geom_line(data = ne_700_avg, aes(x = week, y = avg_temp, color = 'NE 7 m')) +
+    geom_line(data = ne_100_avg, aes(x = week, y = avg_temp, color = 'NE 1 m')) +
+    geom_point(size=0.5) +
+    ggtitle("Biosphere 2 Tower Temperatures") +
+    xlab("Date (Weekly Averages)") +
+    ylab("Temperature (C)") +
+    theme(axis.text.x=element_text(angle=60, hjust=1)) +
+    ylim(17.0, 35.0)
+```
+
+### Relative Humidity
+
+**There is no data from 1/1/2023 through 12/7/2023 for the Northeast tower at 7 m.**\
+Comparison of the two available tower readings of relative humidity near the experiment locations.
+
+```{R graph_rh}
+
+mnt_100_avg <- RH_MNT_100 %>% group_by(week = week(date_time)) %>% summarise(avg_rh = mean(mnt_100_rh))
+ne_700_avg <- RH_NE_700 %>% group_by(week = week(date_time)) %>% summarise(avg_rh = mean(ne_700_rh))
+ne_100_avg <- RH_NE_100 %>% group_by(week = week(date_time)) %>% summarise(avg_rh = mean(ne_100_rh))
+
+ggplot() +
+    geom_line(data = mnt_100_avg, aes(x = week, y = avg_rh, color = 'Moutain 1 m')) +
+    # geom_line(data = ne_700_avg, aes(x = week, y = avg_rh, color = 'NE 7 m')) +
+    geom_line(data = ne_100_avg, aes(x = week, y = avg_rh, color = 'NE 1 m')) +
+    geom_point(size=0.5) +
+    ggtitle("Biosphere 2 Tower Relative Humidity") +
+    xlab("Date (Weekly Averages)") +
+    ylab("RH (%)") +
+    theme(axis.text.x=element_text(angle=60, hjust=1)) +
+    ylim(60.0, 100.0)
+```
+
+### Photosynthetic Photon Flux Density (PPFD)
+
+Comparison of the tower readings from Apogee SQ-110 sensors of PPFD near the experiment locations.\
+It is unknown if a color spectrum exists under the unique glazing of Biosphere 2.
+
+The graph does not mean much, but represents the average of all values per day based on 15 minute interval readings.  
+
+DLI would be better.  
+
+Mountain 1 m max PPFD `r max(PAR_MNT_100$mnt_100_sq_110)`  
+NE Tower 7 m max PPFD `r max(PAR_NE_700$ne_700_sq_110)`  
+NE Tower 1 m max PPFD `r max(PAR_NE_100$ne_100_sq_110)`  
+
+These values may make sense as the mountain sensor is in a bowl shaped area. This is below the canopy height that the experiment will run. This needs investigated further.   
+
+```{R graph_ppfd}
+
+
+mnt_100_avg <- PAR_MNT_100 %>% group_by(week = day(date_time)) %>% summarise(avg_rh = mean(mnt_100_sq_110))
+ne_700_avg <- PAR_NE_700 %>% group_by(week = day(date_time)) %>% summarise(avg_rh = mean(ne_700_sq_110))
+ne_100_avg <- PAR_NE_100 %>% group_by(week = day(date_time)) %>% summarise(avg_rh = mean(ne_100_sq_110))
+
+
+ggplot() +
+    geom_line(data = mnt_100_avg, aes(x = week, y = avg_rh, color = 'Moutain 1 m')) +
+    geom_line(data = ne_700_avg, aes(x = week, y = avg_rh, color = 'NE 7 m')) +
+    geom_line(data = ne_100_avg, aes(x = week, y = avg_rh, color = 'NE 1 m')) +
+    geom_point(size=0.5) +
+    ggtitle("Biosphere 2 Tower Photosynthetic Photon Flux Density (PPFD)") +
+    xlab("Date (Daily Averages)") +
+    ylab("PPFD (µmol/m^2/s)") +
+    theme(axis.text.x=element_text(angle=60, hjust=1)) 
+
+
+```
+
+
