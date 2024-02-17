@@ -1,9 +1,0 @@
-MICROPROCESSOR MAC DESCRIPTION TABLE
-tab delimited file
-
-Use this table to map MAC addresses to their function such as climate sensor, temperature relay control, and data logger.
-
-
-Header Recorod
-MICRO_NUM	DATE_ENTERED	MICRO_HARDWARE_DESC	ROLE	MAC_HUMAN	MAC_CODE	ROLE_SHORT_NUMBERED
-
