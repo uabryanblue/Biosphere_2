@@ -49,7 +49,25 @@ library(gridExtra) # quick layout of multiple graphs
 here::here()
 ```
 
-## Location Within Greenhouse
+## SOFTWARE
+
+### RStudio
+
+RStudio 2023.12.0+369 "Ocean Storm" Release (33206f75bd14d07d84753f965eaa24756eda97b7, 2023-12-17) for windows Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) RStudio/2023.12.0+369 Chrome/116.0.5845.190 Electron/26.2.4 Safari/537.36
+
+### R
+
+\[64-bit\] R-4.2.2
+
+### COMPUTER
+
+Processor Intel(R) Core(TM) i9-10885H CPU \@ 2.40GHz 2.40 GHz Installed RAM 32.0 GB (31.7 GB usable) System type 64-bit operating system
+
+### OS
+
+Edition Windows 10 Pro Version 22H2 Installed on ‎9/‎11/‎2021 OS build 19045.4046 Experience Windows Feature Experience Pack 1000.19053.1000.0
+
+# Location Within Greenhouse
 
 **Lowest CEAC Sensor Above an Existing Experiments Drainage Tray at Approximately 3 feet (\~1 m) From the Ground**\
 **Midpoint in The North/South Direction**\
@@ -146,7 +164,7 @@ All dates are standardized to POSIXct. YYYY-MM-DD HH:MM:SS
 
 There was a difference in the clock values between the THP sensors and CEAC sensor. The clocks were not synchronized at the beginning of the test. Through trial and error it was determined that the difference was \~30 minutes. This is consistent with previous tests at this location. A 30 minute shift was applied to the THP sensor data to align it with the CEAC sensor data.
 
-The THP sensor was set to record on 15 minute boundaries but had records where the expected value was past a time boundary. This was sporadic and appeared to have cycles of time jumps forward by one 15 minute boundary, and then would correct itself. This caused some duplication of the dates/times. These were averaged together in the THP data to normalize it to 15 minute boundaries. \
+The THP sensor was set to record on 15 minute boundaries but had records where the expected value was past a time boundary. This was sporadic and appeared to have cycles of time jumps forward by one 15 minute boundary, and then would correct itself. This caused some duplication of the dates/times. These were averaged together in the THP data to normalize it to 15 minute boundaries.\
 The Cambpell Scientific logs rounded the TIMESTAMP (date fields) to the minute, so the THP sensor data had the seconds set to 0 values to match this format.
 
 ```{r data_wrangle}

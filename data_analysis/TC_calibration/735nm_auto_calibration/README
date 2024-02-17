@@ -1,0 +1,40 @@
+The 735nm project contains a calibration program that uses one of the TRC modules to take readings from a thermocouple.
+
+IT WAS NOT USED FOR THE FINAL EXPERIMENT AS IT WAS LATER DETERMINED THAT THREE POINT CALIBRATION WERE NOT A GOOD CALIBRATION.
+A 2ND ATTEMPT AT A TWO POINT CALIBRATION WAS ATTEMPTED USING A NEW XLSX FILE. THE VALUES WERE NOT A GOOD CALIBRATION.
+(A TWO POINT CALIBRATION WAS PERFORMED MANUALLY TAKING THREE READINGS VS A REFERENCE THERMOMETER IN A WATER BATH.)
+
+PROCEDURE
+The name, reference temperature are entered while the TC is in the water bath
+Starting the calibration the program takes consecutive readings until a threshold is reached for delta T (specified by the user)
+The information is sent to a 735nm data logger module and stored on a microSD card. 
+These data are downloaded in the folders for three different reference temperatures in the 24C, 33C and 60C folders.
+
+1st attempt
+The CSV text data was loaded into the calibration_coef.ods spread sheet and an average of the readings was calculated.
+
+These were turned into coef for creating a three point calibration.
+
+The information on the "coef" sheet is the consolidated view of the calibration readings. Calculations were performed for spot checking.
+The equations and coef that were calculated and tried using the TC connected to the TRC module and placed in a water bath did not result in any reliable readings.
+
+2nd attempt
+Values were then put into a new "TC_individual_calibration_coef.xlsx" file where each TC was broken into its own sheet.
+Data for 24C and 33C values were graphed and the coef from the equation were used for calibration values in the 735nm TRC code.
+These values did not perform any better and not used in this experiment.
+
+3rd attempt
+Values were manually taken, three TC readings vs reference from thermometer, two reference values ~25C and ~35C.
+These data points were then put into an spread sheet and the standard equation to calculate slope and intercept were calculated as coef.
+These new coef were used in the experiment.
+
+
+DISCUSSION
+This process should have worked if values were retaken as a two point calibration with different analysis.
+It is unclear why the recorded data was unable to create coef for the 735TRC program to take reliable, accurate measurements of supsequent water baths vs thermometer references.
+It could be the user defined tollerance for temperature variation in TC readings was too tight.
+
+Due to time constraints, it was decided that the amount of TC and readings that needed to be taken were easier to perform manually in a lab book with subsequent calculations of the coef in a spread sheet.
+Instead of graphing the points, an equation for calculating the slope and intercept were used.
+These manual readings performed better. Consistent and relative accuracy among all TC. These were used in the experiment.
+

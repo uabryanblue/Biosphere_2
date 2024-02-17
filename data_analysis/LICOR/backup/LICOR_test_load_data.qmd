@@ -1,0 +1,216 @@
+---
+title: "LICOR Data Loading Test"
+author: "Bryan Blue"
+e-mail: 'bryanblue@arizona.edu'
+date: "Last Generated: `r Sys.Date()`"
+execute:
+  echo: false
+format: 
+  html:
+    code-fold: true
+    fig-width: 8
+    fig-height: 6
+  pdf:
+    fig-width: 7
+    fig-height: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(tidyverse)
+library(dplyr)
+library(lubridate)
+require(read_excel)
+# require(readxl)
+library(ggplot2)
+library(here)
+
+# start in the current project directory
+# this ensures relative paths will work
+# independent of the location the script is run
+here::here()
+```
+
+## LI-COR Data Parser  
+This project loads a LI-COR Xlsx file and wrangles it into appropriate table structures for further analysis.  
+
+The LI_COR system outputs an Excel format requires sumstantial data wrangling before it can be analyzed. There are multiple rows containing different groups of data that need to be read in indivdually. The main data set consists of a group name, assoicated data value name, and a third line that contains an optional units designation.  
+
+These different groups are read into their own tables.  
+SysConst, ChambConst, LTConst, LQConst, QConst, LeakConst  
+
+SysObs is a block that requires additional manipulation to get data into a tidy format. 
+
+```{r data_read}
+
+load_field_information <- function(fname) {
+  info_df <- read_xlsx(
+    fname,
+    sheet = NULL,
+    col_names = FALSE,
+    # col_types = NULL,  
+    # na = "",
+    trim_ws = TRUE,
+    skip = 13,
+    n_max = 3
+    # progress = readxl_progress(),
+    # .name_repair = "unique"
+  )
+    return(info_df)
+}
+
+field_information <- load_field_information("data_raw/2023-11-08-b2trf/2023-11-08-1224_logdata-test-tc-heat.xlsx")
+
+load_data <- function(fname) {
+  data_df <- read_xlsx(
+    fname,
+    sheet = NULL,
+    col_names = FALSE,
+    # col_types = c("text"),  
+    # na = "",
+    trim_ws = TRUE,
+    skip = 16,
+    # n_max = 3
+    # progress = readxl_progress(),
+    # .name_repair = "unique"
+  )
+    return(data_df)
+}
+
+licor_data <- load_data("data_raw/2023-11-08-b2trf/2023-11-08-1224_logdata-test-tc-heat.xlsx")
+
+
+# #####################################################
+SysConst <- read_xlsx(
+  ".raw_data/2023-09-22-B2Trf/2023-08-02-1126_logdata_bryan2.xlsx",
+  sheet = NULL,
+  range = "B2:C3",
+  col_names = TRUE,
+  col_types = NULL,  
+  na = "",
+  trim_ws = TRUE,
+  skip = 0,
+  # n_max = Inf,
+  # guess_max = min(1000, n_max),
+  progress = readxl_progress(),
+  .name_repair = "unique"
+)
+
+ChambConst <- read_xlsx(
+  "../../Raw_Data/LICOR_test_how_to_use/2023-08-02-1126_logdata_bryan2.xlsx",
+  sheet = NULL,
+  range = "B4:K5",
+  col_names = TRUE,
+  col_types = NULL, 
+  na = "",
+  trim_ws = TRUE,
+  skip = 0,
+  # n_max = Inf,
+  # guess_max = min(1000, n_max),
+  progress = readxl_progress(),
+  .name_repair = "unique"
+)
+
+LTConst <- read_xlsx(
+  "../../Raw_Data/LICOR_test_how_to_use/2023-08-02-1126_logdata_bryan2.xlsx",
+  sheet = NULL,
+  range = "B8:Q9",
+  col_names = TRUE,
+  col_types = NULL, 
+  na = "",
+  trim_ws = TRUE,
+  skip = 0,
+  # n_max = Inf,
+  # guess_max = min(1000, n_max),
+  progress = readxl_progress(),
+  .name_repair = "unique"
+)
+
+QConst <- read_xlsx(
+  "../../Raw_Data/LICOR_test_how_to_use/2023-08-02-1126_logdata_bryan2.xlsx",
+  sheet = NULL,
+  range = "B10:F11",
+  col_names = TRUE,
+  col_types = NULL, 
+  na = "",
+  trim_ws = TRUE,
+  skip = 0,
+  # n_max = Inf,
+  # guess_max = min(1000, n_max),
+  progress = readxl_progress(),
+  .name_repair = "unique"
+)
+
+LeakConst <- read_xlsx(
+  "../../Raw_Data/LICOR_test_how_to_use/2023-08-02-1126_logdata_bryan2.xlsx",
+  sheet = NULL,
+  range = "B12:H13",
+  col_names = TRUE,
+  col_types = NULL, 
+  na = "",
+  trim_ws = TRUE,
+  skip = 0,
+  # n_max = Inf,
+  # guess_max = min(1000, n_max),
+  progress = readxl_progress(),
+  .name_repair = "unique"
+)
+
+# SysObs group has 3 line description - group, column name, units followed by the data
+SysObs_labels <- read_xlsx(
+  "../../Raw_Data/LICOR_test_how_to_use/2023-08-02-1126_logdata_bryan2.xlsx",
+  sheet = NULL,
+  range = "A14:KC14",
+  col_names = FALSE,
+  col_types = NULL, 
+  na = "",
+  trim_ws = TRUE,
+  skip = 0,
+  # n_max = Inf,
+  # guess_max = min(1000, n_max),
+  progress = readxl_progress(),
+  .name_repair = "unique"
+)
+
+# the remainder of the file are observation values, read them all in
+SysObs_units <- read_xlsx(
+  "../../Raw_Data/LICOR_test_how_to_use/2023-08-02-1126_logdata_bryan2.xlsx",
+  sheet = NULL,
+  range = "A15:KC16",
+  col_names = FALSE,
+  col_types = NULL, 
+  na = "",
+  trim_ws = TRUE,
+  skip = 0,
+  # n_max = Inf,
+  # guess_max = min(1000, n_max),
+  progress = readxl_progress(),
+  .name_repair = "unique"
+)
+
+SysObs_values <- read_xlsx(
+  "../../Raw_Data/LICOR_test_how_to_use/2023-08-02-1126_logdata_bryan2.xlsx",
+  sheet = NULL,
+  # range = "A14:KC15",
+  col_names = FALSE,
+  col_types = NULL, 
+  na = "",
+  trim_ws = TRUE,
+  skip = 16,
+  # n_max = Inf,
+  # guess_max = min(1000, n_max),
+  progress = readxl_progress(),
+  .name_repair = "unique"
+)
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

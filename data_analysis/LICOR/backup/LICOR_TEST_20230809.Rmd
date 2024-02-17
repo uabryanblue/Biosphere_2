@@ -1,0 +1,162 @@
+---
+title: "LI-COR Test 2023-08-09"
+author: "Bryan Blue bryanblue@arizona.edu"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(tidyverse)
+# require(read_excel)
+require(readxl)
+
+```
+
+## LI-COR Data Parser  
+This project loads a LI-COR Xlsx file and wrangles it into appropriate table structures for further analysis.  
+
+The LI_COR system outputs an Excel format requires sumstantial data wrangling before it can be analyzed. There are multiple rows containing different groups of data that need to be read in indivdually. The main data set consists of a group name, assoicated data value name, and a third line that contains an optional units designation.  
+
+These different groups are read into their own tables.  
+SysConst, ChambConst, LTConst, LQConst, QConst, LeakConst  
+
+SysObs is a block that requires additional manipulation to get data into a tidy format. 
+
+```{r data_read}
+
+# "2023-08-02-1126_logdata_bryan2.xlsx"
+
+SysConst <- read_xlsx(
+  "../../Raw_Data/LICOR_test_how_to_use/2023-08-02-1126_logdata_bryan2.xlsx",
+  sheet = NULL,
+  range = "B2:C3",
+  col_names = TRUE,
+  col_types = NULL,  
+  na = "",
+  trim_ws = TRUE,
+  skip = 0,
+  # n_max = Inf,
+  # guess_max = min(1000, n_max),
+  progress = readxl_progress(),
+  .name_repair = "unique"
+)
+
+ChambConst <- read_xlsx(
+  "../../Raw_Data/LICOR_test_how_to_use/2023-08-02-1126_logdata_bryan2.xlsx",
+  sheet = NULL,
+  range = "B4:K5",
+  col_names = TRUE,
+  col_types = NULL, 
+  na = "",
+  trim_ws = TRUE,
+  skip = 0,
+  # n_max = Inf,
+  # guess_max = min(1000, n_max),
+  progress = readxl_progress(),
+  .name_repair = "unique"
+)
+
+LTConst <- read_xlsx(
+  "../../Raw_Data/LICOR_test_how_to_use/2023-08-02-1126_logdata_bryan2.xlsx",
+  sheet = NULL,
+  range = "B8:Q9",
+  col_names = TRUE,
+  col_types = NULL, 
+  na = "",
+  trim_ws = TRUE,
+  skip = 0,
+  # n_max = Inf,
+  # guess_max = min(1000, n_max),
+  progress = readxl_progress(),
+  .name_repair = "unique"
+)
+
+QConst <- read_xlsx(
+  "../../Raw_Data/LICOR_test_how_to_use/2023-08-02-1126_logdata_bryan2.xlsx",
+  sheet = NULL,
+  range = "B10:F11",
+  col_names = TRUE,
+  col_types = NULL, 
+  na = "",
+  trim_ws = TRUE,
+  skip = 0,
+  # n_max = Inf,
+  # guess_max = min(1000, n_max),
+  progress = readxl_progress(),
+  .name_repair = "unique"
+)
+
+LeakConst <- read_xlsx(
+  "../../Raw_Data/LICOR_test_how_to_use/2023-08-02-1126_logdata_bryan2.xlsx",
+  sheet = NULL,
+  range = "B12:H13",
+  col_names = TRUE,
+  col_types = NULL, 
+  na = "",
+  trim_ws = TRUE,
+  skip = 0,
+  # n_max = Inf,
+  # guess_max = min(1000, n_max),
+  progress = readxl_progress(),
+  .name_repair = "unique"
+)
+
+# SysObs group has 3 line description - group, column name, units followed by the data
+SysObs_labels <- read_xlsx(
+  "../../Raw_Data/LICOR_test_how_to_use/2023-08-02-1126_logdata_bryan2.xlsx",
+  sheet = NULL,
+  range = "A14:KC14",
+  col_names = FALSE,
+  col_types = NULL, 
+  na = "",
+  trim_ws = TRUE,
+  skip = 0,
+  # n_max = Inf,
+  # guess_max = min(1000, n_max),
+  progress = readxl_progress(),
+  .name_repair = "unique"
+)
+
+# the remainder of the file are observation values, read them all in
+SysObs_units <- read_xlsx(
+  "../../Raw_Data/LICOR_test_how_to_use/2023-08-02-1126_logdata_bryan2.xlsx",
+  sheet = NULL,
+  range = "A15:KC16",
+  col_names = FALSE,
+  col_types = NULL, 
+  na = "",
+  trim_ws = TRUE,
+  skip = 0,
+  # n_max = Inf,
+  # guess_max = min(1000, n_max),
+  progress = readxl_progress(),
+  .name_repair = "unique"
+)
+
+SysObs_values <- read_xlsx(
+  "../../Raw_Data/LICOR_test_how_to_use/2023-08-02-1126_logdata_bryan2.xlsx",
+  sheet = NULL,
+  # range = "A14:KC15",
+  col_names = FALSE,
+  col_types = NULL, 
+  na = "",
+  trim_ws = TRUE,
+  skip = 16,
+  # n_max = Inf,
+  # guess_max = min(1000, n_max),
+  progress = readxl_progress(),
+  .name_repair = "unique"
+)
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
