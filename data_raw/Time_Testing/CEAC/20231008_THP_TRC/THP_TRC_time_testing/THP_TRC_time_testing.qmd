@@ -1,0 +1,95 @@
+---
+title: "THP_TRC_time_testing"
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+```{r setup, include=FALSE}
+#knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(ggplot2)
+library(lubridate)
+library('dplyr')
+library('tidyr')
+```
+
+2023-10-05 14:00:34,1475,2023-10-05 14:00:04,c4:5b:be:e5:00:35,21.6764,46.241,934.154,139
+
+```{r load_data}
+# 15 minute intervals, collected 4 test logs
+test <- read_csv(
+  # file = "../CLIMATE_C45BBEE4FE08_C45BBEE50035.log",
+  # file = "../CLIMATE_C45BBEE4FE08_485519DF2848.log",
+  file = "../CLIMATE_C45BBEE4FE08_48E72953672E.log",
+  # file = "../CLIMATE_C45BBEE4FE08_48E72952E8D2.log",
+  col_names = c("log_date",
+                "record_number",
+                "sensor_date",
+                "mac",
+                "temp",
+                "rh",
+                "pressure",
+                "avg_count"
+                                ),
+  col_types = cols(`log_date` = col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+                   `sensor_date` = col_datetime(format = "%Y-%m-%d %H:%M:%S"),
+                    `record_number` = col_integer(),
+                   `mac` = col_character(),
+                   `temp` = col_double(),
+                   `rh` = col_double(),
+                   `pressure` = col_double(),
+                   'avg_count'= col_integer()
+  ),
+            skip = 2,
+            trim_ws = FALSE)
+
+test$diff <- as.numeric(test$log_date - test$sensor_date)
+# second(test$sensor_date) <- 0
+# second(test$log_date) <- 0
+test$new_diff <- as.numeric(test$log_date - test$sensor_date)
+```
+
+4 logs from 4 aspriated sensors were recorded. The data was incorrect, but that does not invalidate the time issues. Time for the sensor is sometimes after the time of the data logger. The boundary condition throws the log off until another event corrects it.
+
+```{r data_graph, echo=TRUE}
+
+ggplot(data = test, aes(x = log_date)) +
+         geom_line(aes(y = diff, color = "Time Difference")) +
+         ggtitle("Test Time Drift of logger date vs sensor date") +
+         xlab("Data Logger Time (15 minute intervals)") + 
+         ylab("Time Difference (s)")
+
+ggplot(data = test, aes(x = sensor_date)) +
+         geom_line(aes(y = new_diff, color = "Time Difference")) +
+         ggtitle("Test Time Drift of logger date vs sensor date") +
+         xlab("Data Logger Time (15 minute intervals)") + 
+         ylab("Time Difference (s)")
+
+max(test$diff)
+min(test$diff)
+mean(test$diff)
+
+```
+
+```{r}
+
+head(test$new_diff)
+
+time_delays_less_0 <- filter(test, new_diff < 0) |>
+  select(log_date, sensor_date, record_number, diff, new_diff, avg_count)
+
+time_delays_log_before_source <- filter(test, log_date < sensor_date) |>
+  select(log_date, sensor_date, record_number, diff, new_diff, avg_count)
+
+time_delays_avg_count_less_177 <- filter(test, avg_count < 177) |>
+  select(log_date, sensor_date, record_number, diff, new_diff, avg_count)
+
+test$lag <- lag(test$sensor_date)
+time_lag_15 <- filter(test, (test$lag - test$sensor_date) == 0)
+
+
+test$consec <- test$lag - test$sensor_date
+
+```

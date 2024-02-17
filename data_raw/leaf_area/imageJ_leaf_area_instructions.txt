@@ -1,0 +1,41 @@
+IMageJ version 1.54g
+OS: Windows 10 Pro 64 bit
+http://imagej.org
+Java 1.8.0_345 (64-bit)
+
+Summary from: https://www.petiolepro.com/blog/how-to-measure-leaf-area-with-imagej/
+
+
+You must have a known distance or scale in the image for this to work.
+The background of the leaf needs to be a solid color and distinct from the leaf color. White works well.
+
+Open Image
+SET THE SCALE
+	On the item with a known distance, draw a straigh line from one side to the other.
+	Menu: Analyze -> Set Scale
+		In the "Known distance" box put in the value of the size you specified by drawing a line. e.g. drew a line on a scale from 0 to 5 cm, you would enter 5.
+		In the "Unit of length" for centimeters type in "cm" and click the OK button.
+
+PREPARE THE IMAGE
+	Menu: Image -> Type -> 8-bit this should turn the image black and white
+	Menu: Image -> Adjust -> Threshold
+		The top slider may be adjusted slightly to get the most area of the leaf black. Do not change the 2nd slider.
+		Click the "Apply" button
+	Review the image, there should be a black in the area of the leaf.
+	NOTE: If there are white patches inside the leaf border, you may need to remove them using the brush tool with Black as the foreground color. The same for any black items that may be touching the leaf, use the brush tool with White as the foreground color and erase the portions that touch the leaf.
+	
+	MEASURE THE LEAF AREA
+	Menu: Analyze -> Tools -> ROI Manager
+		Use the "Wand (tracing) tool" from the menu bar and click on a black area of the leaf. A yellow outline of the leaf should apper along with a number on the leaf.
+			NOTE: if you cannot get the leaf to be selected, ensure the leaf contents is black, there are no other black items on the image touching the edge of the leaf, and that no part of the black of the leaf touches the border of the image area.
+		In the ROI window, click the "Add (t)" button. A new entry will appear in the window in the white box on the left hand side.
+		Click on the entry that was just added in the ROI window.
+		Click the "Measure" button.
+		A new window named "Results" will appear with information about the leaf. The number of the leaf is the first column, followed by the "Area".
+			NOTE: verify the Area is reasonable. An improper selection may cause a lare error in the area value.
+		In the Results window, Menu: File -> "Save As..." choose a location and filename for a CSV version of the information.
+		
+SAVE PROCESSED IMAGE
+	Menu: File -> Save As -> "Tiff..."  You can then reuse the image if needed at a later time.
+		
+This process can be performed more than once on an image if multiple leaves are present.
