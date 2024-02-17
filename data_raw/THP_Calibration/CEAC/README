@@ -1,0 +1,11 @@
+735nm THP Aspirated temperature/humidity/pressure Sensor Calibration
+
+4 of the 5 THP sensors were calibrated and proven to accurately correspond to recently calibrated Vaisala HMP60 temperature/humidity sensor within greenhouse C at The University of Arizona's Controlled Environment Agriculture Center.
+The 4 THP sensors were bundled side by side to line up all four inlets and outlets. This assembly was hung next to the Vaisala sensor and covered with expanded foam insulation to protect the 735nm sensors from direct sunlight in the greenhouse.
+The 4 sensors had data recorded in a 735nm data logger located withing the greenhouse.
+
+Multiple runs were performed, but the first two sets of data were unusable due to date/time issues in the THP code.
+The code was corrected for the final run.
+At the end of readings on 20231019 the 735nm data was compared to the Vaisala data from a Campbell Scientific data logger.
+
+Results are shown in the analysis. They all performed as well at the Vaisala and only required an offset as a calibration to match it's readings.
