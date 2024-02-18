@@ -97,10 +97,10 @@ varsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[3]]),'\t',fix
 valuesdf <- data.frame(do.call('rbind',strsplit(as.character(output[[4]][,1]),'\t',fixed=TRUE)))
 
 # write out a text file that Excel can read
-# write_excel_csv(groupsdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
-# write_excel_csv(unitsdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
-# write_excel_csv(varsdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
-# write_excel_csv(valuesdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
+write_csv(groupsdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
+write_csv(unitsdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
+write_csv(varsdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
+write_csv(valuesdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
 write_csv(valuesdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
 
 # 
@@ -136,7 +136,7 @@ final_data <- valuesdf %>% select(any_of(new_select_field_list))
 # final_data$SysObs_date <- strptime(final_data$SysObs_date, "%Y%m%d %H:%M:%S")
 final_data$SysObs_date <- as.POSIXct(final_data$SysObs_date, format = "%Y%m%d %H:%M:%S")
 final_data$GasEx_gsw <- as.numeric(final_data$GasEx_gsw)
-write_excel_csv(final_data, "data_cleaned/test_licor_selected_data.txt", append = FALSE, col_names = FALSE)
+write_csv(final_data, "data_cleaned/test_licor_selected_data.txt", append = FALSE, col_names = FALSE)
 
 ```
 
