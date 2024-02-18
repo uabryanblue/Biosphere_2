@@ -22,7 +22,6 @@ require(tidyverse)
 library(dplyr)
 library(lubridate)
 require(tidyr)
-# require(readxl)
 library(ggplot2)
 library(here)
 
@@ -98,10 +97,12 @@ varsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[3]]),'\t',fix
 valuesdf <- data.frame(do.call('rbind',strsplit(as.character(output[[4]][,1]),'\t',fixed=TRUE)))
 
 # write out a text file that Excel can read
-write_excel_csv(groupsdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
-write_excel_csv(unitsdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
-write_excel_csv(varsdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
-write_excel_csv(valuesdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
+# write_excel_csv(groupsdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
+# write_excel_csv(unitsdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
+# write_excel_csv(varsdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
+# write_excel_csv(valuesdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
+write_csv(valuesdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
+
 # 
 # col_types = cols(SysObs_date = col_datetime(format = "%Y%m%d %H:%M:%S"), 
 # col_types$SysObs_date <- as.Date.POSIXct(col_types$SysObs_date)
