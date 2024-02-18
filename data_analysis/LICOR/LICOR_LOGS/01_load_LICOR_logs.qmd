@@ -88,6 +88,15 @@ load_data_chunks <- function(filename) {
   
 }
 
+# remarks fall into this block of he [Header]
+# there may be zero or more remarks present
+# all should be read and cat into one value for output
+# Flr. Version	1.4.22
+# 12:44:30	Stability Definition:	A (GasEx): Slp<0.3 Per=15	gsw (GasEx): Slp<0.05 Per=15	F (FlrLS): Slp<5 Per=15
+# 12:44:44	tc-shade5
+# 12:44:50	tc-shade5
+# SysConst:AvgTime	4.0
+
 # this will not work for multiple files without the structure, columns
 # create df for each of the chunks of information
 output <- load_data_chunks(here("data_raw/2023-11-17-btrf/2023-11-17-1144_logdata-tc-heat"))
@@ -114,8 +123,12 @@ write_csv(valuesdf, here("data_cleaned/test_licor_data_cleaned.txt"), append = T
 ```{r header_add}
 #| echo: true
 
+# the original source for the fields to select out from Joost analysis file
+# select_field_list <- read_csv(here("data_raw/Joost_Analysis_Sample/2023-09-22-1536_logdata_fields.csv"), 
+
 # load the names of the columns of interest
-select_field_list <- read_csv(here("data_raw/Joost_Analysis_Sample/2023-09-22-1536_logdata_fields.csv"), 
+# UTF-8 CSV text file to keep units in proper form
+select_field_list <- read_csv(here("data_raw/select_logdata_fields.csv"), 
                        col_names = FALSE, 
                        # skip = 1, 
                        n_max = 2,
