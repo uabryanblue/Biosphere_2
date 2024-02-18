@@ -29,6 +29,7 @@ library(here)
 # this ensures relative paths will work
 # independent of the location the script is run
 here::here()
+# https://www.regextester.com/ for regex checking
 ```
 
 ## 01_load_LICOR_logs  
@@ -36,6 +37,17 @@ Currently loads one text log from a LICOR data set. It reads each chunk of data 
 The original group names, field names, and units are stored off as text in separate dataframes from the data. There are many special characters that do not convert into column names without loss of uniqueness. The values call all be referenced by the column position.  
 The consolidated data is written out to an Excel CSV type text file.
 
+### REMARKS:
+remarks fall into this block of the [Header] area
+There may be zero or more remarks present.
+All should be read and con-cat into one value for output.
+-----
+Flr. Version	1.4.22
+12:44:30	Stability Definition:	A (GasEx): Slp<0.3 Per=15	gsw (GasEx): Slp<0.05 Per=15	F (FlrLS): Slp<5 Per=15
+12:44:44	tc-shade5
+12:44:50	tc-shade5
+SysConst:AvgTime	4.0
+----- 
 
 TODO: Check that grouped data records are from the correct data set.
 Averages of the groups are needed, not the raw records for analysis.
@@ -43,18 +55,48 @@ Averages of the groups are needed, not the raw records for analysis.
 ```{r load}
 #| echo: true
 
+
+
 load_data_chunks <- function(filename) {
   con <- file(filename, "rt")
   print("start")
+  remarks <- "REMARKS: " # used to contain the list of remarks, if any
   i = 0 # used to specify which group of data is being read
   dataLines <- data.frame(matrix(ncol = 1, nrow = 0))
   colnames(dataLines) <- c("original")
   
     while (length(oneLine <- readLines(con, n = 1, skipNul = TRUE, warn = FALSE)) > 0) {
       # print(oneLine)
+
+      # collect all of the remarks for the data lines
+      # line before actual remarks starts with "12:44:30	Stability Definition:"
+      if (str_detect(oneLine, regex("[0-9]{2}:[0-9]{2}:[0-9]{2}\tStability Definition:"))) {
+        print("found the BEGINING of the remarks")
+      }
+      
+      while (length(oneLine <- readLines(con, n = 1, skipNul = TRUE, warn = FALSE)) > 0) {
+        if (str_detect(oneLine, regex("[0-9]{2}:[0-9]{2}:[0-9]{2}\t")) &&
+           !str_detect(oneLine, regex("[0-9]{2}:[0-9]{2}:[0-9]{2}\tStability Definition:")))
+        {
+          remarks <- paste(remarks, oneLine, ", ")
+          print(paste("found remark: ", oneLine)) 
+        } else {
+        break
+        }
+      }
+        
+      # remarks <- paste(remarks, readLines(con, n = 1, skipNul = TRUE, warn = FALSE), sep = "\t")      
+      
+      if (str_detect(oneLine, regex("SysConst:AvgTime"))) {
+        print("found the END of the remarks")
+      }
+
+      
+      # read all the records in the found [Data] block    
       if (str_detect(oneLine, regex("\\[Data\\]"))) {
         # print("We found data start")
         
+        # sequential numbering for each group of [Data] in the file
         i = i + 1
         groupNumber = paste("group",i, sep = "")
 
@@ -63,47 +105,40 @@ load_data_chunks <- function(filename) {
         dataVars   <- paste("data_group", readLines(con, n = 1, skipNul = TRUE, warn = FALSE), sep = "\t")
         dataUnits  <- paste("data_group", readLines(con, n = 1, skipNul = TRUE, warn = FALSE), sep = "\t")
         
-        # create an empty list to store all of the data records
+        # create an empty list to store all of the data records in the found block
         # read lines until it is not longer a data line
-
-
         while (length(dataLine <- readLines(con, n = 1, skipNul = TRUE, warn = FALSE)) > 0) {
           # print(dataLine)
           # lines starts with and integer record number and tab
           if (str_detect(dataLine, regex("^[0-9]?\t"))) { 
             finalString <- paste(groupNumber, dataLine, sep = "\t")
             dataLines[nrow(dataLines) + 1,] = finalString
-
           } else {
             break
           }
         }
+        # done reading data lines from the current block       
       }
     } 
 
   print("stop")
   close(con) 
 
-  return(list(dataGroups, dataUnits, dataVars, dataLines))
+  return(list(dataGroups, dataUnits, dataVars, dataLines, remarks))
   
 }
 
-# remarks fall into this block of he [Header]
-# there may be zero or more remarks present
-# all should be read and cat into one value for output
-# Flr. Version	1.4.22
-# 12:44:30	Stability Definition:	A (GasEx): Slp<0.3 Per=15	gsw (GasEx): Slp<0.05 Per=15	F (FlrLS): Slp<5 Per=15
-# 12:44:44	tc-shade5
-# 12:44:50	tc-shade5
-# SysConst:AvgTime	4.0
+
 
 # this will not work for multiple files without the structure, columns
 # create df for each of the chunks of information
 output <- load_data_chunks(here("data_raw/2023-11-17-btrf/2023-11-17-1144_logdata-tc-heat"))
+
 groupsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[1]]),'\t',fixed=TRUE)))
 unitsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[2]]),'\t',fixed=TRUE)))
 varsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[3]]),'\t',fixed=TRUE)))
 valuesdf <- data.frame(do.call('rbind',strsplit(as.character(output[[4]][,1]),'\t',fixed=TRUE)))
+remarks <- output[5][1]
 
 # write out a text file that Excel can read
 write_csv(groupsdf, here("data_cleaned/test_licor_data_cleaned.txt"), append = TRUE, col_names = FALSE)
