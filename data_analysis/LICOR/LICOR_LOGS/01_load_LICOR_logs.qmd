@@ -32,7 +32,7 @@ here::here()
 ```
 
 ## 01_load_LICOR_logs  
-Current loads one text log from a LICOR data set. It reads each chunck of data from a line with "[Header]" skipping all lines until a line "[Data]" is found. Once found all data lines are read and assigned a group number to keep the related records together. This repeats until the end of file.  
+Currently loads one text log from a LICOR data set. It reads each chunk of data from a line with "[Header]" skipping all lines until a line "[Data]" is found. Once found all data lines are read and assigned a group number to keep the related records together. This repeats until the end of file.  
 The original group names, field names, and units are stored off as text in separate dataframes from the data. There are many special characters that do not convert into column names without loss of uniqueness. The values call all be referenced by the column position.  
 The consolidated data is written out to an Excel CSV type text file.
 
@@ -90,18 +90,18 @@ load_data_chunks <- function(filename) {
 
 # this will not work for multiple files without the structure, columns
 # create df for each of the chunks of information
-output <- load_data_chunks("data_raw/2023-11-17-btrf/2023-11-17-1144_logdata-tc-heat")
+output <- load_data_chunks(here("data_raw/2023-11-17-btrf/2023-11-17-1144_logdata-tc-heat"))
 groupsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[1]]),'\t',fixed=TRUE)))
 unitsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[2]]),'\t',fixed=TRUE)))
 varsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[3]]),'\t',fixed=TRUE)))
 valuesdf <- data.frame(do.call('rbind',strsplit(as.character(output[[4]][,1]),'\t',fixed=TRUE)))
 
 # write out a text file that Excel can read
-write_csv(groupsdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
-write_csv(unitsdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
-write_csv(varsdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
-write_csv(valuesdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
-write_csv(valuesdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, col_names = FALSE)
+write_csv(groupsdf, here("data_cleaned/test_licor_data_cleaned.txt"), append = TRUE, col_names = FALSE)
+write_csv(unitsdf, here("data_cleaned/test_licor_data_cleaned.txt"), append = TRUE, col_names = FALSE)
+write_csv(varsdf, here("data_cleaned/test_licor_data_cleaned.txt"), append = TRUE, col_names = FALSE)
+write_csv(valuesdf, here("data_cleaned/test_licor_data_cleaned.txt"), append = TRUE, col_names = FALSE)
+write_csv(valuesdf, here("data_cleaned/test_licor_data_cleaned.txt"), append = TRUE, col_names = FALSE)
 
 # 
 # col_types = cols(SysObs_date = col_datetime(format = "%Y%m%d %H:%M:%S"), 
@@ -115,7 +115,7 @@ write_csv(valuesdf, "data_cleaned/test_licor_data_cleaned.txt", append = TRUE, c
 #| echo: true
 
 # load the names of the columns of interest
-select_field_list <- read_csv("data_raw/Joost_Analysis_Sample/2023-09-22-1536_logdata_fields.csv", 
+select_field_list <- read_csv(here("data_raw/Joost_Analysis_Sample/2023-09-22-1536_logdata_fields.csv"), 
                        col_names = FALSE, 
                        # skip = 1, 
                        n_max = 2,
@@ -136,7 +136,7 @@ final_data <- valuesdf %>% select(any_of(new_select_field_list))
 # final_data$SysObs_date <- strptime(final_data$SysObs_date, "%Y%m%d %H:%M:%S")
 final_data$SysObs_date <- as.POSIXct(final_data$SysObs_date, format = "%Y%m%d %H:%M:%S")
 final_data$GasEx_gsw <- as.numeric(final_data$GasEx_gsw)
-write_csv(final_data, "data_cleaned/test_licor_selected_data.txt", append = FALSE, col_names = FALSE)
+write_csv(final_data, here("data_cleaned/test_licor_selected_data.txt"), append = FALSE, col_names = FALSE)
 
 ```
 
