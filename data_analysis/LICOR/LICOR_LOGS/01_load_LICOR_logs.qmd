@@ -179,11 +179,11 @@ valuesdf <- data.frame(do.call('rbind',strsplit(as.character(output[[4]][,1]),'\
 # remarks <- output[5][1]
 
 # write out a text file that Excel can read
-write_csv(groupsdf, here("data_cleaned/test_licor_data_cleaned.txt"), append = TRUE, col_names = FALSE)
+write_csv(groupsdf, here("data_cleaned/test_licor_data_cleaned.txt"), append = FALSE, col_names = FALSE)
 write_csv(varsdf, here("data_cleaned/test_licor_data_cleaned.txt"), append = TRUE, col_names = FALSE)
 write_csv(unitsdf, here("data_cleaned/test_licor_data_cleaned.txt"), append = TRUE, col_names = FALSE)
 write_csv(valuesdf, here("data_cleaned/test_licor_data_cleaned.txt"), append = TRUE, col_names = FALSE)
-write_csv(valuesdf, here("data_cleaned/test_licor_data_cleaned.txt"), append = TRUE, col_names = FALSE)
+# write_csv(valuesdf, here("data_cleaned/test_licor_data_cleaned.txt"), append = TRUE, col_names = FALSE)
 
 # 
 # col_types = cols(SysObs_date = col_datetime(format = "%Y%m%d %H:%M:%S"), 
