@@ -155,16 +155,8 @@ load_data_chunks <- function(filename) {
 # TODO add the filename to the data
 # TODO add looping to process all files in a folder
 
-output <- load_data_chunks(here("data_raw/2023-09-22-B2Trf_Joost/2023-09-22-1536_logdata"))
-
-# set the proper variable types
-# LI-COR data has values that are not consistent in number of sig digits
-#        inconsistent such as seconds appear as partial and full seconds in the same column
-# TODO this function needs to be implemented
-# faluesdf <- assign_field_types(valuesdf)
-
-# col_types = cols(SysObs_date = col_datetime(format = "%Y%m%d %H:%M:%S"), 
-# col_types$SysObs_date <- as.Date.POSIXct(col_types$SysObs_date)
+#output <- load_data_chunks(here("data_raw/2023-09-22-B2Trf_Joost/2023-09-22-1536_logdata"))
+output <- load_data_chunks(here("data_raw/2024-02-14-1115_logdata_ca_heat_lvl2"))
 
 
 # output contains tabular data broken into the group, units, var names, and values
@@ -173,7 +165,6 @@ groupsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[1]]),'\t',f
 unitsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[2]]),'\t',fixed=TRUE)))
 varsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[3]]),'\t',fixed=TRUE)))
 valuesdf <- data.frame(do.call('rbind',strsplit(as.character(output[[4]][,1]),'\t',fixed=TRUE)))
-
 
 # write out a text file that Excel can read
 write_csv(groupsdf, here("data_cleaned/licor_data_cleaned_UTF-8.txt"), append = FALSE, col_names = FALSE)
@@ -191,6 +182,27 @@ write_csv(valuesdf, here("data_cleaned/licor_data_cleaned_UTF-8.txt"), append = 
 new_field_list <- paste(groupsdf[1,], varsdf[1,], sep = "_")
 colnames(valuesdf) <- new_field_list #varsdf[1,]
 
+# set the proper variable types
+# LI-COR data has values that are not consistent in number of sig digits
+#        inconsistent such as seconds appear as partial and full seconds in the same column
+# TODO this function needs to be implemented
+# faluesdf <- assign_field_types(valuesdf)
+
+
+# TODO create a fix types function
+sigdif = 8    # default number of digits for data readings
+valuesdf$SysObs_date <-     as.POSIXct(valuesdf$SysObs_date, format = "%Y%m%d %H:%M:%S")
+valuesdf$SysObs_obs <-      as.numeric(valuesdf$SysObs_obs)
+valuesdf$SysObs_time <-     round(as.numeric(valuesdf$SysObs_time))
+valuesdf$SysObs_elapsed <-  round(as.numeric(valuesdf$SysObs_elapsed),digits = 0)
+valuesdf$GasEx_gsw <-   round(as.numeric(valuesdf$GasEx_gsw), digits = sigdif)
+valuesdf$GasEx_TIME <-  round(as.numeric(valuesdf$GasEx_TIME))
+valuesdf$GasEx_E <-     round(as.numeric(valuesdf$GasEx_E),digits = sigdif)
+valuesdf$GasEx_Emm <-   round(as.numeric(valuesdf$GasEx_Emm),digits = sigdif)
+valuesdf$GasEx_A <-     round(as.numeric(valuesdf$GasEx_A),digits = sigdif)
+valuesdf$GasEx_Ca <-    round(as.numeric(valuesdf$GasEx_Ca),digits = sigdif)
+
+
 # load the names of the columns of interest
 # UTF-8 CSV text file to keep units in proper form
 select_field_list <- read_csv(here("data_raw/select_logdata_fields.csv"), 
@@ -206,6 +218,7 @@ sysdf[1,2] <- groupsdf[1]
 sysdf[2,1] <- varsdf[1]
 sysdf[2,2] <- varsdf[2]
 select_field_list <- data.frame(sysdf, select_field_list)
+rm(sysdf)
 
 # variable names are not unique, add suffix of the group to fix it
 new_select_field_list <- paste(select_field_list[1,], select_field_list[2,], sep = "_")
@@ -215,6 +228,7 @@ colnames(unitsdf) <- new_field_list
 final_data <- valuesdf %>% select(any_of(new_select_field_list))
 
 # TODO these should already be done in the fix types routine above
+# this is only for test graphing below
 final_data$SysObs_date <- as.POSIXct(final_data$SysObs_date, format = "%Y%m%d %H:%M:%S")
 final_data$GasEx_gsw <- as.numeric(final_data$GasEx_gsw)
 
@@ -224,7 +238,7 @@ write_csv(final_data, here("data_cleaned/selected_licor_data.csv"), append = FAL
 
 
 
-```{r test_graph_group2}
+```{r test_graph_cont}
 
 ggplot() +
     # geom_point(data = final_data, 
@@ -233,8 +247,6 @@ ggplot() +
     # geom_line(data = final_data, aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
     # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
     # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-    # geom_line(data = final_data, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
     ggtitle("LICOR Test Graph - GasEx gsw CONTROL LEAF") +
     xlab("SysObs_date") +
     ylab("GasEx_gsw") +
@@ -252,7 +264,7 @@ ggplot() +
 
 
 ```
-```{r test_graph_group3}
+```{r test_graph_trt}
 ggplot() +
     # geom_point(data = final_data, 
     geom_point(data=subset(final_data, data_group=="group3"), 
@@ -263,6 +275,48 @@ ggplot() +
     # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
     # geom_line(data = final_data, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
     ggtitle("LICOR Test Graph - GasEx gsw - TREATMENT LEAF") +
+    xlab("SysObs_date") +
+    ylab("GasEx_gsw") +
+    scale_y_continuous(limits=c(0.0, 0.2), breaks=c(0, 0.1, 0.2, 0.5)) +
+    scale_x_datetime(date_labels = ("%M:%S"),
+        date_breaks = "10 sec",  expand = expansion(0)) +
+    theme(axis.text.x=element_text(angle=60, hjust=1))
+    # 
+  
+      # scale_x_datetime(labels=date_format("%b %y"))
+    #   date_breaks = "6 hours",  expand = expansion(0)) +
+    
+    # theme(axis.text.x=element_text(angle=60, hjust=1))
+
+final_data['data_remarks'][final_data['data_remarks'] == '11:21:47 lvl2_ref'] <- 'Reference'
+final_data['data_remarks'][final_data['data_remarks'] == '11:34:16 lvl2_trt'] <- 'Control'
+final_data['data_remarks'][final_data['data_remarks'] == '11:45:31 lvl2_trt_real, trt was cntrl'] <- 'Treatment'
+# 11:34:16 lvl2_trt
+
+ggplot(final_data, aes(x = data_remarks , y = GasEx_gsw, color = data_remarks)) + 
+  geom_boxplot(outlier.colour="red",
+                outlier.size=4) +
+  ggtitle("LICOR GasEx gsw - 2024-02-14-1115_logdata_ca_heat_lvl2") +
+    xlab("Leaf") +
+    ylab("GasEx_gsw") 
+
+# ggplot(final_data, aes(x=dose, y=len)) +
+#   geom_boxplot(outlier.colour="red", outlier.shape=8,
+#                 outlier.size=4)
+
+```
+
+```{r test_graph_ref}
+ggplot() +
+    # geom_point(data = final_data, 
+    geom_point(data=subset(final_data, data_group=="group1"), 
+               aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
+    # geom_line(data = final_data, aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
+    ggtitle("LICOR Test Graph - GasEx gsw - REFERENCE LEAF") +
     xlab("SysObs_date") +
     ylab("GasEx_gsw") +
     scale_y_continuous(limits=c(0.0, 0.2), breaks=c(0, 0.1, 0.2, 0.5)) +
