@@ -33,67 +33,53 @@ here::here()
 ```
 
 ## 01_load_LICOR_logs  
-Currently loads one text log from a LICOR data set. It reads each chunk of data from a line with "[Header]" skipping all lines until a line "[Data]" is found. Once found all data lines are read and assigned a group number to keep the related records together. This repeats until the end of file.  
-The original group names, field names, and units are stored off as text in separate dataframes from the data. There are many special characters that do not convert into column names without loss of uniqueness. The values call all be referenced by the column position.  
-The consolidated data is written out to an Excel CSV type text file.
+__All files (read or written) are assumed to be in UTF-8 and not ASCII. The units row contains special characters that will not render unless this is true. If these values do not render correctly in your software, see if there is an option to use UTF-8 or convert them to values you are able to use.__   
+Currently loads one text log from a LICOR data set. It reads each chunk of data that contains a line with "[Header]".  
+All lines are skipped unless a remarks row is found. This continues until a line with "[Data]" is found.  
+All data and remarks lines are read and assigned a group number to keep the related records together. This repeats until the end of file every time a "[Header]" line is found..  
+The original group names, field names, and units are stored off in separate data frames from the first [Data] chunk.  
+There are variable names that are not unique e.g. "time". Therefore the variable names are a concatenation of the group name and the variable name separated by an underscore. e.g. group "SysObs" and variable "time" are converted into a new name of "SysObs_time"    
+All data files are written to a UTF-8, CSV type text file.  
+__NOTE:__ Files that end in TXT should be imported into Excel using the import data option otherwise the UTF-8 units values do not import correctly.  
+If a CSV data file is open directly in Excel, DO NOT "Convert large numbers into scientific notation", it may also ask that there are many 'E' values found, should they be treated as exponent values, do not do this either.
 
 ### REMARKS:
-remarks fall into this block of the [Header] area
-There may be zero or more remarks present.
-All should be read and con-cat into one value for output.
------
-Flr. Version	1.4.22
-12:44:30	Stability Definition:	A (GasEx): Slp<0.3 Per=15	gsw (GasEx): Slp<0.05 Per=15	F (FlrLS): Slp<5 Per=15
+Remarks are found in both the [Header] section and [Data] section.  
+There may be zero or more remarks present in either section.  
+All should be read and concatenated into one comma delimited value for output as they are found.  
+This means that the remarks field can change as data records are read and more remarks are found.  
+  
+Remarks start with time followed by a tab character.  
+After the tab there are two possibilities  
+1. "Stability Definition" (ignore)  
+2. the actual remarks text (concatenate to remarks variable as found)  
+
+__EXAMPLE__  
+12:44:30	Stability Definition:	A (GasEx): Slp<0.3 Per=15	gsw (GasEx): Slp<0.05 Per=15	F (FlrLS): Slp<5 Per=15  
 12:44:44	tc-shade5
-12:44:50	tc-shade5
-SysConst:AvgTime	4.0
------ 
 
-TODO: Check that grouped data records are from the correct data set.
-Averages of the groups are needed, not the raw records for analysis.
 
-```{r load}
+```{r all_dat}
 #| echo: true
 
-
-
+# given a fully qualified LI-COR data log file name
+# process it into data frames of the groups, units, var names, data values
+# add in a group number column representing a chunk of [Data], there may be many
+# add in a remarks column that appends all remark lines as they are found in
+# the [Header] section and within the [Data] section
 load_data_chunks <- function(filename) {
   con <- file(filename, "rt")
   print("start")
+  
+  # init vars
   remarks <- "" # used to contain the list of remarks, if any
   i = 0 # used to specify which group of data is being read
   dataLines <- data.frame(matrix(ncol = 1, nrow = 0))
   colnames(dataLines) <- c("original")
   
   while (length(oneLine <- readLines(con, n = 1, skipNul = TRUE, warn = FALSE)) > 0) {
-    # print(oneLine)
-    
-    # collect all of the remarks
-    # line before actual remarks starts with "12:44:30<tab>Stability Definition:<tab>"
-    # if found, skip it and start remarks collecting
-    # if (str_detect(oneLine, regex("^[0-9]{2}:[0-9]{2}:[0-9]{2}\tStability Definition:\t"))) {
-    #   print("---- found the BEGINING of the remarks")
-    # print(oneLine)
-    
-    
-    # read the next line and see if it is a remarks line
-    # starts with "nn:nn:nn\t" followed by remarks
-    # Stability Definition also starts with the "nn:nn:nn\t", make sure that is not what we found
-    # while (length(oneLine <- readLines(con, n = 1, skipNul = TRUE, warn = FALSE)) > 0) {
-    # if str_detect(oneLine, regex("^[0-9]{2}:[0-9]{2}:[0-9]{2}\t")) # & 
-    #   # !str_detect(oneLine, regex("^[0-9]{2}:[0-9]{2}:[0-9]{2}\tStability Definition:\t"))
-    # {
-    #   
-    #   if (remarks == "") {
-    #     remarks <- str_replace(oneLine, "\t", " ")
-    #   } else {
-    #     oneLine <- str_replace(oneLine, "\t", " ")
-    #     remarks <- paste(remarks, oneLine, sep = ", ")
-    #   }
-    #   }
-    # 
-    
-    # remarks in header, not data block
+
+    # get the remarks in header, add ones in [Data] block later
     if (str_detect(oneLine, regex("^[0-9]{2}:[0-9]{2}:[0-9]{2}\t")) &
         !str_detect(oneLine, regex("^[0-9]{2}:[0-9]{2}:[0-9]{2}\tStability Definition:\t"))) 
     {
@@ -165,39 +151,41 @@ load_data_chunks <- function(filename) {
 }
 
 
-# this will not work for multiple files without the structure, columns
-# create df for each of the chunks of information
-# output <- load_data_chunks(here("data_raw/2023-11-17-btrf/2023-11-17-1144_logdata-tc-heat"))
+# this will not work for multiple files
+# TODO add the filename to the data
+# TODO add looping to process all files in a folder
 
 output <- load_data_chunks(here("data_raw/2023-09-22-B2Trf_Joost/2023-09-22-1536_logdata"))
 
+# set the proper variable types
+# LI-COR data has values that are not consistent in number of sig digits
+#        inconsistent such as seconds appear as partial and full seconds in the same column
+# TODO this function needs to be implemented
+# faluesdf <- assign_field_types(valuesdf)
 
-groupsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[1]]),'\t',fixed=TRUE)))
-unitsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[2]]),'\t',fixed=TRUE)))
-varsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[3]]),'\t',fixed=TRUE)))
-valuesdf <- data.frame(do.call('rbind',strsplit(as.character(output[[4]][,1]),'\t',fixed=TRUE)))
-# remarks <- output[5][1]
-
-# write out a text file that Excel can read
-write_csv(groupsdf, here("data_cleaned/test_licor_data_cleaned.txt"), append = FALSE, col_names = FALSE)
-write_csv(varsdf, here("data_cleaned/test_licor_data_cleaned.txt"), append = TRUE, col_names = FALSE)
-write_csv(unitsdf, here("data_cleaned/test_licor_data_cleaned.txt"), append = TRUE, col_names = FALSE)
-write_csv(valuesdf, here("data_cleaned/test_licor_data_cleaned.txt"), append = TRUE, col_names = FALSE)
-# write_csv(valuesdf, here("data_cleaned/test_licor_data_cleaned.txt"), append = TRUE, col_names = FALSE)
-
-# 
 # col_types = cols(SysObs_date = col_datetime(format = "%Y%m%d %H:%M:%S"), 
 # col_types$SysObs_date <- as.Date.POSIXct(col_types$SysObs_date)
 
 
+# output contains tabular data broken into the group, units, var names, and values
+# break them into their own tables for further use
+groupsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[1]]),'\t',fixed=TRUE)))
+unitsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[2]]),'\t',fixed=TRUE)))
+varsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[3]]),'\t',fixed=TRUE)))
+valuesdf <- data.frame(do.call('rbind',strsplit(as.character(output[[4]][,1]),'\t',fixed=TRUE)))
+
+
+# write out a text file that Excel can read
+write_csv(groupsdf, here("data_cleaned/licor_data_cleaned_UTF-8.txt"), append = FALSE, col_names = FALSE)
+write_csv(varsdf, here("data_cleaned/licor_data_cleaned_UTF-8.txt"), append = TRUE, col_names = FALSE)
+write_csv(unitsdf, here("data_cleaned/licor_data_cleaned_UTF-8.txt"), append = TRUE, col_names = FALSE)
+write_csv(valuesdf, here("data_cleaned/licor_data_cleaned_UTF-8.txt"), append = TRUE, col_names = FALSE)
+
 ```
 
 
-```{r header_add}
+```{r select_data}
 #| echo: true
-
-# the original source for the fields to select out from Joost analysis file
-# select_field_list <- read_csv(here("data_raw/Joost_Analysis_Sample/2023-09-22-1536_logdata_fields.csv"), 
 
 # variable names are not unique, prepend the group to fix it
 new_field_list <- paste(groupsdf[1,], varsdf[1,], sep = "_")
@@ -207,49 +195,37 @@ colnames(valuesdf) <- new_field_list #varsdf[1,]
 # UTF-8 CSV text file to keep units in proper form
 select_field_list <- read_csv(here("data_raw/select_logdata_fields.csv"), 
                        col_names = FALSE, 
-                       # skip = 1, 
                        n_max = 2,
                        show_col_types = FALSE) 
-# Append new column to front of data, group is required as column 1, remarks as column 2
 
-# sysdf <- data.frame(c(groupsdf[1], varsdf[1]),c(groupsdf[2], varsdf[2]))
+# Append new column to front of data, 'group' is required as column 1, 'remarks' as column 2
+# there is a better way to do this
 sysdf <- data.frame(matrix(ncol = 2, nrow = 2))
 sysdf[1,1] <- groupsdf[1]
 sysdf[1,2] <- groupsdf[1]
 sysdf[2,1] <- varsdf[1]
 sysdf[2,2] <- varsdf[2]
-# t_select_field_list <- data.frame(col1 = c(groupsdf[1]), col2 = c("duh"), select_field_list)
 select_field_list <- data.frame(sysdf, select_field_list)
-# temp_select_field_list <- data.frame(str(new_field_list[1])) = new_field_list[1], col2 = new_field_list[2], select_field_list)
 
-# variable names are not unique, prepend the group to fix it
+# variable names are not unique, add suffix of the group to fix it
 new_select_field_list <- paste(select_field_list[1,], select_field_list[2,], sep = "_")
-# new_select_field_list <- paste(select_field_list[1,], select_field_list[2,], sep = "_")
-# colnames(select_field_list) <- select_field_list
 colnames(unitsdf) <- new_field_list
-
-
 
 # create a set of data that the user specified in select_field_list
 final_data <- valuesdf %>% select(any_of(new_select_field_list))
 
-# sample to get the units that are needed for selected data
-# final_units <- unitsdf %>% select(any_of(new_select_field_list))
-
-# sample code to merge df using a list by column names
-# df_list <- list(final_units, final_vals)
-# t <- Reduce(function(x, y) merge(x, y, all=TRUE), df_list)  
-
-# final_data$SysObs_date <- strptime(final_data$SysObs_date, "%Y%m%d %H:%M:%S")
+# TODO these should already be done in the fix types routine above
 final_data$SysObs_date <- as.POSIXct(final_data$SysObs_date, format = "%Y%m%d %H:%M:%S")
 final_data$GasEx_gsw <- as.numeric(final_data$GasEx_gsw)
-write_csv(final_data, here("data_cleaned/test_licor_selected_data.csv"), append = FALSE, col_names = TRUE)
+
+write_csv(final_data, here("data_cleaned/selected_licor_data.csv"), append = FALSE, col_names = TRUE)
 
 ```
 
 
 
 ```{r test_graph_group2}
+
 ggplot() +
     # geom_point(data = final_data, 
     geom_point(data=subset(final_data, data_group=="group2"), 
@@ -279,7 +255,7 @@ ggplot() +
 ```{r test_graph_group3}
 ggplot() +
     # geom_point(data = final_data, 
-    geom_point(data=subset(final_data, data_group=="group2"), 
+    geom_point(data=subset(final_data, data_group=="group3"), 
                aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
     # geom_line(data = final_data, aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
     # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
