@@ -202,6 +202,7 @@ valuesdf$GasEx_Emm <-   round(as.numeric(valuesdf$GasEx_Emm),digits = sigdif)
 valuesdf$GasEx_A <-     round(as.numeric(valuesdf$GasEx_A),digits = sigdif)
 valuesdf$GasEx_Ca <-    round(as.numeric(valuesdf$GasEx_Ca),digits = sigdif)
 valuesdf$GasEx_VPDleaf <-    round(as.numeric(valuesdf$GasEx_VPDleaf), digits = sigdif)
+valuesdf$`FLR_Fv'/Fm'` <-    round(as.numeric(valuesdf$`FLR_Fv'/Fm'`),digits = sigdif)
 
 
 # load the names of the columns of interest
@@ -321,6 +322,20 @@ ggplot(final_data, aes(x = data_remarks , y = GasEx_VPDleaf, color = data_remark
   ggtitle("LICOR GasEx VPDleaf - 2024-02-14-1206_logdata_ca_heat_lvl3") +
     xlab("Leaf") +
     ylab("GasEx_VPDleaf") 
+
+ggplot(final_data, aes(x = data_remarks , y = `FLR_Fv'/Fm'`, color = data_remarks)) + 
+  geom_boxplot(outlier.colour="red",
+                outlier.size=4) +
+  ggtitle("LICOR `FLR Fv'/Fm'` - 2024-02-14-1206_logdata_ca_heat_lvl3") +
+    xlab("Leaf") +
+    ylab("FLR_Fv'/Fm'") 
+
+ggplot(final_data, aes(x = data_remarks , y = "GasEx_A", color = data_remarks)) + 
+  geom_boxplot(outlier.colour="red",
+                outlier.size=4) +
+  ggtitle("LICOR GasEx_A - 2024-02-14-1206_logdata_ca_heat_lvl3") +
+    xlab("Leaf") +
+    ylab("GasEx_A") 
 
 # ggplot(final_data, aes(x=dose, y=len)) +
 #   geom_boxplot(outlier.colour="red", outlier.shape=8,
