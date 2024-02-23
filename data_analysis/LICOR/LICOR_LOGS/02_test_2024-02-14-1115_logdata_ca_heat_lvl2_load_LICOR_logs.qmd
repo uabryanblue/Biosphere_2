@@ -180,11 +180,14 @@ __Processing Data from data_raw folder__
 # TODO add the filename to the data
 # TODO add looping to process all files in a folder
 
+# constants to data paths
 DATARAW <- here("data_raw//")
+DATACLEAN <- here("data_clean//")
 
-#output <- load_data_chunks(here("data_raw/2023-09-22-B2Trf_Joost/2023-09-22-1536_logdata"))
-FileName <- "2024-02-14-1115_logdata_ca_heat_lvl2"
-output <- load_data_chunks(paste(DATARAW, FileName, sep = ''))
+# file name to load
+# TODO this needs turned into a loop to process all files in DATARAW
+OutFileName <- "2024-02-14-1115_logdata_ca_heat_lvl2"
+output <- load_data_chunks(paste(DATARAW, OutFileName, sep = ''))
 
 
 # output contains tabular data broken into the group, units, var names, and values
@@ -195,11 +198,7 @@ varsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[3]]),'\t',fix
 valuesdf <- data.frame(do.call('rbind',strsplit(as.character(output[[4]][,1]),'\t',fixed=TRUE)))
 
 
-# write out a text file that Excel can read
-write_csv(groupsdf, here("data_cleaned/licor_data_cleaned_UTF-8.txt"), append = FALSE, col_names = FALSE)
-write_csv(varsdf, here("data_cleaned/licor_data_cleaned_UTF-8.txt"), append = TRUE, col_names = FALSE)
-write_csv(unitsdf, here("data_cleaned/licor_data_cleaned_UTF-8.txt"), append = TRUE, col_names = FALSE)
-write_csv(valuesdf, here("data_cleaned/licor_data_cleaned_UTF-8.txt"), append = TRUE, col_names = FALSE)
+
 
 ```
 
@@ -240,8 +239,6 @@ select_field_list <- data.frame(sysdf, select_field_list)
 
 
 
-# rm(sysdf)
-
 # variable names are not unique, add suffix of the group to fix it
 new_select_field_list <- paste(select_field_list[1,], select_field_list[2,], sep = "_")
 colnames(unitsdf) <- new_field_list
@@ -249,15 +246,24 @@ colnames(unitsdf) <- new_field_list
 # create a set of data that the user specified in select_field_list
 final_data <- valuesdf %>% select(any_of(new_select_field_list))
 
-# TODO these should already be done in the fix types routine above
-# this is only for test graphing below
-final_data$SysObs_date <- as.POSIXct(final_data$SysObs_date, format = "%Y%m%d %H:%M:%S")
-final_data$GasEx_gsw <- as.numeric(final_data$GasEx_gsw)
+```
+__Write Data Files__
+```{r write_files}
 
-write_csv(final_data, here("data_cleaned/selected_licor_data.csv"), append = FALSE, col_names = TRUE)
+# write out a text file that Excel can read
+CleanDataFile <- "licor_data_cleaned_UTF-8.txt"
+CleanOutput <- paste(DATACLEAN, CleanDataFile, sep = '')
+
+write_csv(groupsdf, CleanOutput, append = FALSE, col_names = FALSE)
+write_csv(varsdf, CleanOutput, append = TRUE, col_names = FALSE)
+write_csv(unitsdf, CleanOutput, append = TRUE, col_names = FALSE)
+write_csv(valuesdf, CleanOutput, append = TRUE, col_names = FALSE)
+
+SelectedDataFile <- "selected_licor_data.csv"
+SelectedOutput <- paste(DATACLEAN, SelectedDataFile, sep = '')
+write_csv(final_data, SelectedOutput, append = FALSE, col_names = TRUE)
 
 ```
-
 
 
 ```{r test_graph_cont}
