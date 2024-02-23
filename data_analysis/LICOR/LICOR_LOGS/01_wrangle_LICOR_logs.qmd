@@ -14,8 +14,6 @@ format:
   pdf:
     fig-width: 7
     fig-height: 5
-
-
 ---
 
 ```{r setup, include=FALSE}
@@ -246,14 +244,9 @@ main <- function(LogFileName) {
   DATACLEAN <- here("data_clean//")
   DATAUSER <- here("data_user//")
   
-  # file name to load
-  # TODO this needs turned into a loop to process all files in DATARAW
+  # this is now a function and called multiple times to process all logs
   # LogFileName <- "2024-02-14-1115_logdata_ca_heat_lvl2"
   OutFile <- paste(DATARAW, LogFileName, sep = '')
-  # #
-  
-  # LogFileName <- "2024-02-14-1115_logdata_ca_heat_lvl2"
-  # TODO !!!!! OutFile <- paste(DATARAW, LogFileName, sep = '')
 
   output <- load_data_chunks(OutFile, LogFileName)
   
@@ -327,7 +320,6 @@ SelectedDataFile <- paste("selected", LogFileName, sep = '_')
 SelectedOutput <- paste(DATACLEAN, SelectedDataFile, sep = '')
 write_csv(final_data, SelectedOutput, append = FALSE, col_names = TRUE)  
   
-  
   }
 ```
 
@@ -335,6 +327,8 @@ write_csv(final_data, SelectedOutput, append = FALSE, col_names = TRUE)
 ```{r main}
 
 FileList <- list.files("data_raw")
+
+main(FileList[1])
 
 for (FileName in FileList) {
   # FileName <- paste(here("data_raw", FileName, sep = ""))
