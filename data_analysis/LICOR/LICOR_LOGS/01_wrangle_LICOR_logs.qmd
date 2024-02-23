@@ -326,7 +326,10 @@ write_csv(final_data, SelectedOutput, append = FALSE, col_names = TRUE)
 
 ```{r main}
 
-FileList <- list.files("data_raw")
+# NOTE LICOR logs default to start with the date "YYYY-MM-DD"
+# this ensures only these files are read
+# if files are not saved this way, it will not work
+FileList <- list.files("data_raw", pattern = "^[0-9]{4}-[0-9]{2}-[0-9]{2}")
 
 main(FileList[1])
 
