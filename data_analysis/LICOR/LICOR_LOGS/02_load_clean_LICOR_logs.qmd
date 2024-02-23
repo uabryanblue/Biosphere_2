@@ -1,0 +1,78 @@
+---
+title: "LICOR Data Processing"
+author: "Bryan Blue"
+e-mail: 'bryanblue@arizona.edu'
+date: "Last Generated: `r Sys.Date()`"
+
+execute:
+  echo: false
+format: 
+  html:
+    code-fold: true
+    fig-width: 8
+    fig-height: 6
+  pdf:
+    fig-width: 7
+    fig-height: 5
+---
+
+# Run 01_wrangle_LICOR_logs.qmd first!
+```{r setup, include=FALSE}
+#| echo: false
+
+# #| tags: [parameters]
+# names = "test"
+
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+library(tidyr)
+library(ggplot2)
+library(here)
+
+# start in the current project directory
+# this ensures relative paths will work
+# independent of the location the script
+here::here()
+# https://www.regextester.com/ for regex checking
+```
+
+```{r load_selected_data}
+main <- function(LogFileName, cleandf) {
+  
+  # constants to data paths
+  DATARAW <- here("data_raw//")
+  DATACLEAN <- here("data_clean//")
+  DATAUSER <- here("data_user//")
+
+  SelectedFilename <- paste(DATACLEAN, LogFileName, sep = "")
+  print(SelectedFilename)
+  
+   SelectedData <- read_csv(SelectedFilename, 
+                                col_names = TRUE, 
+                                # n_max = 2,
+                                show_col_types = FALSE) 
+  cleandf <- rbind(cleandf, SelectedData)
+  return(cleandf)
+  
+}
+```
+
+
+```{r main}
+
+# only work with the clean data that has the selected fields
+FileList <- list.files("data_clean", pattern = "^selected_")
+cleandf <- data.frame()
+
+for (FileName in FileList) {
+  # print(FileName)
+  cleandf <- main(FileName, cleandf)
+}
+
+write_csv(cleandf, here("CleanOutput"), append = FALSE, col_names = TRUE)
+
+```
+
+
