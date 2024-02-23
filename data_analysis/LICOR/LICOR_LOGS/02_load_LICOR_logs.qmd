@@ -1,0 +1,274 @@
+---
+title: "LICOR Data Processing"
+author: "Bryan Blue"
+e-mail: 'bryanblue@arizona.edu'
+date: "Last Generated: `r Sys.Date()`"
+execute:
+  echo: false
+format: 
+  html:
+    code-fold: true
+    fig-width: 8
+    fig-height: 6
+  pdf:
+    fig-width: 7
+    fig-height: 5
+---
+
+```{r setup, include=FALSE}
+#| echo: false
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+library(tidyr)
+library(ggplot2)
+library(here)
+
+# start in the current project directory
+# this ensures relative paths will work
+# independent of the location the script
+here::here()
+# https://www.regextester.com/ for regex checking
+```
+
+## 01_load_LICOR_logs  
+__All files (read or written) are assumed to be in UTF-8 and not ASCII. The units row contains special characters that will not render unless this is true. If these values do not render correctly in your software, see if there is an option to use UTF-8 or convert them to values you are able to use.__   
+Currently loads one text log from a LICOR data set. It reads each chunk of data that contains a line with "[Header]".  
+All lines are skipped unless a remarks row is found. This continues until a line with "[Data]" is found.  
+All data and remarks lines are read and assigned a group number to keep the related records together. This repeats until the end of file every time a "[Header]" line is found..  
+The original group names, field names, and units are stored off in separate data frames from the first [Data] chunk.  
+There are variable names that are not unique e.g. "time". Therefore the variable names are a concatenation of the group name and the variable name separated by an underscore. e.g. group "SysObs" and variable "time" are converted into a new name of "SysObs_time"    
+All data files are written to a UTF-8, CSV type text file.  
+__NOTE:__ Files that end in TXT should be imported into Excel using the import data option otherwise the UTF-8 units values do not import correctly.  
+If a CSV data file is open directly in Excel, DO NOT "Convert large numbers into scientific notation", it may also ask that there are many 'E' values found, should they be treated as exponent values, do not do this either.
+
+### REMARKS:
+Remarks are found in both the [Header] section and [Data] section.  
+There may be zero or more remarks present in either section.  
+All should be read and concatenated into one comma delimited value for output as they are found.  
+This means that the remarks field can change as data records are read and more remarks are found.  
+  
+Remarks start with time followed by a tab character.  
+After the tab there are two possibilities  
+1. "Stability Definition" (ignore)  
+2. the actual remarks text (concatenate to remarks variable as found)  
+
+__EXAMPLE__  
+12:44:30	Stability Definition:	A (GasEx): Slp<0.3 Per=15	gsw (GasEx): Slp<0.05 Per=15	F (FlrLS): Slp<5 Per=15  
+12:44:44	tc-shade5
+
+
+```{r functions}
+#| echo: true
+
+# given a fully qualified LI-COR data log file name
+# process it into data frames of the groups, units, var names, data values
+# add in a group number column representing a chunk of [Data], there may be many
+# add in a remarks column that appends all remark lines as they are found in
+# the [Header] section and within the [Data] section
+load_data_chunks <- function(OutFile, OutFileName) {
+  con <- file(OutFile, "rt")
+  print("start")
+  
+  # init vars
+  remarks <- "" # used to contain the list of remarks, if any
+  i = 0 # used to specify which group of data is being read
+  dataLines <- data.frame(matrix(ncol = 1, nrow = 0))
+  colnames(dataLines) <- c("original")
+  
+  while (length(oneLine <- readLines(con, n = 1, skipNul = TRUE, warn = FALSE)) > 0) {
+
+    # get the remarks in header, add ones in [Data] block later
+    if (str_detect(oneLine, regex("^[0-9]{2}:[0-9]{2}:[0-9]{2}\t")) &
+        !str_detect(oneLine, regex("^[0-9]{2}:[0-9]{2}:[0-9]{2}\tStability Definition:\t"))) 
+    {
+      if (remarks == "") {
+        remarks <- str_replace(oneLine, "\t", " ")
+      } else {
+        oneLine <- str_replace(oneLine, "\t", " ")
+        remarks <- paste(remarks, oneLine, sep = ", ")
+      }
+    }
+    
+    
+    # read all the records in the found [Data] block
+    if (str_detect(oneLine, regex("\\[Data\\]"))) {
+      # print("We found data start")
+      
+      # sequential numbering for each group of [Data] in the file
+      i = i + 1
+      groupNumber = paste("group",i, sep = "")
+      
+      # these three groups appear after [Data] in the file
+      # add prefix for fiels for filename, data group, and remarks
+      dataGroups <- paste("Filenames", "Data", "Data", readLines(con, n = 1, skipNul = TRUE, warn = FALSE), sep = "\t")
+      dataVars   <- paste("filename", "group", "remarks", readLines(con, n = 1, skipNul = TRUE, warn = FALSE), sep = "\t")
+      dataUnits  <- paste("", "", "", readLines(con, n = 1, skipNul = TRUE, warn = FALSE), sep = "\t")
+      
+      # create an empty list to store all of the data records in the found block
+      # read lines until it is not longer a data line
+      while (length(dataLine <- readLines(con, n = 1, skipNul = TRUE, warn = FALSE)) > 0) {
+
+        # remarks could be here too
+        if (str_detect(dataLine, regex("^[0-9]{2}:[0-9]{2}:[0-9]{2}\t")) &
+            !str_detect(dataLine, regex("^[0-9]{2}:[0-9]{2}:[0-9]{2}\tStability Definition:\t"))) 
+        {
+          if (remarks == "") {
+            remarks <- str_replace(dataLine, "\t", " ")
+          } else {
+            dataLine <- str_replace(dataLine, "\t", " ")
+            remarks <- paste(remarks, dataLine, sep = ", ")
+          }
+        }
+        
+        
+        # lines starts with and integer record number and tab
+        if (str_detect(dataLine, regex("^[0-9]?\t")) &
+            !str_detect(dataLine, regex("^[0-9]{2}:[0-9]{2}:[0-9]{2}\t"))) {
+          finalString <- paste(OutFileName, groupNumber, remarks, dataLine, sep = "\t")
+          dataLines[nrow(dataLines) + 1,] = finalString
+          # } else {
+          #   break
+        }
+        
+        # done reading data lines from the current block
+        # reset remarks for next group of data       
+        if (str_detect(dataLine, regex("\\[Header\\]"))) {
+          remarks <- ""
+          break
+        }
+    }
+  }
+
+  }
+  print("stop")
+  close(con)
+  
+  return(list(dataGroups, dataUnits, dataVars, dataLines))
+  
+}
+
+
+fix_types <- function(typesdf) {
+  
+  # ggplot, other software has trouble with the large values in the data file
+  # SIGDIF specifies the number of significant digits to retain, < 9 works
+  SIGDIF = 8    # default number of digits for data readings
+
+  typesdf$SysObs_date <-     as.POSIXct(typesdf$SysObs_date, format = "%Y%m%d %H:%M:%S")
+  typesdf$SysObs_obs <-      as.numeric(typesdf$SysObs_obs)
+  typesdf$SysObs_time <-     round(as.numeric(typesdf$SysObs_time))
+  typesdf$SysObs_elapsed <-  round(as.numeric(typesdf$SysObs_elapsed),digits = 0)
+  typesdf$GasEx_gsw <-   round(as.numeric(typesdf$GasEx_gsw), digits = SIGDIF)
+  typesdf$GasEx_TIME <-  round(as.numeric(typesdf$GasEx_TIME))
+  typesdf$GasEx_E <-     round(as.numeric(typesdf$GasEx_E),digits = SIGDIF)
+  typesdf$GasEx_Emm <-   round(as.numeric(typesdf$GasEx_Emm),digits = SIGDIF)
+  typesdf$GasEx_A <-     round(as.numeric(typesdf$GasEx_A),digits = SIGDIF)
+  typesdf$GasEx_Ca <-    round(as.numeric(typesdf$GasEx_Ca),digits = SIGDIF)
+  typesdf$GasEx_VPDleaf <-    round(as.numeric(typesdf$GasEx_VPDleaf),digits = SIGDIF)
+  typesdf$`FLR_Fv'/Fm'` <-    round(as.numeric(typesdf$`FLR_Fv'/Fm'`),digits = SIGDIF)
+  
+  return(typesdf) 
+}
+
+
+```
+__Processing Data from data_raw folder__  
+```{r load_files}
+
+# this will not work for multiple files
+# TODO add the filename to the data
+# TODO add looping to process all files in a folder
+
+# constants to data paths
+DATARAW <- here("data_raw//")
+DATACLEAN <- here("data_clean//")
+
+# file name to load
+# TODO this needs turned into a loop to process all files in DATARAW
+OutFileName <- "2024-02-14-1115_logdata_ca_heat_lvl2"
+OutFile <- paste(DATARAW, OutFileName, sep = '')
+output <- load_data_chunks(OutFile, OutFileName)
+
+
+# output contains tabular data broken into the group, units, var names, and values
+# break them into their own tables for further use
+groupsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[1]]),'\t',fixed=TRUE)))
+unitsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[2]]),'\t',fixed=TRUE)))
+varsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[3]]),'\t',fixed=TRUE)))
+valuesdf <- data.frame(do.call('rbind',strsplit(as.character(output[[4]][,1]),'\t',fixed=TRUE)))
+
+
+# load the names for the columns of interest
+# UTF-8 CSV text file to keep units in proper form
+# only the fields in this file will appear in the selected output file
+SelectDataFile <- "select_logdata_fields.csv"
+SelectInput <- paste(DATARAW, SelectDataFile, sep = '')
+select_field_list <- read_csv(SelectInput, 
+                       col_names = FALSE, 
+                       n_max = 2,
+                       show_col_types = FALSE) 
+
+# Append new column to the front of data
+sysdf <- data.frame(matrix(ncol = 3, nrow = 2))
+# the groups to add
+sysdf[1,1] <- "Filenames"
+sysdf[1,2] <- groupsdf[1]
+sysdf[1,3] <- groupsdf[2]
+# the variable names to add
+sysdf[2,1] <- "filename"
+sysdf[2,2] <- varsdf[1]
+sysdf[2,3] <- varsdf[2]
+select_field_list <- data.frame(sysdf, select_field_list)
+
+```
+
+
+```{r select_data}
+#| echo: true
+
+# variable names are not unique, prepend the group to fix it
+new_field_list <- paste(groupsdf[1,], varsdf[1,], sep = "_")
+# new_field_list <- paste(select_field_list[1,], select_field_list[2,], sep = "_")
+new_field_list <- str_replace_all(new_field_list, " ", "_")
+colnames(valuesdf) <- new_field_list
+
+# set the proper variable types
+# LI-COR data has values that are not consistent in number of sig digits
+#        inconsistent such as seconds appear as partial and full seconds in the same column
+valuesdf <- fix_types(valuesdf)
+
+
+
+
+# TODO rewrite cleanup of adding columns to dfs
+# colnames(t) <- varsdf[]
+
+
+
+# variable names are not unique, add suffix of the group to fix it
+new_select_field_list <- paste(select_field_list[1,], select_field_list[2,], sep = "_")
+colnames(unitsdf) <- new_field_list
+
+# create a set of data that the user specified in select_field_list
+final_data <- valuesdf %>% select(any_of(new_select_field_list))
+
+```
+__Write Data Files__
+```{r write_files}
+
+# write out a text file that Excel can read
+CleanDataFile <- "licor_data_cleaned_UTF-8.txt"
+CleanOutput <- paste(DATACLEAN, CleanDataFile, sep = '')
+write_csv(groupsdf, CleanOutput, append = FALSE, col_names = FALSE)
+write_csv(varsdf, CleanOutput, append = TRUE, col_names = FALSE)
+write_csv(unitsdf, CleanOutput, append = TRUE, col_names = FALSE)
+write_csv(valuesdf, CleanOutput, append = TRUE, col_names = FALSE)
+
+SelectedDataFile <- "selected_licor_data.csv"
+SelectedOutput <- paste(DATACLEAN, SelectedDataFile, sep = '')
+write_csv(final_data, SelectedOutput, append = FALSE, col_names = TRUE)
+
+```
+
