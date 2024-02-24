@@ -36,6 +36,12 @@ library(here)
 # independent of the location the script
 here::here()
 # https://www.regextester.com/ for regex checking
+
+# constants to data paths
+DATARAW <- here("data_raw//")
+DATACLEAN <- here("data_clean//")
+DATAUSER <- here("data_user//")
+
 ```
 
 ```{r load_selected_data}
@@ -71,7 +77,9 @@ for (FileName in FileList) {
   cleandf <- main(FileName, cleandf)
 }
 
-write_csv(cleandf, here("CleanOutput"), append = FALSE, col_names = TRUE)
+write_csv(cleandf, here(paste(DATAUSER,"combined_selected_log_data.csv", sep = "")), append = FALSE, col_names = TRUE)
+
+write_csv(cleandf[,1:6], here(paste(DATAUSER,"REMOVE_PREFIX_THEN_EDIT_leaf_identification.csv", sep = "")), append = FALSE, col_names = TRUE)
 
 ```
 
