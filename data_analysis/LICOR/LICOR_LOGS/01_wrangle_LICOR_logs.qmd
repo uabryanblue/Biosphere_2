@@ -60,7 +60,7 @@ Remarks are found in both the [Header] section and [Data] section.
 There may be zero or more remarks present in either section.  
 All should be read and concatenated into one comma delimited value for output as they are found.  
 This means that the remarks field can change as data records are read and more remarks are found.  
-  
+
 Remarks start with time followed by a tab character.  
 After the tab there are two possibilities  
 1. "Stability Definition" (ignore)  
@@ -83,23 +83,23 @@ load_data_chunks <- function(OutFile, OutFileName) {
   print("function: load_data_chunks")
   print(paste("OutFile:", OutFile))
   print(paste("OutFileName:", OutFileName))
-
+  
   con <- file(OutFile, "rt")
   print("start")
   
-   
+  
   # init vars
   remarks <- "" # used to contain the list of remarks, if any
   i = 0 # used to specify which group of data is being read
   dataLines <- data.frame(matrix(ncol = 1, nrow = 0))
   colnames(dataLines) <- c("original")
   
-
+  
   while (length(oneLine <- 
                 readLines(con, n = 1, skipNul = TRUE, warn = FALSE)) > 0) {
-
-     
-       # get the remarks in header, add ones in [Data] block later
+    
+    
+    # get the remarks in header, add ones in [Data] block later
     if (str_detect(oneLine, regex("^[0-9]{2}:[0-9]{2}:[0-9]{2}\t")) &
         !str_detect(oneLine, regex("^[0-9]{2}:[0-9]{2}:[0-9]{2}\tStability Definition:\t"))) 
     {
@@ -132,7 +132,7 @@ load_data_chunks <- function(OutFile, OutFileName) {
       # create an empty list to store all of the data records in the found block
       # read lines until it is not longer a data line
       while (length(dataLine <- readLines(con, n = 1, skipNul = TRUE, warn = FALSE)) > 0) {
-
+        
         # remarks could be here too
         if (str_detect(dataLine, regex("^[0-9]{2}:[0-9]{2}:[0-9]{2}\t")) &
             !str_detect(dataLine, regex("^[0-9]{2}:[0-9]{2}:[0-9]{2}\tStability Definition:\t"))) 
@@ -161,9 +161,9 @@ load_data_chunks <- function(OutFile, OutFileName) {
           remarks <- ""
           break
         }
+      }
     }
-  }
-
+    
   }
   print("stop")
   close(con)
@@ -172,7 +172,9 @@ load_data_chunks <- function(OutFile, OutFileName) {
   
 }
 
-
+# manipulate the data in valsdf using these varsdf column names
+# special manipulations should go here
+# normal rounding and formatting dates are common manipulations
 fix_types <- function(typesdf) {
   print("function: fix_types")
   # ggplot, other software has trouble with the large values in the data file
@@ -197,15 +199,19 @@ fix_types <- function(typesdf) {
   typesdf$GasEx_gsw <-   round(as.numeric(typesdf$GasEx_gsw), digits = SIGDIF)
   typesdf$GasEx_RHcham <-   round(as.numeric(typesdf$GasEx_RHcham), digits = SIGDIF)
   typesdf$GasEx_TleafCnd <- round(as.numeric(typesdf$GasEx_TleafCnd), digits = SIGDIF)
-  typesdf$GasEx_VPcham <- round(as.numeric(typesdf$GasEx_VPcham), digits = SIGDIF)
-  typesdf$GasEx_VPDleaf <-    round(as.numeric(typesdf$GasEx_VPDleaf), digits = SIGDIF)
-
+  typesdf$GasEx_VPcham <-   round(as.numeric(typesdf$GasEx_VPcham), digits = SIGDIF)
+  typesdf$GasEx_VPDleaf <-  round(as.numeric(typesdf$GasEx_VPDleaf), digits = SIGDIF)
+  
   #FLR
-  typesdf$`FLR_Fv'/Fm'` <-    round(as.numeric(typesdf$`FLR_Fv'/Fm'`), digits = SIGDIF)
+  
+  typesdf$`FLR_Fv'/Fm'` <-    round(as.numeric(typesdf$`FLR_Fv'/Fm'`), digits = SIGDIF) 
+  typesdf$`FLR_Fv/Fm` <-    round(as.numeric(typesdf$`FLR_Fv/Fm`), digits = SIGDIF) 
+  # typesdf$FLR_Fv_prime_div_Fm_prime <- round(as.numeric(typesdf$FLR_Fv_prime_div_Fm_prime), digits = SIGDIF) # `FLR_Fv'/Fm'`
   typesdf$FLR_A_fs <-    round(as.numeric(typesdf$FLR_A_fs), digits = SIGDIF)
   typesdf$FLR_ETR	 <-    round(as.numeric(typesdf$FLR_ETR), digits = SIGDIF)
   typesdf$FLR_NPQ <-    round(as.numeric(typesdf$FLR_NPQ), digits = SIGDIF)
   
+
   # LeafQ
   typesdf$LeafQ_Qin <-    round(as.numeric(typesdf$LeafQ_Qin), digits = SIGDIF)
   
@@ -214,7 +220,7 @@ fix_types <- function(typesdf) {
   typesdf$Meas_Pa	<-    round(as.numeric(typesdf$Meas_Pa), digits = SIGDIF)
   typesdf$Meas_Tair	<-    round(as.numeric(typesdf$Meas_Tair), digits = SIGDIF)
   typesdf$Meas_Tleaf<-    round(as.numeric(typesdf$Meas_Tleaf), digits = SIGDIF)
-
+  
   return(typesdf) 
 }
 
@@ -250,21 +256,22 @@ select_data <- function() {
 __Write Data Files__
 ```{r write_files}
 
-write_files <- function() {
+write_files <- function(LogFileName, groupsdf, varsdf, unitsdf, valuesdf, final_data) {
   print("function: write_files")
-# write out a text file that Excel can read
-# CleanDataFile <- "licor_data_cleaned_UTF-8.txt"
-CleanDataFile <- paste("cleaned_UTF-8", LogFileName, sep = '_')
-CleanOutput <- paste(DATACLEAN, CleanDataFile, sep = '')
-write_csv(groupsdf, CleanOutput, append = FALSE, col_names = FALSE)
-write_csv(varsdf, CleanOutput, append = TRUE, col_names = FALSE)
-write_csv(unitsdf, CleanOutput, append = TRUE, col_names = FALSE)
-write_csv(valuesdf, CleanOutput, append = TRUE, col_names = FALSE)
-
-SelectedDataFile <- paste("selected", LogFileName, sep = '_')
-# SelectedDataFile <- "selected_licor_data.csv"
-SelectedOutput <- paste(DATACLEAN, SelectedDataFile, sep = '')
-write_csv(final_data, SelectedOutput, append = FALSE, col_names = TRUE)
+  # write out a text file that Excel can read
+  # this file keep LICOR units in UTF-8 with special characters
+  CleanDataFile <- paste("cleaned_UTF-8", LogFileName, sep = '_')
+  CleanDataFile <- paste(CleanDataFile, "csv", sep = '.')
+  CleanOutput <- paste(DATACLEAN, CleanDataFile, sep = '')
+  write_csv(groupsdf, CleanOutput, append = FALSE, col_names = FALSE)
+  write_csv(varsdf, CleanOutput, append = TRUE, col_names = FALSE)
+  write_csv(unitsdf, CleanOutput, append = TRUE, col_names = FALSE)
+  write_csv(valuesdf, CleanOutput, append = TRUE, col_names = FALSE)
+  
+  SelectedDataFile <- paste("selected", LogFileName, sep = '_')
+  SelectedDataFile <- paste(SelectedDataFile, "csv", sep = '.')
+  SelectedOutput <- paste(DATACLEAN, SelectedDataFile, sep = '')
+  write_csv(final_data, SelectedOutput, append = FALSE, col_names = TRUE)
 }
 
 ```
@@ -317,7 +324,7 @@ main <- function(LogFileName) {
   # LogFileName <- "2023-11-15-1148_logdata"
   
   LogFullFileName <- paste(DATARAW, LogFileName, sep = '')
-
+  
   output <- load_data_chunks(LogFullFileName, LogFileName)
   # print(paste("output: ", head(output[[4]][,1])))
   
@@ -329,11 +336,16 @@ main <- function(LogFileName) {
   valuesdf <- data.frame(do.call('rbind',strsplit(as.character(output[[4]][,1]),'\t',fixed=TRUE)))
   # print(paste("varsdf: ",varsdf))
   
-
+  
   # LICOR variable names are not unique, add the group as a suffix to fix it
   full_field_list <- paste(groupsdf[1,], varsdf[1,], sep = "_")
-  # LICOR variable names may contain spaces, replace with hyphens
+  
+  # LICOR variable names may contain spaces and other UTF-8 special characters
+  # replace them with appropriate values for raw data handling
   full_field_list <- str_replace_all(full_field_list, " ", "_")
+  # full_field_list <- str_replace_all(full_field_list, "/", "_div_")
+  # full_field_list <- str_replace_all(full_field_list, "'", "_prime_")
+
 
   # df that need to have column names set to cleaned up field lists
   colnames(valuesdf) <- full_field_list
@@ -350,28 +362,31 @@ main <- function(LogFileName) {
   select_field_list <- paste(select_field_list[1,], select_field_list[2,], sep = "_")
   # LICOR variable names may contain spaces, replace with hyphens
   select_field_list <- str_replace_all(select_field_list, " ", "_")
-
+  
   
   # create a set of data that the user specified in select_field_list
   final_data <- valuesdf %>% select(any_of(select_field_list))
   
   
   # write data ----------------------------
-  # write out a text file that Excel can read
-  # CleanDataFile <- "licor_data_cleaned_UTF-8.txt"
-  CleanDataFile <- paste("cleaned_UTF-8", LogFileName, sep = '_')
-  CleanOutput <- paste(DATACLEAN, CleanDataFile, sep = '')
-  write_csv(groupsdf, CleanOutput, append = FALSE, col_names = FALSE)
-  write_csv(varsdf, CleanOutput, append = TRUE, col_names = FALSE)
-  write_csv(unitsdf, CleanOutput, append = TRUE, col_names = FALSE)
-  write_csv(valuesdf, CleanOutput, append = TRUE, col_names = FALSE)
+  write_files(LogFileName, groupsdf, varsdf, unitsdf, valuesdf, final_data)
   
-  SelectedDataFile <- paste("selected", LogFileName, sep = '_')
-  # SelectedDataFile <- "selected_licor_data.csv"
-  SelectedOutput <- paste(DATACLEAN, SelectedDataFile, sep = '')
-  write_csv(final_data, SelectedOutput, append = FALSE, col_names = TRUE)  
   
-  }
+  # # write out a text file that Excel can read
+  # # CleanDataFile <- "licor_data_cleaned_UTF-8.txt"
+  # CleanDataFile <- paste("cleaned_UTF-8", LogFileName, sep = '_')
+  # CleanOutput <- paste(DATACLEAN, CleanDataFile, sep = '')
+  # write_csv(groupsdf, CleanOutput, append = FALSE, col_names = FALSE)
+  # write_csv(varsdf, CleanOutput, append = TRUE, col_names = FALSE)
+  # write_csv(unitsdf, CleanOutput, append = TRUE, col_names = FALSE)
+  # write_csv(valuesdf, CleanOutput, append = TRUE, col_names = FALSE)
+  # 
+  # SelectedDataFile <- paste("selected", LogFileName, sep = '_')
+  # # SelectedDataFile <- "selected_licor_data.csv"
+  # SelectedOutput <- paste(DATACLEAN, SelectedDataFile, sep = '')
+  # write_csv(final_data, SelectedOutput, append = FALSE, col_names = TRUE)  
+  
+}
 ```
 
 
