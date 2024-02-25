@@ -16,12 +16,19 @@ format:
     fig-height: 5
 ---
 
-# Run 01_wrangle_LICOR_logs.qmd first!
+# Combine Cleaned *Selected* Files
+
+## NOTE: Run 01_wrangle_LICOR_logs.qmd first!
+
+*Files are encoded using UTF-8*
+
+Paths used in this script are absolute. They are generated using the function **here()** combined with the code's relative paths defined as constants.
+
+Field names were created by concatenating the LICOR data Group name with the Variable name with a hyphen as a delimiter.
+
 ```{r setup, include=FALSE}
 #| echo: false
 
-# #| tags: [parameters]
-# names = "test"
 
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
@@ -44,43 +51,99 @@ DATAUSER <- here("data_user//")
 
 ```
 
-```{r load_selected_data}
-main <- function(LogFileName, cleandf) {
-  
-  # constants to data paths
-  DATARAW <- here("data_raw//")
-  DATACLEAN <- here("data_clean//")
-  DATAUSER <- here("data_user//")
+## Function: add_selected_file()
 
-  SelectedFilename <- paste(DATACLEAN, LogFileName, sep = "")
-  print(SelectedFilename)
+Read and add the contents of a *LogFileName* to the destination *cleandf* data frame.
+
+```{r load_selected_data}
+add_selected_file <- function(LogFileName, cleandf) {
   
-   SelectedData <- read_csv(SelectedFilename, 
-                                col_names = TRUE, 
-                                # n_max = 2,
-                                show_col_types = FALSE) 
+  SelectedFilename <- paste(DATACLEAN, LogFileName, sep = "")
+  # print(SelectedFilename)
+  
+  SelectedData <- read_csv(SelectedFilename, 
+                           col_names = TRUE, 
+                           show_col_types = FALSE) 
   cleandf <- rbind(cleandf, SelectedData)
   return(cleandf)
   
 }
 ```
 
+## MAIN
+
+## 1) Aggregate all the files that were pre-processed and have a prefix of "selected\_"
+
+Files are selected in the folder specified by **DATACLEAN** using a pattern of **"\^selected\_"** and appended to a common data frame called *cleandf*.
+
+## 2) Generate an Empty Leaf Identification File
+
+In the `DATAUSER` directory, a new CSV file named `REMOVE_PREFIX_THEN_EDIT_leaf_identification.csv` is created, containing the columns for manual input of data that is not contained in the original LICOR data. Leaf identification information needs to be manually added, such as the elevation of the tree and the leaf type (`Treatment`, `Control`, `Reference`, and others as users wish to assign them).
+
+**NOTE:** This CSV file is overwritten every time this script is run to reflect any data changes. The file prefix `REMOVE_PREFIX_THEN_EDIT_` must be removed before editing. Keep this new file, l`eaf_identification.csv`, manually up to date to contain all of the non-LICOR information. This file will be used in future operations. The user is responsible for ensuring all information is accurate and filled in with the correct data. `NA` is allowed for unknown information.
+
+The following columns are provided for the identification of information and to create a unique key to any group of data.
+
+`Filenames_filename, Data_group, Data_remarks, Data_plant_id, Data_leaftype`
+
+`Filenames_filename` - the original LICOR text log filename.
+
+`Data_group` - the group number that corresponds to the *\[Data\]* block within the LICOR text log file.
+
+`Data_remarks` - the remarks found in the `Data_group` within the `Filenames_filename`
+
+`Data_plant_id`a - user-defined value to identify a unique plant in the experiment
+
+`Data_leaftype` - is a user-defined value to identify the leaf on the plant used for LICOR readings. These need not be unique and will be averaged per `Data_group` and `Filenames_filename` into a single value for future processing. `Treatment`, `Control`, and `Reference` should exist for each group of readings for each plant in the experiment. Additional values can be assigned for leaves that are not explicitly part of the experiment.
 
 ```{r main}
 
+# __Aggregate all the files that were pre-processed and have a prefix of "selected_"__  
 # only work with the clean data that has the selected fields
-FileList <- list.files("data_clean", pattern = "^selected_")
+FileList <- list.files(DATACLEAN, pattern = "^selected_")
 cleandf <- data.frame()
 
 for (FileName in FileList) {
   # print(FileName)
-  cleandf <- main(FileName, cleandf)
+  cleandf <- add_selected_file(FileName, cleandf)
 }
 
-write_csv(cleandf, here(paste(DATAUSER,"combined_selected_log_data.csv", sep = "")), append = FALSE, col_names = TRUE)
 
-write_csv(cleandf[,1:6], here(paste(DATAUSER,"REMOVE_PREFIX_THEN_EDIT_leaf_identification.csv", sep = "")), append = FALSE, col_names = TRUE)
+# store off all of the combined data
+write_csv(cleandf, here(paste(DATAUSER,"combined_selected_log_data.csv",sep = "")), 
+          append = FALSE, 
+          col_names = TRUE)
 
 ```
 
+## Generate Final Data for Analysis
 
+`cleandf` and `leaf_identification.csv` are combined back into a single CSV file named `final_raw_data.csv`.
+
+NOTE: If the file structure changes in any way in `01_wrangle_LICOR_logs.qmd`, this code needs to be verified it still captures all columns. Change indexes and needed.
+
+```{r leaf_data}
+
+# __Generate an Empty Leaf Identification File__   
+# store off the first columns of the combined data to generate a file
+# used for manual identification of information that is not contained 
+# within the LICOR data  
+# NOTE: this file is generated every time, any edits will be lost
+write_csv(cleandf[,1:6], here(paste(DATAUSER,"REMOVE_PREFIX_THEN_EDIT_leaf_identification.csv", sep = "")), 
+          append = FALSE, 
+          col_names = TRUE)
+
+#__Combine leaf_identification.csv wit the cleandf__
+# add in the leaf identification information that the user has entered.
+leafdf <- read_csv(paste(DATAUSER,"leaf_identification.csv", sep = ""), 
+                   col_names = TRUE, 
+                   show_col_types = FALSE) 
+
+leafdf <- cbind(cleandf[,1:3], leafdf[,4:5], cleandf[,6:ncol(cleandf)])
+
+write_csv(leafdf, here(paste(DATAUSER,"final_raw_data.csv", sep = "")), 
+          append = FALSE, 
+          col_names = TRUE)
+
+
+```
