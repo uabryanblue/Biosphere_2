@@ -58,7 +58,9 @@ plot_plant_line <- function(finaldata, plantid, fname, plantvar) {
                           finaldata$Data_leaftype == "Control" |
                           finaldata$Data_leaftype == "Reference")
                      , ]
-
+  
+if (nrow(plant) > 0) {
+  
 plot <- ggplot() +
     # geom_point(data = final_data, 
     geom_line(data=plant, 
@@ -71,14 +73,17 @@ plot <- ggplot() +
     ggtitle(paste("LICOR Test Graph ", fname)) +
     xlab("SysObs_obs") +
     ylab(plantvar) +
-    scale_y_continuous(limits=c(0.0, 0.2), breaks=c(0, 0.1, 0.2, 0.5))   +
+    # scale_y_continuous(limits=c(0.0, 0.2), breaks=c(0, 0.1, 0.2, 0.5))   +
     # scale_x_datetime(date_labels = ("%M:%S"),
     #     date_breaks = "10 sec",  expand = expansion(0)) +
     theme(axis.text.x=element_text(angle=60, hjust=1))
-  
+}  
 return(plot)
 
 
+
+  
+  
 # ggplot(plant, aes(x = SysObs_obs , y = GasEx_gsw, color = Data_leaftype)) + 
 #   geom_boxplot(outlier.colour="red",
 #                 outlier.size=4) +
@@ -100,12 +105,12 @@ ggplot(plant, aes(x = SysObs_obs , y = get(plantvar), color = Data_leaftype)) +
 
 }
 
-# ggplot() +
-#     # geom_point(data = final_data, 
-#     geom_point(data=subset(final_data, data_group=="group1"), 
-#                aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
-#     # geom_line(data = final_data, aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
-#     # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+ggplot() +
+    # geom_point(data = final_data,
+    geom_point(data=subset(final_data, data_group=="group1"),
+               aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
+    # geom_line(data = final_data, aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
 #     # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
 #     # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
 #     # geom_line(data = final_data, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
@@ -127,98 +132,49 @@ finaldata <- read_csv(paste(DATAUSER,"final_raw_data.csv", sep = ""),
                       col_names = TRUE, 
                       show_col_types = FALSE) 
 
-  myplot <- plot_plant_line(finaldata, 2,  "2023-11-17-1144_logdata-tc-heat", "GasEx_gsw")
-print(myplot)
-
+# RAW DATA PLOTS
 for (FileName in unique(finaldata$Filenames_filename)) {
-  # print(paste("Generate Plot: ", FileName, " PlantID: ", finaldata[finaldata$Filenames_filename==FileName,]$Data_plant_id))
+  # print(paste("Generate Plot: ", FileName, " PlantID: ", 
   print(FileName)
   # plot one days readings as a line chart
-  41
-# 2023-11-17-1144_logdata-tc-heat
-
-  # myplot <- plot_plant_line(finaldata, 2, FileName, "GasEx_A")
+  myplot <- plot_plant_line(finaldata, finaldata[finaldata$Filenames_filename==FileName,]$Data_plant_id, FileName, "GasEx_A")
   print(myplot)
-  # plot_plant_line(finaldata, finaldata[finaldata$Filenames_filename==FileName,]$Data_plant_id, FileName)
   
+# mean(finaldata[finaldata$Filenames_filename == "2023-11-22-1138_logdata" & finaldata$Data_leaftype == "Treatment",]$GasEx_A)
+
+  i = 0
+  av <- data.frame(matrix(ncol = 5, nrow = 0))
+  colnames(av) <- c('filename', 'mRef', 'mTrt', 'mCnt', 'index')
+
+  for (FileName in unique(finaldata$Filenames_filename)) {
+    i = i + 1
+    # plant <- finaldata[finaldata$Filenames_filename == FileName ,]
+    
+    mr <- mean(finaldata[finaldata$Filenames_filename == FileName & finaldata$Data_leaftype == "Reference",]$GasEx_gsw)
+    mt <- mean(finaldata[finaldata$Filenames_filename == FileName & finaldata$Data_leaftype == "Treatment",]$GasEx_gsw)
+    mc <- mean(finaldata[finaldata$Filenames_filename == FileName & finaldata$Data_leaftype == "Control",]$GasEx_gsw)
+
+    # add in all the averages from each unique set of readings
+    av[nrow(av) + 1,] = c(FileName, mr, mt, mc, i)
+  }
+
 }
 
-```
+av <- type.convert(av, as.is = TRUE) 
+# av <- na.omit(av)
 
-
-```{r}
-# ggplot() +
-#     # geom_point(data = plant1, 
-#     geom_point(data=plant1, 
-#                aes(x = SysObs_obs, y = GasEx_gsw, color = "GasEx_gsw")) +
-#     # geom_line(data = final_data, aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
-#     # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-#     # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-#     # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-#     # geom_line(data = final_data, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
-#     ggtitle("LICOR Test Graph - GasEx gsw - TREATMENT LEAF") +
-#     xlab("SysObs_date") +
-#     ylab("GasEx_gsw") +
-#     scale_y_continuous(limits=c(0.0, 0.2), breaks=c(0, 0.1, 0.2, 0.5)) +
-#     scale_x_datetime(date_labels = ("%M:%S"),
-#         date_breaks = "10 sec",  expand = expansion(0)) +
-#     theme(axis.text.x=element_text(angle=60, hjust=1))
-#     # 
-#   
-#       # scale_x_datetime(labels=date_format("%b %y"))
-#     #   date_breaks = "6 hours",  expand = expansion(0)) +
-#     
-#     # theme(axis.text.x=element_text(angle=60, hjust=1))
-# 
-# final_data['data_remarks'][final_data['data_remarks'] == '12:21:19 lvl3 ref'] <- 'Reference'
-# final_data['data_remarks'][final_data['data_remarks'] == '12:07:55 lvl3 ctrl'] <- 'Control'
-# final_data['data_remarks'][final_data['data_remarks'] == '12:30:05 lvl3 trt'] <- 'Treatment'
-# # 11:34:16 lvl2_trt
-# 
-# ggplot(plant1, aes(x = Data_group , y = GasEx_gsw, color = Data_leaftype)) + 
-#   geom_boxplot(outlier.colour="red",
-#                 outlier.size=4) +
-#   ggtitle("LICOR GasEx gsw - 2024-02-14-1206_logdata_ca_heat_lvl3") +
-#     xlab("Leaf") +
-#     ylab("GasEx_gsw") 
-# 
-# ggplot(final_data, aes(x = data_remarks , y = GasEx_A, color = data_remarks)) + 
-#   geom_boxplot(outlier.colour="red",
-#                 outlier.size=4) +
-#   ggtitle("LICOR GasEx A - 2024-02-14-1206_logdata_ca_heat_lvl3") +
-#     xlab("Leaf") +
-#     ylab("GasEx_A") 
-# 
-# ggplot(final_data, aes(x = data_remarks , y = Meas_Tleaf, color = data_remarks)) + 
-#   geom_boxplot(outlier.colour="red",
-#                 outlier.size=4) +
-#   ggtitle("LICOR Meas Tleaf - 2024-02-14-1206_logdata_ca_heat_lvl3") +
-#     xlab("Leaf") +
-#     ylab("Meas_Tleaf") 
-# 
-# ggplot(final_data, aes(x = data_remarks , y = GasEx_VPDleaf, color = data_remarks)) + 
-#   geom_boxplot(outlier.colour="red",
-#                 outlier.size=4) +
-#   ggtitle("LICOR GasEx VPDleaf - 2024-02-14-1206_logdata_ca_heat_lvl3") +
-#     xlab("Leaf") +
-#     ylab("GasEx_VPDleaf") 
-# 
-# ggplot(final_data, aes(x = data_remarks , y = `FLR_Fv'/Fm'`, color = data_remarks)) + 
-#   geom_boxplot(outlier.colour="red",
-#                 outlier.size=4) +
-#   ggtitle("LICOR `FLR Fv'/Fm'` - 2024-02-14-1206_logdata_ca_heat_lvl3") +
-#     xlab("Leaf") +
-#     ylab("FLR_Fv'/Fm'") 
-# 
-# ggplot(final_data, aes(x = data_remarks , y = "GasEx_A", color = data_remarks)) + 
-#   geom_boxplot(outlier.colour="red",
-#                 outlier.size=4) +
-#   ggtitle("LICOR GasEx_A - 2024-02-14-1206_logdata_ca_heat_lvl3") +
-#     xlab("Leaf") +
-#     ylab("GasEx_A") 
-# 
-# # ggplot(final_data, aes(x=dose, y=len)) +
-# #   geom_boxplot(outlier.colour="red", outlier.shape=8,
-# #                 outlier.size=4)
+ggplot() +
+    geom_line(data = av, aes(x = index, y = mRef, color = "Reference")) +
+    geom_line(data = av, aes(x = index, y = mTrt, color = "Treatment")) +
+    geom_line(data = av, aes(x = index, y = mCnt, color = "Control")) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
+    ggtitle("LICOR Test mean Graph - A") +
+    xlab("index") +
+    ylab("A avg")
 
 ```
+
+
