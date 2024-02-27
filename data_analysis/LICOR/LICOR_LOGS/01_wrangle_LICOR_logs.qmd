@@ -173,7 +173,96 @@ load_data_chunks <- function(OutFile, OutFileName) {
   return(list(dataGroups, dataUnits, dataVars, dataLines))
   
 }
+```
+https://www.reneshbedre.com/blog/find-outliers.html
 
+## Example IQR
+x = c(10,4,6,8,9,8,7,6,12,14,11,9,8,4,5,10,14,12,15,7,10,14,24,28)
+
+# get values of Q1, Q3, and IQR
+summary(x)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   4.00    7.00    9.50   10.62   12.50   28.00 
+
+# get IQR
+IQR(x)
+[1] 5.5
+
+# get threshold values for outliers
+Tmin = 7-(1.5*5.5) 
+Tmax = 12.50+(1.5*5.5) 
+
+# find outlier
+x[which(x < Tmin | x > Tmax)]
+[1] 24 28
+
+# remove outlier
+x[which(x > Tmin & x < Tmax)]
+[1] 10  4  6  8  9  8  7  6 12 14 11  9  8  4  5 10 14 12 15  7 10 14
+
+
+```{r remove_outliers}
+remove_outliers <- function(raw_data, FileName) {
+
+  # FileName = "2024-02-21-1317_logdata_lvl3"
+  # raw_data = maindf[[4]]
+# daydata <- raw_data[raw_data$Filenames_filename==FileName,]$Data_group
+  
+groups <- unique(raw_data$Data_group)
+
+  
+   for (gr in groups) {
+  
+  write_csv(filter(raw_data, (Filenames_filename == FileName & Data_group == gr & GasEx_A < 0)), 
+            paste(DATAUSER, "outliers.csv"), 
+            append = TRUE, 
+            col_names = FALSE)
+  raw_data <- filter(raw_data, !(Filenames_filename == FileName & Data_group == gr & GasEx_A <= 0))
+  
+ 
+
+  
+  # tmp <- raw_data[raw_data$Filenames_filename == FileName & raw_data$Data_group == "group1",]  # retains NA  
+  tmp <- filter(raw_data, Filenames_filename == FileName & Data_group == gr) # does not retain NA
+  x <- tmp[,"GasEx_A"]
+  # x = c(10,4,6,8,9,8,7,6,12,14,11,9,8,4,5,10,14,12,15,7,10,14,24,28)
+  
+  # get values of Q1, Q3, and IQR
+  
+  sm <- summary(x, digits = 8)
+  
+  # get IQR
+  thresh <- IQR(x)
+  
+  Tmin = sm[2] - (1.5 * thresh) 
+  Tmax = sm[5] + (1.5 * thresh) 
+  
+  # find outlier
+  newlist <- x[which(x < Tmin | x > Tmax)]
+  newlist
+  
+  # remove outlier
+  rmout <- x[which(x > Tmin & x < Tmax)]
+  rmout
+  
+  write_csv(filter(raw_data, (Filenames_filename == FileName & Data_group == gr & GasEx_A == newlist[1])), paste(DATAUSER, "outliers.csv"), 
+            append = TRUE, 
+            col_names = FALSE)
+  
+  raw_data <- filter(raw_data, !(Filenames_filename == FileName & Data_group == gr & GasEx_A == newlist[1])) # does not retain NA
+  raw_data
+}
+
+return(raw_data)
+}
+
+```
+
+
+
+
+
+```{r functions}
 # manipulate the data in valsdf using these varsdf column names
 # special manipulations should go here
 # normal rounding and formatting dates are common manipulations
@@ -258,6 +347,7 @@ select_data <- function(groupsdf, varsdf) {
 }
 
 ```
+
 __Write Data Files__
 ```{r write_files}
 
@@ -322,7 +412,7 @@ build_select_fieldlist <- function(groupsdf, varsdf) {
 ```
 
 __Processing Data from data_raw folder__  
-```{r load_files}
+```{r main}
 main <- function(LogFileName) {
   print("function: main()")
   
@@ -336,6 +426,8 @@ main <- function(LogFileName) {
   output <- load_data_chunks(LogFullFileName, LogFileName)
   # print(paste("output: ", head(output[[4]][,1])))
   
+
+  
   # output contains tabular data broken into the group, units, var names, and values
   # break them into their own tables for further use
   groupsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[1]]),'\t',fixed=TRUE)))
@@ -343,8 +435,7 @@ main <- function(LogFileName) {
   varsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[3]]),'\t',fixed=TRUE)))
   valuesdf <- data.frame(do.call('rbind',strsplit(as.character(output[[4]][,1]),'\t',fixed=TRUE)))
   # print(paste("varsdf: ",varsdf))
-  
-  
+
   # LICOR variable names are not unique, add the group as a suffix to fix it
   full_field_list <- paste(groupsdf[1,], varsdf[1,], sep = "_")
 
@@ -360,9 +451,20 @@ main <- function(LogFileName) {
   colnames(unitsdf) <- full_field_list
   
   # set the proper variable types
-  # LI-COR data has values that are not consistent in number of sig digits
+  # LICOR data has values that are not consistent in number of sig digits
   # inconsistent such as seconds appear as partial and full seconds in the same column
+  # convert all fields that can be converted to the correct type based on the data
+  # TODO is type.convert() the best answer for global type updates?
+  ############################
+  # valuesdf <- type.convert(valuesdf, as.is = TRUE, numerals = "allow.loss") 
+  # override of any types that may not convert as expected
   valuesdf <- fix_types(valuesdf)
+  
+  
+  # TODO this function needs implemented ----------------------------
+  # valuesdf <- remove_outliers(valuesdf, LogFileName)
+  # NOT WORKING, TOO MANY ARE FLAGGED
+  
   
   # create select list of groups and variables of interest
   select_field_list <- build_select_fieldlist(groupsdf, varsdf)
@@ -375,16 +477,16 @@ main <- function(LogFileName) {
   # create a set of data that the user specified in select_field_list
   final_data <- valuesdf %>% select(any_of(select_field_list))
   
-  
-  # write data ----------------------------
+  # write data
   write_files(LogFileName, groupsdf, varsdf, unitsdf, valuesdf, final_data)
 
-  
+  return(list(groupsdf, varsdf, unitsdf, valuesdf, final_data))
 }
 ```
 
 
 ```{r process_files}
+
 
 # NOTE LICOR logs default to start with the date "YYYY-MM-DD"
 # this ensures only these files are read
@@ -393,7 +495,15 @@ FileList <- list.files(DATARAW, pattern = "^[0-9]{4}-[0-9]{2}-[0-9]{2}")
 
 for (FileName in FileList) {
   print(FileName)
-  main(FileName)
+  maindf <- main(FileName)
+  
+  # maindf contains the final results if anything is needed
+  # groupsdf, varsdf, unitsdf, valuesdf, final_data
+  # 1 - groupsdf
+  # 2 - units
+  # 3 - varsdf
+  # 4 - valuesdf
+  # 5 - final_data (selected data df)
 }
 ```
 
