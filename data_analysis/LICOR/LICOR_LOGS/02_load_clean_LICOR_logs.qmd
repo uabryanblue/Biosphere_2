@@ -139,9 +139,17 @@ leafdf <- read_csv(paste(DATAUSER,"leaf_identification.csv", sep = ""),
                    col_names = TRUE, 
                    show_col_types = FALSE) 
 
-leafdf <- cbind(cleandf[,1:3], leafdf[,4:5], cleandf[,6:ncol(cleandf)])
 
-write_csv(leafdf, here(paste(DATAUSER,"final_raw_data.csv", sep = "")), 
+# leafdf <- cbind(cleandf[,1:3], leafdf[,4:5], cleandf[,6:ncol(cleandf)])
+# newdf <-left_join(cleandf, leafdf, by = c('Filenames_filename', 'Data_group', 'Data_remarks', 'SysObs_obs'))
+# newdf <-right_join(leafdf, cleandf, by = c('Filenames_filename', 'Data_group', 'SysObs_obs'))
+# newdf <-left_join(leafdf, cleandf, by = c('Filenames_filename', 'Data_group', 'SysObs_obs'))
+
+newdf <-inner_join(leafdf, cleandf, by = c('Filenames_filename', 'Data_group', 'SysObs_obs'))
+ # newdf <-inner_join(leafdf, cleandf, by = c('Filenames_filename', 'Data_group'='Data_group', 'SysObs_obs'))
+
+
+write_csv(newdf, here(paste(DATAUSER,"final_raw_data.csv", sep = "")), 
           append = FALSE, 
           col_names = TRUE)
 
