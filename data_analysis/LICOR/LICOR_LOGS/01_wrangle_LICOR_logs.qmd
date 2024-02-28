@@ -37,9 +37,9 @@ here::here()
 # https://www.regextester.com/ for regex checking
 
 # constants to data paths
-DATARAW <- here("data_raw//")
-DATACLEAN <- here("data_clean//")
-DATAUSER <- here("data_user//")
+DATARAW <- here("data_raw/")
+DATACLEAN <- here("data_clean/")
+DATAUSER <- here("data_user/")
 
 
 ```
