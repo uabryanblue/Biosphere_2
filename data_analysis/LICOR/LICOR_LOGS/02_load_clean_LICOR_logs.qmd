@@ -65,6 +65,7 @@ add_selected_file <- function(LogFileName, cleandf) {
                            col_names = TRUE, 
                            show_col_types = FALSE) 
   cleandf <- rbind(cleandf, SelectedData)
+  
   return(cleandf)
   
 }
@@ -140,13 +141,17 @@ leafdf <- read_csv(here(DATAUSER, "input", "leaf_identification.csv"),
                    show_col_types = FALSE) 
 
 
-# leafdf <- cbind(cleandf[,1:3], leafdf[,4:5], cleandf[,6:ncol(cleandf)])
-# newdf <-left_join(cleandf, leafdf, by = c('Filenames_filename', 'Data_group', 'Data_remarks', 'SysObs_obs'))
-# newdf <-right_join(leafdf, cleandf, by = c('Filenames_filename', 'Data_group', 'SysObs_obs'))
-# newdf <-left_join(leafdf, cleandf, by = c('Filenames_filename', 'Data_group', 'SysObs_obs'))
-
 newdf <-inner_join(leafdf, cleandf, by = c('Filenames_filename', 'Data_group', 'SysObs_obs'))
- # newdf <-inner_join(leafdf, cleandf, by = c('Filenames_filename', 'Data_group'='Data_group', 'SysObs_obs'))
+
+# join causes duplication of column names
+# colmun names with ".y" are kept
+names(newdf)[names(newdf)=="Data_plant_id.x"] <- "Data_plant_id"
+names(newdf)[names(newdf)=="Data_leaftype.x"] <- "Data_leaftype"
+names(newdf)[names(newdf)=="Data_remarks.x"] <- "Data_remarks"
+# column names with ".x" are removed as they do not contain data
+newdf[,"Data_remarks.y"] <- NULL
+newdf[,"Data_plant_id.y"] <- NULL
+newdf[,"Data_leaftype.y"] <- NULL
 
 
 write_csv(newdf, here(DATAUSER,"final_raw_data.csv"), 
