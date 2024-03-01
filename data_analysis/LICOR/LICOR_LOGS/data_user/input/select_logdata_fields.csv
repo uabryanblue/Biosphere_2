@@ -1,0 +1,3 @@
+﻿SysObs,SysObs,SysObs,SysObs,SysObs,GasEx,GasEx,GasEx,GasEx,GasEx,GasEx,GasEx,GasEx,GasEx,FLR,FLR,FLR,FLR,FLR,FLR,LeafQ,Meas,Meas,Meas,Meas
+obs,time,elapsed,date,hhmmss,Emm,A,Ca,Ci,gsw,TleafCnd,RHcham,VPcham,VPDleaf,Fv/Fm,A_dark,A_fs,ETR,NPQ,Fv'/Fm',Qin,CO2_r,Pa,Tair,Tleaf
+,s,s,,,mmol m⁻² s⁻¹,µmol m⁻² s⁻¹,µmol mol⁻¹,µmol mol⁻¹,mol m⁻² s⁻¹,°C,%,kPa,kPa,,µmol m⁻² s⁻¹,µmol m⁻² s⁻¹,µmol m⁻² s⁻¹,,,µmol m⁻² s⁻¹,µmol mol⁻¹,kPa,°C,°C
