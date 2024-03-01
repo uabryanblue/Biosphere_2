@@ -37,7 +37,7 @@ here::here()
 # https://www.regextester.com/ for regex checking
 
 # constants to data paths
-DATARAW <- "data_raw" # file.path(here("data_raw/"))
+DATARAW <- "data_raw"
 DATACLEAN <- "data_clean"
 DATAUSER <- "data_user"
 
