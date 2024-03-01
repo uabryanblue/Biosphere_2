@@ -32,16 +32,10 @@ here::here()
 # https://www.regextester.com/ for regex checking
 
 # constants to data paths
-<<<<<<< HEAD
 DATARAW <- "data_raw" 
 DATACLEAN <- "data_clean"
 DATAUSER <- "data_user"
 
-=======
-DATARAW <- here("data_raw/")
-DATACLEAN <- here("data_clean/")
-DATAUSER <- here("data_user/")
->>>>>>> 92db21d52c853555ba591fb015319cb73491590e
 ```
 
 
@@ -140,7 +134,7 @@ finaldata <- read_csv(here(DATAUSER,"final_raw_data.csv"),
                       col_names = TRUE, 
                       show_col_types = FALSE) 
 
-finaldata <- rename(finaldata,c("Data_remarks" = "Data_remarks.x", "Data_plant_id" = "Data_plant_id.x", "Data_leaftype" = "Data_leaftype.x"))
+# finaldata <- rename(finaldata,c("Data_remarks" = "Data_remarks.x", "Data_plant_id" = "Data_plant_id.x", "Data_leaftype" = "Data_leaftype.x"))
 
 # finaldata <- type.convert(finaldata) 
 # finaldata[finaldata < 0] <- NA
@@ -159,7 +153,6 @@ for (FileName in unique(finaldata$Filenames_filename)) {
   myplot <- plot_plant_line(finaldata, finaldata[finaldata$Filenames_filename==FileName,]$Data_plant_id, FileName, "GasEx_A")
   print(myplot)
   
-# mean(finaldata[finaldata$Filenames_filename == "2023-11-22-1138_logdata" & finaldata$Data_leaftype == "Treatment",]$GasEx_A)
 
   i = 0
   av <- data.frame(matrix(ncol = 5, nrow = 0))
@@ -295,11 +288,7 @@ ggplot() +
   
   all2
 
-  
-    p3 <- filter(finaldata, Data_plant_id == 3 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
-    
-<<<<<<< HEAD
-=======
+ 
   p2 <- filter(finaldata, Data_plant_id == 2 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
     
 
@@ -324,8 +313,7 @@ ggplot() +
 
   
     p3 <- filter(finaldata, Data_plant_id == 3 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
-    
->>>>>>> 92db21d52c853555ba591fb015319cb73491590e
+
 
   all3 <-  ggplot() +
     # geom_line(data = av, aes(x = index, y = mRef, color = "Reference")) +
@@ -345,10 +333,7 @@ ggplot() +
     ylab("A")
   
   all3
-<<<<<<< HEAD
 
-=======
->>>>>>> 92db21d52c853555ba591fb015319cb73491590e
  
 ```
 
