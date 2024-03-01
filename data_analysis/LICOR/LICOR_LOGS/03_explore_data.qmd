@@ -32,10 +32,16 @@ here::here()
 # https://www.regextester.com/ for regex checking
 
 # constants to data paths
+<<<<<<< HEAD
 DATARAW <- "data_raw" 
 DATACLEAN <- "data_clean"
 DATAUSER <- "data_user"
 
+=======
+DATARAW <- here("data_raw/")
+DATACLEAN <- here("data_clean/")
+DATAUSER <- here("data_user/")
+>>>>>>> 92db21d52c853555ba591fb015319cb73491590e
 ```
 
 
@@ -292,6 +298,34 @@ ggplot() +
   
     p3 <- filter(finaldata, Data_plant_id == 3 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
     
+<<<<<<< HEAD
+=======
+  p2 <- filter(finaldata, Data_plant_id == 2 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
+    
+
+  all2 <-  ggplot() +
+    # geom_line(data = av, aes(x = index, y = mRef, color = "Reference")) +
+    # geom_line(data = av, aes(x = index, y = mTrt, color = "Treatment")) +
+    # geom_line(data = av, aes(x = index, y = mCnt, color = "Control")) +
+    geom_boxplot(data = p2, aes(x = SysObs_obs , y = GasEx_A, color = Data_leaftype)) +
+    # geom_point(data = finaldata, aes(x = index, y = mTrt, color = "Treatment")) +
+    # geom_point(data = finaldata, aes(x = index, y = mCnt, color = "Control")) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
+  # scale_y_continuous(limits=c(0.0, 12.0), breaks=c(0, 0.1, 0.2, 0.5)) +
+  scale_y_continuous(limits=c(0.0, 10)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
+    ggtitle("Test LICOR Level 2 Values Box Plot - A") +
+    xlab("index") +
+    ylab("A")
+  
+  all2
+
+  
+    p3 <- filter(finaldata, Data_plant_id == 3 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
+    
+>>>>>>> 92db21d52c853555ba591fb015319cb73491590e
 
   all3 <-  ggplot() +
     # geom_line(data = av, aes(x = index, y = mRef, color = "Reference")) +
@@ -311,7 +345,10 @@ ggplot() +
     ylab("A")
   
   all3
+<<<<<<< HEAD
 
+=======
+>>>>>>> 92db21d52c853555ba591fb015319cb73491590e
  
 ```
 
