@@ -35,6 +35,7 @@ here::here()
 DATARAW <- "data_raw" 
 DATACLEAN <- "data_clean"
 DATAUSER <- "data_user"
+
 ```
 
 
@@ -53,7 +54,6 @@ plot_plant_line <- function(finaldata, plantid, fname, plantvar) {
 
   plant <- finaldata[finaldata$Filenames_filename == fname &
                        finaldata$Data_plant_id == plantid &
-                       
                        (finaldata$Data_leaftype == "Treatment" |
                           finaldata$Data_leaftype == "Control" |
                           finaldata$Data_leaftype == "Reference")
@@ -133,6 +133,8 @@ NOTE: Look into these for help with graph layout
 finaldata <- read_csv(here(DATAUSER,"final_raw_data.csv"), 
                       col_names = TRUE, 
                       show_col_types = FALSE) 
+
+finaldata <- rename(finaldata,c("Data_remarks" = "Data_remarks.x", "Data_plant_id" = "Data_plant_id.x", "Data_leaftype" = "Data_leaftype.x"))
 
 # finaldata <- type.convert(finaldata) 
 # finaldata[finaldata < 0] <- NA
@@ -264,6 +266,52 @@ ggplot() +
     ylab("A")
  
   all
+
+  p2 <- filter(finaldata, Data_plant_id == 2 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
+    
+
+  all2 <-  ggplot() +
+    # geom_line(data = av, aes(x = index, y = mRef, color = "Reference")) +
+    # geom_line(data = av, aes(x = index, y = mTrt, color = "Treatment")) +
+    # geom_line(data = av, aes(x = index, y = mCnt, color = "Control")) +
+    geom_boxplot(data = p2, aes(x = SysObs_obs , y = GasEx_A, color = Data_leaftype)) +
+    # geom_point(data = finaldata, aes(x = index, y = mTrt, color = "Treatment")) +
+    # geom_point(data = finaldata, aes(x = index, y = mCnt, color = "Control")) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
+  # scale_y_continuous(limits=c(0.0, 12.0), breaks=c(0, 0.1, 0.2, 0.5)) +
+  scale_y_continuous(limits=c(0.0, 10)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
+    ggtitle("Test LICOR Level 2 Values Box Plot - A") +
+    xlab("index") +
+    ylab("A")
+  
+  all2
+
+  
+    p3 <- filter(finaldata, Data_plant_id == 3 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
+    
+
+  all3 <-  ggplot() +
+    # geom_line(data = av, aes(x = index, y = mRef, color = "Reference")) +
+    # geom_line(data = av, aes(x = index, y = mTrt, color = "Treatment")) +
+    # geom_line(data = av, aes(x = index, y = mCnt, color = "Control")) +
+    geom_boxplot(data = p3, aes(x = SysObs_obs , y = GasEx_A, color = Data_leaftype)) +
+    # geom_point(data = finaldata, aes(x = index, y = mTrt, color = "Treatment")) +
+    # geom_point(data = finaldata, aes(x = index, y = mCnt, color = "Control")) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
+    # geom_line(data = final_data, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
+  # scale_y_continuous(limits=c(0.0, 12.0), breaks=c(0, 0.1, 0.2, 0.5)) +
+  scale_y_continuous(limits=c(0.0, 10)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
+    ggtitle("Test LICOR Level 3 Values Box Plot - A") +
+    xlab("index") +
+    ylab("A")
+  
+  all3
+
  
 ```
 
