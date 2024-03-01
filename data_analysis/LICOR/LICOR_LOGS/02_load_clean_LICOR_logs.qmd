@@ -145,11 +145,12 @@ leafdf <- read_csv(here(DATAUSER, "input", "leaf_identification.csv"),
 newdf <-inner_join(leafdf, cleandf, by = c('Filenames_filename', 'Data_group', 'SysObs_obs'))
 
 # join causes duplication of column names
+newdf <- rename(newdf,c("Data_remarks" = "Data_remarks.x", "Data_plant_id" = "Data_plant_id.x", "Data_leaftype" = "Data_leaftype.x"))
 # colmun names with ".y" are kept
-names(newdf)[names(newdf)=="Data_plant_id.x"] <- "Data_plant_id"
-names(newdf)[names(newdf)=="Data_leaftype.x"] <- "Data_leaftype"
-names(newdf)[names(newdf)=="Data_remarks.x"] <- "Data_remarks"
-# column names with ".x" are removed as they do not contain data
+# names(newdf)[names(newdf)=="Data_plant_id.x"] <- "Data_plant_id"
+# names(newdf)[names(newdf)=="Data_leaftype.x"] <- "Data_leaftype"
+# names(newdf)[names(newdf)=="Data_remarks.x"] <- "Data_remarks"
+# # column names with ".x" are removed as they do not contain data
 newdf[,"Data_remarks.y"] <- NULL
 newdf[,"Data_plant_id.y"] <- NULL
 newdf[,"Data_leaftype.y"] <- NULL
