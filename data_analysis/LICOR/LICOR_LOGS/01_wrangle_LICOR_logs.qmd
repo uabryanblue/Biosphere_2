@@ -37,9 +37,9 @@ here::here()
 # https://www.regextester.com/ for regex checking
 
 # constants to data paths
-DATARAW <- here("data_raw//")
-DATACLEAN <- here("data_clean//")
-DATAUSER <- here("data_user//")
+DATARAW <- "data_raw" # file.path(here("data_raw/"))
+DATACLEAN <- "data_clean"
+DATAUSER <- "data_user"
 
 
 ```
@@ -203,7 +203,7 @@ x[which(x > Tmin & x < Tmax)]
 
 ```{r remove_outliers}
 remove_outliers <- function(raw_data, FileName) {
-
+# file.path(
   # FileName = "2024-02-21-1317_logdata_lvl3"
   # raw_data = maindf[[4]]
 # daydata <- raw_data[raw_data$Filenames_filename==FileName,]$Data_group
@@ -357,7 +357,8 @@ write_files <- function(LogFileName, groupsdf, varsdf, unitsdf, valuesdf, final_
   # this file keep LICOR units in UTF-8 with special characters
   CleanDataFile <- paste("cleaned_UTF-8", LogFileName, sep = '_')
   CleanDataFile <- paste(CleanDataFile, "csv", sep = '.')
-  CleanOutput <- paste(DATACLEAN, CleanDataFile, sep = '')
+  CleanOutput <- here(DATACLEAN, CleanDataFile)
+  
   write_csv(groupsdf, CleanOutput, append = FALSE, col_names = FALSE)
   write_csv(varsdf, CleanOutput, append = TRUE, col_names = FALSE)
   write_csv(unitsdf, CleanOutput, append = TRUE, col_names = FALSE)
@@ -365,7 +366,8 @@ write_files <- function(LogFileName, groupsdf, varsdf, unitsdf, valuesdf, final_
   
   SelectedDataFile <- paste("selected", LogFileName, sep = '_')
   SelectedDataFile <- paste(SelectedDataFile, "csv", sep = '.')
-  SelectedOutput <- paste(DATACLEAN, SelectedDataFile, sep = '')
+  SelectedOutput <- here(DATACLEAN, SelectedDataFile)
+  
   write_csv(final_data, SelectedOutput, append = FALSE, col_names = TRUE)
 }
 
@@ -382,7 +384,7 @@ build_select_fieldlist <- function(groupsdf, varsdf) {
   print("function: build_select_fieldlist()")
   
   SelectDataFile <- "select_logdata_fields.csv"
-  SelectInput <- paste(DATAUSER, SelectDataFile, sep = '')
+  SelectInput <- here(DATAUSER, "input", SelectDataFile)
   select_field_list <- read_csv(SelectInput, 
                                 col_names = FALSE, 
                                 n_max = 2,
@@ -421,7 +423,7 @@ main <- function(LogFileName) {
   # LogFileName <- FileList[1] # TODO !!!!!! testing with one file only !!!!!!
   # LogFileName <- "2023-11-15-1148_logdata"
   
-  LogFullFileName <- paste(DATARAW, LogFileName, sep = '')
+  LogFullFileName <- here(DATARAW, LogFileName)
   
   output <- load_data_chunks(LogFullFileName, LogFileName)
   # print(paste("output: ", head(output[[4]][,1])))

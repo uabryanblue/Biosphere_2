@@ -45,9 +45,9 @@ here::here()
 # https://www.regextester.com/ for regex checking
 
 # constants to data paths
-DATARAW <- here("data_raw//")
-DATACLEAN <- here("data_clean//")
-DATAUSER <- here("data_user//")
+DATARAW <- "data_raw" 
+DATACLEAN <- "data_clean"
+DATAUSER <- "data_user"
 
 ```
 
@@ -58,7 +58,7 @@ Read and add the contents of a *LogFileName* to the destination *cleandf* data f
 ```{r load_selected_data}
 add_selected_file <- function(LogFileName, cleandf) {
   
-  SelectedFilename <- paste(DATACLEAN, LogFileName, sep = "")
+  SelectedFilename <- here(DATACLEAN, LogFileName)
   # print(SelectedFilename)
   
   SelectedData <- read_csv(SelectedFilename, 
@@ -110,7 +110,7 @@ for (FileName in FileList) {
 
 
 # store off all of the combined data
-write_csv(cleandf, here(paste(DATAUSER,"combined_selected_log_data.csv",sep = "")), 
+write_csv(cleandf, here(DATAUSER,"combined_selected_log_data.csv"), 
           append = FALSE, 
           col_names = TRUE)
 
@@ -129,13 +129,13 @@ NOTE: If the file structure changes in any way in `01_wrangle_LICOR_logs.qmd`, t
 # used for manual identification of information that is not contained 
 # within the LICOR data  
 # NOTE: this file is generated every time, any edits will be lost
-write_csv(cleandf[,1:6], here(paste(DATAUSER,"REMOVE_PREFIX_THEN_EDIT_leaf_identification.csv", sep = "")), 
+write_csv(cleandf[,1:6], here(DATAUSER, "input", "REMOVE_PREFIX_THEN_EDIT_leaf_identification.csv"), 
           append = FALSE, 
           col_names = TRUE)
 
 #__Combine leaf_identification.csv wit the cleandf__
 # add in the leaf identification information that the user has entered.
-leafdf <- read_csv(paste(DATAUSER,"leaf_identification.csv", sep = ""), 
+leafdf <- read_csv(here(DATAUSER, "input", "leaf_identification.csv"), 
                    col_names = TRUE, 
                    show_col_types = FALSE) 
 
@@ -149,7 +149,7 @@ newdf <-inner_join(leafdf, cleandf, by = c('Filenames_filename', 'Data_group', '
  # newdf <-inner_join(leafdf, cleandf, by = c('Filenames_filename', 'Data_group'='Data_group', 'SysObs_obs'))
 
 
-write_csv(newdf, here(paste(DATAUSER,"final_raw_data.csv", sep = "")), 
+write_csv(newdf, here(DATAUSER,"final_raw_data.csv"), 
           append = FALSE, 
           col_names = TRUE)
 
