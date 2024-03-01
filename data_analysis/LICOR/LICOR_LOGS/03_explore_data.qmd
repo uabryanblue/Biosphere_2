@@ -221,7 +221,7 @@ ggplot() +
     ylab("A avg")
 
 
-  p <- filter(finaldata, Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference")
+  p <- filter(finaldata, Data_plant_id == 2 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
     
 
   all <-  ggplot() +
