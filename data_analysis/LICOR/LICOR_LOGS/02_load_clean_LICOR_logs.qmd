@@ -149,14 +149,20 @@ leafdf <- read_csv(here(DATAUSER, "input", "leaf_identification.csv"),
                    show_col_types = FALSE) 
 leafjoindf <-left_join(cleandf, leafdf, by = c('Filenames_filename', 'Data_group', 'SysObs_obs'))
 # join causes duplication of column names
-leafjoindf <- rename(leafjoindf,c("Data_remarks" = "Data_remarks.y", 
+leafjoindf <- rename(leafjoindf, c("Data_remarks" = "Data_remarks.x", 
                                   "Data_plant_id" = "Data_plant_id.y", 
-                                  "Data_leaftype" = "Data_leaftype.y"))
+                                  "Data_leaftype" = "Data_leaftype.y",
+                                  "SysObs_date" = "SysObs_date.x"))
 # colmun names with ".x" are kept
 # column names with ".y" are removed as they do not contain data
-leafjoindf[,"Data_remarks.x"] <- NULL
+leafjoindf[,"Data_remarks.y"] <- NULL
 leafjoindf[,"Data_plant_id.x"] <- NULL
 leafjoindf[,"Data_leaftype.x"] <- NULL
+leafjoindf[,"SysObs_date.y"] <- NULL
+
+colnames(leafjoindf)<-gsub("\\.x","",colnames(leafjoindf))
+leafjoindf <- leafjoindf %>% select(-contains(".y"))
+
 # after renaming the fields are in the wrong location, put them back
 leafjoindf <- leafjoindf %>% relocate(c(Data_remarks, Data_plant_id, Data_leaftype), .after = Data_group)
 # final file that the user should continue to edit
@@ -179,6 +185,10 @@ newdf <- rename(newdf,c("Data_remarks" = "Data_remarks.x",
 newdf[,"Data_remarks.y"] <- NULL
 newdf[,"Data_plant_id.y"] <- NULL
 newdf[,"Data_leaftype.y"] <- NULL
+
+colnames(newdf)<-gsub("\\.x","",colnames(newdf))
+newdf <- newdf %>% select(-contains(".y"))
+
 write_csv(newdf, here(DATAUSER,"final_raw_data.csv"), 
           append = FALSE, 
           col_names = TRUE)
