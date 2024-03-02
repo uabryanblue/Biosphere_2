@@ -80,9 +80,11 @@ Files are selected in the folder specified by **DATACLEAN** using a pattern of *
 
 ## 2) Generate an Empty Leaf Identification File
 
-In the `DATAUSER` directory, a new CSV file named `REMOVE_PREFIX_THEN_EDIT_leaf_identification.csv` is created, containing the columns for manual input of data that is not contained in the original LICOR data. Leaf identification information needs to be manually added, such as the elevation of the tree and the leaf type (`Treatment`, `Control`, `Reference`, and others as users wish to assign them).
+In the `DATAUSER` directory, a new CSV file named `EMPTY_leaf_identification.csv` is created, containing the columns for manual input of data that is not contained in the original LICOR data. Leaf identification information needs to be manually added, such as the elevation of the tree and the leaf type (`Treatment`, `Control`, `Reference`, and others as users wish to assign them).
 
-**NOTE:** This CSV file is overwritten every time this script is run to reflect any data changes. The file prefix `REMOVE_PREFIX_THEN_EDIT_` must be removed before editing. Keep this new file, l`eaf_identification.csv`, manually up to date to contain all of the non-LICOR information. This file will be used in future operations. The user is responsible for ensuring all information is accurate and filled in with the correct data. `NA` is allowed for unknown information.
+**NOTE:** This CSV file is overwritten every time this script is run to reflect any data changes. The file prefix `EMPTY_PREFIX_THEN_EDIT_` must be removed before editing. Keep this new file `leaf_identification.csv`, manually up to date to contain all of the non-LICOR information. This file will be used in future operations. The user is responsible for ensuring all information is accurate and filled in with the correct data. `NA` is allowed for unknown information.
+
+`JOINED_final_raw_data.csv` is the joined values from the new data set and the previous leaf_identification.csv file. This allows prevous edits to remain and any NA values reviewed to have their `Data_plant_id, Data_leaftype` assigned.
 
 The following columns are provided for the identification of information and to create a unique key to any group of data.
 
@@ -131,30 +133,46 @@ NOTE: If the file structure changes in any way in `01_wrangle_LICOR_logs.qmd`, t
 # used for manual identification of information that is not contained 
 # within the LICOR data  
 # NOTE: this file is generated every time, any edits will be lost
-write_csv(cleandf[,1:6], here(DATAUSER, "input", "REMOVE_PREFIX_THEN_EDIT_leaf_identification.csv"), 
+write_csv(cleandf[,1:6], 
+          here(DATAUSER, "input", "EMPTY_leaf_identification.csv"), 
           append = FALSE, 
           col_names = TRUE)
 
-#__Combine leaf_identification.csv wit the cleandf__
-# add in the leaf identification information that the user has entered.
+
+# join all lines in the current leaf_identification.csv file with cleandf
+# previously identified rows will remain and unknown rows will be added
+# JOINED_final_raw_data.csv can be continued to be edited once done,
+# it should replace the leaf_identification.csv file for future processing
 leafdf <- read_csv(here(DATAUSER, "input", "leaf_identification.csv"), 
                    col_names = TRUE, 
                    show_col_types = FALSE) 
+leafjoindf <-left_join(cleandf, leafdf, by = c('Filenames_filename', 'Data_group', 'SysObs_obs'))
+# join causes duplication of column names
+leafjoindf <- rename(leafjoindf,c("Data_remarks" = "Data_remarks.y", "Data_plant_id" = "Data_plant_id.y", "Data_leaftype" = "Data_leaftype.y"))
+# colmun names with ".x" are kept
+# column names with ".y" are removed as they do not contain data
+leafjoindf[,"Data_remarks.x"] <- NULL
+leafjoindf[,"Data_plant_id.x"] <- NULL
+leafjoindf[,"Data_leaftype.x"] <- NULL
+# after renaming the fields are in the wrong location, put them back
+leafjoindf <- leafjoindf %>% relocate(c(Data_remarks, Data_plant_id, Data_leaftype), .after = Data_group)
+
+write_csv(leafjoindf, here(DATAUSER, "input", "JOINED_final_raw_data.csv"), 
+          append = FALSE, 
+          col_names = TRUE)
 
 
+#__Combine leaf_identification.csv wit the cleandf__
+# add in the leaf identification information that the user has entered.
 newdf <-inner_join(leafdf, cleandf, by = c('Filenames_filename', 'Data_group', 'SysObs_obs'))
 
 # join causes duplication of column names
 newdf <- rename(newdf,c("Data_remarks" = "Data_remarks.x", "Data_plant_id" = "Data_plant_id.x", "Data_leaftype" = "Data_leaftype.x"))
-# colmun names with ".y" are kept
-# names(newdf)[names(newdf)=="Data_plant_id.x"] <- "Data_plant_id"
-# names(newdf)[names(newdf)=="Data_leaftype.x"] <- "Data_leaftype"
-# names(newdf)[names(newdf)=="Data_remarks.x"] <- "Data_remarks"
-# # column names with ".x" are removed as they do not contain data
+# colmun names with ".x" are kept
+# column names with ".y" are removed as they do not contain data
 newdf[,"Data_remarks.y"] <- NULL
 newdf[,"Data_plant_id.y"] <- NULL
 newdf[,"Data_leaftype.y"] <- NULL
-
 
 write_csv(newdf, here(DATAUSER,"final_raw_data.csv"), 
           append = FALSE, 
