@@ -24,6 +24,7 @@ library(lubridate)
 require(tidyr)
 library(ggplot2)
 library(here)
+library(patchwork)
 
 # start in the current project directory
 # this ensures relative paths will work
@@ -37,7 +38,6 @@ DATACLEAN <- "data_clean"
 DATAUSER <- "data_user"
 
 ```
-
 
 ```{r test_graph_trt}
 
@@ -123,61 +123,147 @@ ggplot(plant, aes(x = SysObs_obs , y = get(plantvar), color = Data_leaftype)) +
 # #     theme(axis.text.x=element_text(angle=60, hjust=1))
 ```
 
-NOTE: Look into these for help with graph layout
-# facet# TODO !!!!
-# patchwork TODO !!!!
-# wrap plot, axis collect
+# NOTE: Look into these for help with graph layout
 
-```{r}
+### facet TODO !!!!
 
+### patchwork TODO !!!!
+
+### wrap plot, axis collect
+
+```{r raw_plots}
+#| echo: FALSE
+#| error: TRUE
+#| warning: FALSE
+#| 
 finaldata <- read_csv(here(DATAUSER,"final_raw_data.csv"), 
                       col_names = TRUE, 
                       show_col_types = FALSE) 
+finaldata <- type.convert(finaldata, as.is = TRUE) 
+finaldata$Data_leaftype <- as.factor(finaldata$Data_leaftype)
+finaldata$Filenames_filename <- as.factor(finaldata$Filenames_filename)
+finaldata$Data_plant_id <- as.factor(finaldata$Data_plant_id)
+# finaldata$SysObs_date <-  as.POSIXct(finaldata$SysObs_date, format = "%Y%m%d %H:%M:%S")
+finaldata$SysObs_date <-as.Date(finaldata$SysObs_date)
+finaldata <- finaldata %>% filter(GasEx_A > 0 & GasEx_A < 7)
+finaldata <- finaldata %>% filter(SysObs_time > 1668543540) %>% arrange(SysObs_date)
+# finaldata <- finaldata %>% filter(!Filenames_filename == "2023-11-22-1138_logdata")
 
+finaldata <- finaldata %>% arrange(SysObs_date)
 # finaldata <- rename(finaldata,c("Data_remarks" = "Data_remarks.x", "Data_plant_id" = "Data_plant_id.x", "Data_leaftype" = "Data_leaftype.x"))
 
 # finaldata <- type.convert(finaldata) 
 # finaldata[finaldata < 0] <- NA
 # finaldata <- na.omit(finaldata)
 
-
-# finaldata <- type.convert(finaldata) 
 # 
 # finaldata %>% mutate_all(~ na_if(., . < 0))
+
+myplot <- list()
 
 # RAW DATA PLOTS
 for (FileName in unique(finaldata$Filenames_filename)) {
   # print(paste("Generate Plot: ", FileName, " PlantID: ", 
-  print(FileName)
+  # print(FileName)
   # plot one days readings as a line chart
-  myplot <- plot_plant_line(finaldata, finaldata[finaldata$Filenames_filename==FileName,]$Data_plant_id, FileName, "GasEx_A")
+  # myplot[[length(myplot) + 1]] <- 
+    myplot <- plot_plant_line(finaldata, 
+                    plantid = finaldata[finaldata$Filenames_filename==FileName,]$Data_plant_id, 
+                    FileName, "GasEx_A")
   print(myplot)
-  
-
-  i = 0
-  av <- data.frame(matrix(ncol = 5, nrow = 0))
-  colnames(av) <- c('filename', 'mRef', 'mTrt', 'mCnt', 'index')
-
-  for (FileName in unique(finaldata$Filenames_filename)) {
-    i = i + 1
-    # plant <- finaldata[finaldata$Filenames_filename == FileName ,]
-    
-    mr <- mean(finaldata[finaldata$Filenames_filename == FileName & finaldata$Data_leaftype == "Reference",]$GasEx_A)
-    mt <- mean(finaldata[finaldata$Filenames_filename == FileName & finaldata$Data_leaftype == "Treatment",]$GasEx_A)
-    mc <- mean(finaldata[finaldata$Filenames_filename == FileName & finaldata$Data_leaftype == "Control",]$GasEx_A)
-
-    # add in all the averages from each unique set of readings
-    av[nrow(av) + 1,] = c(FileName, mr, mt, mc, i)
-  }
-  
-  
-
 }
+
+# plot_a_list <- function(master_list_with_plots, no_of_rows, no_of_cols) {
+# 
+#   patchwork::wrap_plots(master_list_with_plots, 
+#                         nrow = no_of_rows, ncol = no_of_cols)
+# }
+#     
+# plot_a_list(myplot, 7, 2)
+
+
+
+# ggsave(here(DATAUSER,"testp.png"),myplot)
+# rm(myplot)
+# myplot[2]
+```
+
+```{r alldata_plots}
+
+# t <- finaldata %>% 
+#   filter(Data_plant_id == 2 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference")) %>%
+#   filter(GasEx_A > 0 & GasEx_A < 7) 
+# f<- t %>% group_by(Filenames_filename, Data_leaftype) 
+# b <- f %>% summarise(gm = mean(GasEx_A))
+
+# %>% 
+  # select(Filenames_filename, Data_plant_id, Data_leaftype,GasEx_A)
+
+
+s <- finaldata %>% filter(Data_plant_id == 2)
+f <- s %>% group_by(Filenames_filename, Data_leaftype, SysObs_date) %>% summarise(gm = mean(GasEx_A))
+g2 <- f %>% filter(Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference") %>% arrange(SysObs_date)
+ # b <- g %>% summarise(gm = mean(GasEx_A))
+# g <- f %>% filter(Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference")
+
+s <- finaldata %>% filter(Data_plant_id == 3)
+f <- s %>% group_by(Filenames_filename, Data_leaftype, SysObs_date) %>% summarise(gm = mean(GasEx_A))
+g3 <- f %>% filter(Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference") %>% arrange(SysObs_date)
+
+
+
+# test all data plot
+plot1 <- ggplot() +
+    # geom_point(data = final_data, 
+    geom_line(data=g2, 
+               aes(x = SysObs_date, y = gm, color = Data_leaftype)) +
+    ggtitle(paste("LICOR Test ALL Graph level 2")) +
+    xlab("SysObs_date") +
+    ylab("GasEx_A") +
+        scale_y_continuous(limits=c(0.0, 6.0))   +
+    #     date_breaks = "10 sec",  expand = expansion(0)) +
+    theme(axis.text.x=element_text(angle=60, hjust=1))
+  
+plot1
+
+# test all data plot
+plot2 <- ggplot() +
+    # geom_point(data = final_data, 
+    geom_line(data=g3, 
+               aes(x = SysObs_date, y = gm, color = Data_leaftype)) +
+  # aes(x = key, y = gm, color = Data_leaftype)) +
+    # geom_line(data = final_data, aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
+
+    ggtitle(paste("LICOR Test ALL Graph level 3")) +
+    xlab("SysObs_date") +
+    ylab("GasEx_A") +
+    # scale_y_continuous(limits=c(0.0, 6.0), breaks=c(0, 0.1, 0.2, 0.5))   +
+      scale_y_continuous(limits=c(0.0, 6.0))   +
+
+    # scale_x_date(date_labels = ("%MM %DD %YYYY")) +
+    #     date_breaks = "10 sec",  expand = expansion(0)) +
+    theme(axis.text.x=element_text(angle=60, hjust=1))
+  
+plot1 / plot2 # + plot_layout(axes = "collect")
+```
+
+```{r average_plots}
+
+
+# t <- finaldata %>% 
+#   filter(Data_plant_id == 2) %>% 
+#   filter(GasEx_A > 0) %>% 
+#   select(Filenames_filename, Data_plant_id, Data_leaftype,GasEx_A)
+# 
+# f<- t %>% group_by(Filenames_filename, Data_leaftype) %>% summarise(gm = mean(GasEx_A))
+# g <- f %>% filter(Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference")
+# 
+# b <- f %>% filter(Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference")
 
 # correct the types for graphing
 # TODO these may not align with the original type conversion in 0_ 
-av <- type.convert(av)
-av[av < 0] <- NA
+# av <- type.convert(av)
+# av[av < 0] <- NA
 
 # av %>% mutate_all(~ na_if(., . < 0), as.is = TRUE)
 # TODO is this the best way to do things?
@@ -185,51 +271,17 @@ av[av < 0] <- NA
 # av %>% mutate_all(~ na_if(., . < 0))
   # av <- na.omit(av)
 
+  # av <- av %>% drop_na(mRef)
   
-  
-ggplot() +
-    # geom_line(data = av, aes(x = index, y = mRef, color = "Reference")) +
-    # geom_line(data = av, aes(x = index, y = mTrt, color = "Treatment")) +
-    # geom_line(data = av, aes(x = index, y = mCnt, color = "Control")) +
-    geom_point(data = av, aes(x = index, y = mRef, color = "Reference")) +
-    geom_point(data = av, aes(x = index, y = mTrt, color = "Treatment")) +
-    geom_point(data = av, aes(x = index, y = mCnt, color = "Control")) +
-    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-    # geom_line(data = final_data, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
-    ggtitle("LICOR Test mean Graph - A") +
-    xlab("index") +
-    ylab("A avg")
-
-
-
-ggplot() +
-    # geom_line(data = av, aes(x = index, y = mRef, color = "Reference")) +
-    # geom_line(data = av, aes(x = index, y = mTrt, color = "Treatment")) +
-    # geom_line(data = av, aes(x = index, y = mCnt, color = "Control")) +
-    geom_point(data = finaldata, aes(x = SysObs_obs , y = GasEx_A, color = Data_leaftype)) +
-    # geom_point(data = finaldata, aes(x = index, y = mTrt, color = "Treatment")) +
-    # geom_point(data = finaldata, aes(x = index, y = mCnt, color = "Control")) +
-    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-    # geom_line(data = final_data, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
-  # scale_y_continuous(limits=c(0.0, 12.0), breaks=c(0, 0.1, 0.2, 0.5)) +
-  scale_y_continuous(limits=c(0.0, 12.0)) +
-    ggtitle("LICOR Test mean Graph - A") +
-    xlab("index") +
-    ylab("A avg")
-
 
   p2 <- filter(finaldata, Data_plant_id == 2 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
-    
+  #   
 
   all <-  ggplot() +
     # geom_line(data = av, aes(x = index, y = mRef, color = "Reference")) +
     # geom_line(data = av, aes(x = index, y = mTrt, color = "Treatment")) +
     # geom_line(data = av, aes(x = index, y = mCnt, color = "Control")) +
-    geom_boxplot(data = p2, aes(x = SysObs_obs , y = GasEx_A, color = Data_leaftype)) +
+    geom_boxplot(data = p2, aes(x = Data_leaftype , y = GasEx_A)) +
     # geom_point(data = finaldata, aes(x = index, y = mTrt, color = "Treatment")) +
     # geom_point(data = finaldata, aes(x = index, y = mCnt, color = "Control")) +
     # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
@@ -239,7 +291,7 @@ ggplot() +
   # scale_y_continuous(limits=c(0.0, 12.0), breaks=c(0, 0.1, 0.2, 0.5)) +
   scale_y_continuous(limits=c(0.0, 10)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
     ggtitle("LICOR All Observations for Elevation 2 on A") +
-    xlab("index") +
+    xlab("Leaf Type") +
     ylab("A")
  
   all
@@ -251,7 +303,7 @@ ggplot() +
     # geom_line(data = av, aes(x = index, y = mRef, color = "Reference")) +
     # geom_line(data = av, aes(x = index, y = mTrt, color = "Treatment")) +
     # geom_line(data = av, aes(x = index, y = mCnt, color = "Control")) +
-    geom_boxplot(data = p3, aes(x = SysObs_obs , y = GasEx_A, color = Data_leaftype)) +
+    geom_boxplot(data = p3, aes(x = Data_leaftype , y = GasEx_A)) +
     # geom_point(data = finaldata, aes(x = index, y = mTrt, color = "Treatment")) +
     # geom_point(data = finaldata, aes(x = index, y = mCnt, color = "Control")) +
     # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
@@ -260,81 +312,11 @@ ggplot() +
     # geom_line(data = final_data, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
   # scale_y_continuous(limits=c(0.0, 12.0), breaks=c(0, 0.1, 0.2, 0.5)) +
   scale_y_continuous(limits=c(0.0, 10)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
-    ggtitle("LICOR All Observations for Elevation 3 on A") +
-    xlab("index") +
+   ggtitle("LICOR All Observations for Elevation 3 on A") +
+    xlab("Leaf Type") +
     ylab("A")
  
   all
 
-  p2 <- filter(finaldata, Data_plant_id == 2 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
-    
 
-  all2 <-  ggplot() +
-    # geom_line(data = av, aes(x = index, y = mRef, color = "Reference")) +
-    # geom_line(data = av, aes(x = index, y = mTrt, color = "Treatment")) +
-    # geom_line(data = av, aes(x = index, y = mCnt, color = "Control")) +
-    geom_boxplot(data = p2, aes(x = SysObs_obs , y = GasEx_A, color = Data_leaftype)) +
-    # geom_point(data = finaldata, aes(x = index, y = mTrt, color = "Treatment")) +
-    # geom_point(data = finaldata, aes(x = index, y = mCnt, color = "Control")) +
-    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-    # geom_line(data = final_data, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
-  # scale_y_continuous(limits=c(0.0, 12.0), breaks=c(0, 0.1, 0.2, 0.5)) +
-  scale_y_continuous(limits=c(0.0, 10)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
-    ggtitle("Test LICOR Level 2 Values Box Plot - A") +
-    xlab("index") +
-    ylab("A")
-  
-  all2
-
- 
-  p2 <- filter(finaldata, Data_plant_id == 2 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
-    
-
-  all2 <-  ggplot() +
-    # geom_line(data = av, aes(x = index, y = mRef, color = "Reference")) +
-    # geom_line(data = av, aes(x = index, y = mTrt, color = "Treatment")) +
-    # geom_line(data = av, aes(x = index, y = mCnt, color = "Control")) +
-    geom_boxplot(data = p2, aes(x = SysObs_obs , y = GasEx_A, color = Data_leaftype)) +
-    # geom_point(data = finaldata, aes(x = index, y = mTrt, color = "Treatment")) +
-    # geom_point(data = finaldata, aes(x = index, y = mCnt, color = "Control")) +
-    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-    # geom_line(data = final_data, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
-  # scale_y_continuous(limits=c(0.0, 12.0), breaks=c(0, 0.1, 0.2, 0.5)) +
-  scale_y_continuous(limits=c(0.0, 10)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
-    ggtitle("Test LICOR Level 2 Values Box Plot - A") +
-    xlab("index") +
-    ylab("A")
-  
-  all2
-
-  
-    p3 <- filter(finaldata, Data_plant_id == 3 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
-
-
-  all3 <-  ggplot() +
-    # geom_line(data = av, aes(x = index, y = mRef, color = "Reference")) +
-    # geom_line(data = av, aes(x = index, y = mTrt, color = "Treatment")) +
-    # geom_line(data = av, aes(x = index, y = mCnt, color = "Control")) +
-    geom_boxplot(data = p3, aes(x = SysObs_obs , y = GasEx_A, color = Data_leaftype)) +
-    # geom_point(data = finaldata, aes(x = index, y = mTrt, color = "Treatment")) +
-    # geom_point(data = finaldata, aes(x = index, y = mCnt, color = "Control")) +
-    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-    # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-    # geom_line(data = final_data, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
-  # scale_y_continuous(limits=c(0.0, 12.0), breaks=c(0, 0.1, 0.2, 0.5)) +
-  scale_y_continuous(limits=c(0.0, 10)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
-    ggtitle("Test LICOR Level 3 Values Box Plot - A") +
-    xlab("index") +
-    ylab("A")
-  
-  all3
-
- 
 ```
-
-
