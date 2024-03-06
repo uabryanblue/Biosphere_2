@@ -19,7 +19,7 @@ format:
 
 ```{r setup, include=FALSE}
 #| echo: false
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 require(tidyverse)
 library(dplyr)
 library(lubridate)
@@ -130,10 +130,12 @@ for (FileName in unique(finaldata$Filenames_filename)) {
 }
 
 ```
+{{< pagebreak >}}
 # Daily Mean Functions
 ```{r daily_mean_data}
 #| echo: false
-
+#| warning: false
+#| 
 # calculate the daily means of a given column in sysobs
 mean_plant_data <- function(finaldata, plantid, sysobs) {
   plotdf <- finaldata %>% filter(Data_plant_id == plantid) %>%
@@ -152,20 +154,23 @@ mean_plant_data <- function(finaldata, plantid, sysobs) {
 
 plot_means <- function(plot_data, title="", xlabel="", ylabel=""){
   plot1 <- ggplot() +
-    # geom_point(data = final_data, 
-    geom_line(data=plot_data, 
+    geom_point(data=plot_data, 
               aes(x = SysObs_date, y = gm, color = Data_leaftype)) +
+    # geom_line(data=plot_data, 
+              # aes(x = SysObs_date, y = gm, color = Data_leaftype)) +
     ggtitle(title) +
     xlab(xlabel) +
     ylab(ylabel) +
     # scale_y_continuous(limits=c(0.0, 6.0))   +
     #     date_breaks = "10 sec",  expand = expansion(0)) +
+    geom_smooth(method=lm, se=FALSE, col='red', size=2) +
     theme(axis.text.x=element_text(angle=60, hjust=1))
   
   return(plot1)
 }
 ```
 
+{{< pagebreak >}}
 # Daily Means Graphs
 ### dates need filled in here
 
@@ -174,7 +179,8 @@ Elevation 2 graphs are the most complete as elevation 3 did not have accurate da
 The long consistent negative slope is due to a lack of measurements for several weeks before January until the start of January. 
 ```{r graph_means}
 #| echo: false
-
+#| warning: false
+#| 
 # GRAPH: GasEx_A
 elevation2 <- mean_plant_data(finaldata, "2", "GasEx_A")
 plot2 <- plot_means(elevation2, "Elevation 2 Daily Means GasEx_A", "SysObs_date", "GasEx_A") 
@@ -220,37 +226,118 @@ plot3 <- plot_means(elevation3, "Elevation 3 Daily Means Meas_Tleaf", "SysObs_da
 plot2 / plot3
 
 ```
-# Generate Boxplots  
-## Not finished or tested  
-Boxplots of all data from elevation 2 and 3.
-```{r average_plots}
-#| echo: false
+{{< pagebreak >}}
+# LICOR Daily Mean Observations on GasEx_A  
 
+```{r}
+#| echo: false
+#| warning: false
+#| 
 # THIS IS NOT DONE OR TESTED
 
-# TODO break into function
-p2 <- filter(finaldata, Data_plant_id == 2 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
+# # TODO break into function
+# p2 <- filter(finaldata, Data_plant_id == 2 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
+
+# A
+elevation2 <- mean_plant_data(finaldata, "2", "GasEx_A")
 
 all2 <-  ggplot() +
-  geom_boxplot(data = p2, aes(x = Data_leaftype , y = GasEx_A, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
-  scale_y_continuous(limits=c(0.0, 6.0)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
-  ggtitle("LICOR All Observations for Elevation 2 on A") +
+  geom_boxplot(data = elevation2, aes(x = Data_leaftype , y = gm, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
+  scale_y_continuous(limits=c(0.0, 5.0)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
+  ggtitle("LICOR Daily Mean Observations for Elevation 2 on A") +
   xlab("Leaf Type") +
   ylab("A")
 
 all2
 
-# TODO break into function
-p3 <- filter(finaldata, Data_plant_id == 3 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
+# # TODO break into function
+# p3 <- filter(finaldata, Data_plant_id == 3 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
+elevation3 <- mean_plant_data(finaldata, "3", "GasEx_A")
 
 all3 <-  ggplot() +
-  geom_boxplot(data = p3, aes(x = Data_leaftype , y = GasEx_A, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
-  scale_y_continuous(limits=c(0.0, 6.0)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
-  ggtitle("LICOR All Observations for Elevation 3 on A") +
+  geom_boxplot(data = elevation3, aes(x = Data_leaftype , y = gm, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
+  scale_y_continuous(limits=c(0.0, 5.0)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
+  ggtitle("LICOR Daily Mean Observations for Elevation 3 on A") +
   xlab("Leaf Type") +
   ylab("A")
 
 all3
 
 all2 / all3
+```
+
+{{< pagebreak >}}
+
+# LICOR Daily Mean Observations on GasEx_gsw  
+
+```{r davg_GasEx_VPDleaf}
+#| echo: false
+#| warning: false
+#| 
+# GSW
+elevation2 <- mean_plant_data(finaldata, "2", "GasEx_gsw")
+
+all2 <-  ggplot() +
+  # geom_boxplot(data = elevation2, aes(x = Data_leaftype , y = gm, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
+    geom_boxplot(data = elevation2, aes(x = Data_leaftype , y = gm, color = Data_leaftype)) +
+  scale_y_continuous(limits=c(0.0, 0.1)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
+  ggtitle("LICOR Daily Mean Observations for Elevation 2 on gsw") +
+  xlab("Leaf Type") +
+  ylab("GasEx_gsw")
+
+all2
+
+# # TODO break into function
+# p3 <- filter(finaldata, Data_plant_id == 3 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
+elevation3 <- mean_plant_data(finaldata, "3", "GasEx_gsw")
+
+all3 <-  ggplot() +
+  geom_boxplot(data = elevation3, aes(x = Data_leaftype , y = gm, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
+  scale_y_continuous(limits=c(0.0, 0.1)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
+  ggtitle("LICOR Daily Mean Observations for Elevation 3 on gsw") +
+  xlab("Leaf Type") +
+  ylab("GasEx_gsw")
+
+all3
+
+all2 / all3
+```
+
+{{< pagebreak >}}
+
+# LICOR Daily Mean Observations on GasEx_VPDleaf
+```{r davg_GasEx_VPDleaf}
+#| echo: false
+#| warning: false
+#| 
+
+# Leaf VPD
+elevation2 <- mean_plant_data(finaldata, "2", "GasEx_VPDleaf")
+
+all2 <-  ggplot() +
+  geom_boxplot(data = elevation2, aes(x = Data_leaftype , y = gm, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
+  scale_y_continuous(limits=c(1.0, 2.8)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
+  ggtitle("LICOR Daily Mean Observations for Elevation 2 on Leaf VPD") +
+  xlab("Leaf Type") +
+  ylab("GasEx_VPDleaf")
+
+all2
+
+# # TODO break into function
+# p3 <- filter(finaldata, Data_plant_id == 3 & (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
+elevation3 <- mean_plant_data(finaldata, "3", "GasEx_VPDleaf")
+
+all3 <-  ggplot() +
+  geom_boxplot(data = elevation3, aes(x = Data_leaftype , y = gm, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
+  scale_y_continuous(limits=c(1.0, 2.8)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
+  ggtitle("LICOR Daily Mean Observations for Elevation 3 on Leaf VPD") +
+  xlab("Leaf Type") +
+  ylab("GasEx_VPDleaf")
+
+all3
+
+all2 / all3
+
+
+
 ```
