@@ -172,15 +172,12 @@ newref <- subset(finalRef, !(finalRef$GasEx_A<(Q1 - 1.5*IQR) | finalRef$GasEx_A>
 newfinaldata <- rbind(newTreat, newCont, newref)
 
 # ---------------- AVERAGE DATA ----------------
-# these are not necessarily needed, but cleans up code
-# and reduces errors
-
 # df - interested in daily means of the Treatment, Control, Reference
 TreatContRef <- mean_plant_data(newfinaldata, ELEVATION, "GasEx_A")
 
+# TODO: these are not really needed, remove when it is confirmed they are not in use anywhere.
 # df - Treatment and Control
 TreatCont <- subset(TreatContRef, Data_leaftype != "Reference")
-
 # list - create two lists of data for the Welch's t-test
 Treat <- TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gm
 Cont <- TreatContRef[TreatContRef$Data_leaftype == "Control",]$gm
@@ -239,7 +236,7 @@ n3plot_original + n3plot
 
 ## Normality *Daily Averages*
 
-Graphs to visually check if the daily averages are normal.
+Graphs are to visually check if the daily averages are normal.
 
 ```{r}
 #| echo: false
@@ -266,15 +263,11 @@ n3plot
 
 n1plot / n2plot / n3plot
 ```
-
 ## Normality Statistics Tests
-
 ### Graph Data
 qqnorm() is used to generate Q-Q plots for all data.  
 The Treatment data is not normal. A transformation of log() is applied to make it normal.  
 Control and Reference are already normal.  
-
-
 ```{r QQ_plots}
 #| echo: false
 #| warning: false
@@ -335,12 +328,13 @@ The Control and Reference Q-Q plots look normal.
 
 ## Test Normality using Statistics
 
-**Shapiro-Wilk Test** If the p-value is less than $α$ =.05, the sample does not come from a normally distributed population.
-H0: The data is normally distribued
-HA: The data is not normally distribued
+**Shapiro-Wilk Test**  
+If the p-value is less than $α$ =.05, the sample does not come from a normally distributed population.  
+H0: The data is normally distribued    
+HA: The data is not normally distribued  
 
 ### Treatment vs Transformation  
-The orignal Treatment data is not normal. There is a drastic improvement in the p-val when the log() transformation is applied, which shows the data is normal.  
+The orignal Treatment data is not normal. There is a drastic improvement in the p-val when the log() transformation is applied, which then shows the data is normal.  
 **Treatment**  
 The p-value = 0.03515 for the Treatment data is significant at $α$ =.05.  
 The original Treatment data is not normal.  
@@ -352,11 +346,11 @@ The transformed Treatment data is normal.
 ### Control and Reference  
 **Control**\
 The p-value = 0.7283 for the Control data is not significant at $α$ =.05.  
-The Control data is normal. 
+The Control data is normal.  
 
 **Reference**\
 The p-value = 0.1215 for Reference data is not significant at $α$ =.05.  
-the Reference data is normal.
+the Reference data is normal.  
 
 ```{r}
 #| echo: false
@@ -376,9 +370,8 @@ shapiro.test(TreatContRef[TreatContRef$Data_leaftype == "Reference",]$gm)
 
 # Are the Means equal between the Treatment and the Control?
 
-## Perform Welch's t-test as Variances are assumed not equal.
-
-A boxplot visually shows the Treatment and Control means are far apart and their variances are not close to each other.
+## Boxplot  
+A boxplot visually shows the Treatment and Control means are far apart and their variances are not close to each other.  
 
 ```{r elev2_means_test}
 #| echo: false
@@ -415,6 +408,8 @@ The boxplot shows differences in variance.
 **Bartlett test** Variance check that\
 H0: The variance among each group is equal.\
 HA: At least one group has a variance that is not equal to the rest.  
+If the p-val is less than a given significance level then reject the null hypothesis and conclude that not all groups have the same variance.
+
 
 The p-value = 0.2291 which is greater than alpha = .05, we fail to reject H0.  
 The variance among variables are equal.  
@@ -439,31 +434,34 @@ bartlett.test(gm ~ Group, data = finalblt)
 
 ```
 
-# Welch's t-test  
-Used to compare the means between two independent groups when it is not assumed that the two groups have equal variances.  
+## Welch's t-test  
+Used to compare the means between two independent groups with unequal variance.  
 H0: difference in means is 0  
- 
+
+## Two Sample T-Test  
+Test whether or not the means of two populations are equal.  
 
 Normality assumption was achieved with the log() transformation of Treatment.  
+*A Two Sample T-Test can be used since the variance is also equal.*  
 
-The p-value = 2.368e-07 which is less than alpha = .05, t = -8.1264 does not fall in the 95% confidence interval [ -3.571281 -2.101800]. We reject the null hypothesis.  
+The p-value = 9.141e-08 which is less than alpha = .05, t = -8.1264 does not fall in the 95% confidence interval [-3.564647, -2.108434]. We reject the null hypothesis.  
 The means are different.  
 
 ```{r}
-# perform Welch's t-test
-# Variances not assumed equal
-t.test(Treat, Cont)
+# Two Sample T-Test 
+# variance is equal
+t.test(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gmLog, 
+       TreatContRef[TreatContRef$Data_leaftype == "Control",]$gm,
+       var.equal=TRUE)
 
+# Welch's t-test
+# Variances not assumed equal
 t.test(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gmLog, 
        TreatContRef[TreatContRef$Data_leaftype == "Control",]$gm)
-
 
 ```
 
 # Conclusion  
 
-Normality could not be shown for Treatment, but was for Control. The variances are not equal. A Welch Two Sample t-test of unequal variance was performed, but it requires data normality to be satisfied. Although the test shows the means of the Treatment and Control are significantly different, the result may be misleading.  
-
-Possible Improvements  
-Check for and remove outliers.  
-Make the Control data normal using a transformation. 
+Normality could be achieved for Treatment when a transformation of log() was applied. Control and Reference data was already normal. The variances were shown to be equal.  
+__A Two Sample t-test was performed and it showed that the means between the Treatment and Control are not equal.__
