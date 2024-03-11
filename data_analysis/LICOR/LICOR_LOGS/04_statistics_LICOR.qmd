@@ -44,9 +44,11 @@ ELEVATION <- 2 # elevation of the experiment, numeric value or 2 or 3
 # wrap plot, axis collect
 
 ```
-# Report for elevation: `r ELEVATION`
 
-# Load Final Data
+# Report for elevation: `r ELEVATION`  
+This is a lengthy exploration of data normality and variance in the Treatment and Control data from this experiemnt.  Much of it is for exploration and would not be needed in any final report.  
+
+# Load Final Data  
 
 A `final_raw_data.csv` file is used for final analysis. This is a combination of all Treatment, Control, and Reference data for all elevations that was combined from the LICOR text logs in previous steps.
 
@@ -292,13 +294,14 @@ n1plot / n2plot / n3plot
 ```
 
 ## Mean Value Normality Tests
+
 T-test, ANOVA have the assumption that the data is Normal. This is explored visually and using statistics.
 
-If the data is not normal, a transformations can be applied, such as taking the natural log(), square or square root, among others to coerce it into a normal form.  
+If the data is not normal, a transformations can be applied, such as taking the natural log(), square or square root, among others to coerce it into a normal form.
 
 ### Q-Q Plots
 
-`qqnorm()` is used to generate Q-Q plots for all mean data.\
+`qqnorm()` is used to generate Q-Q plots for all mean data.  
 
 ```{r QQ_plots}
 #| echo: false
@@ -306,7 +309,7 @@ If the data is not normal, a transformations can be applied, such as taking the 
 
 # original treatment average values, are not normal
 qqnorm(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gm,
-       main = paste("Original: Q-Q Plot Elevation ", ELEVATION, ": \nTreatment - Daily Mean GaseEx_A", sep = ''))
+       main = paste("Q-Q Plot Elevation ", ELEVATION, ": \nTreatment - Daily Mean GaseEx_A", sep = ''))
 qqline(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gm)
 # shapiro.test(Treat)
 
@@ -322,17 +325,7 @@ qqline(TreatContRef[TreatContRef$Data_leaftype == "Reference",]$gm)
 ```
 
 The first Q-Q plot (Treatment) does not look normal. It has a curve that looks exponential.\
-Apply a `log()` (natural log) transformation to the Treatment data to make it normal.
-
-Box-Cox Transformation Selection
-λ 	Transformation
--2 	1/x^2
--1 	1/x
--0.5 	1/sqrt(x)
-0 	log⁡(x)
-0.5 	sqrt(x)
-1 	x
-2 	x^2
+Apply a $log()$ (natural log) transformation to the Treatment data to make it normal.
 
 ```{r log_treatment}
 #| echo: false
@@ -340,24 +333,39 @@ Box-Cox Transformation Selection
 
 # TRANSFORM NON-NORMAL DATA TO NORMAL USING BOXCOX
 
-# library(MASS)
-# b <- boxcox(lm(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gm ~ 1))
-# # Exact lambda
-# lambda <- b$x[which.max(b$y)] # exact lambda
-# # pick transformation based on BoxCox table using nearest lambda
-# lambda
-# # add in a column to TreatContRef
-# # gmlog <- 1/sqrt(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gm)
-# # CREATE AN EMPTY COLUMN FOR VALUES
+library(MASS)
+b <- boxcox(lm(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gm ~ 1), plotit = FALSE)
+# Exact lambda
+Tlambda <- b$x[which.max(b$y)] # exact lambda
+# pick transformation based on BoxCox table using nearest lambda
+# Tlambda
+
+b <- boxcox(lm(TreatContRef[TreatContRef$Data_leaftype == "Control",]$gm ~ 1), plotit = FALSE)
+# Exact lambda)
+# Exact lambda
+Clambda <- b$x[which.max(b$y)] # exact lambda
+# pick transformation based on BoxCox table using nearest lambda
+# Clambda
+
+b <- boxcox(lm(TreatContRef[TreatContRef$Data_leaftype == "Reference",]$gm ~ 1), plotit = FALSE)
+# Exact lambda)
+# Exact lambda
+Rlambda <- b$x[which.max(b$y)] # exact lambda
+# pick transformation based on BoxCox table using nearest lambda
+# Rlambda
+
+# add in a column to TreatContRef
+# gmlog <- 1/sqrt(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gm)
+# CREATE AN EMPTY COLUMN FOR VALUES
 TreatContRef$gmLog <- NaN
 # # ONLY POPULATE OBSERVATION TYPES THAT ARE NEEDED TO BE TRANSFORMED
 # TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gmLog <-  1/sqrt(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gm)
 
 TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gmLog <-  log(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gm)
+TreatContRef[TreatContRef$Data_leaftype == "Control",]$gmLog <-  log(TreatContRef[TreatContRef$Data_leaftype == "Control",]$gm)
+TreatContRef[TreatContRef$Data_leaftype == "Reference",]$gmLog <-  log(TreatContRef[TreatContRef$Data_leaftype == "Reference",]$gm)
 # -----------------
 
-# # gmlog <- log(TreatContRef$gm) # WRONG!!!!
-# TreatContRef$gmLog <- log(TreatContRef$gm)
 
 # transform using log() and the data becomes normal
 qqnorm(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gmLog,
@@ -367,12 +375,40 @@ qqline(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gmLog)
 
 ```
 
-### Test Mean Normality using Statistics
+## Box-Cox  
 
-#### Shapiro-Wilk Test
-p-value greater than significance level $α$ =.05, fail to reject null hypothesis (data is normal).
-H0: The data is normally distributed\
-HA: The data is not normally distributed
+Box-Cox transformation selection can help you find the proper transformation based on the data.  
+If a $\lambda$ value is very close to any value in the table, use the closest transformation.  
+e.g. $\lambda$ 0.14 try to use 0, log(x)  
+Exact equations exist, but they make it harder to interpret results.  
+These can be used as another interpretation of normality. The closer $\lambda$ is to 1, the more normal the data.  
+Box-Cox Transformation Selection  
+| $lambda$ | Transformation  |  
+|------|---------------------|  
+| -2   | $frac{1}{x^2}$      |  
+| -1   | $1/x$               |  
+| -0.5 | $frac{1}{sqrt{x}}$  |  
+| 0    | $log(x)$            |  
+| 0.5  | $sqrt{x}$           |  
+| 1    | $x$                 |  
+| 2    | $x^2$               |
+
+### Box-Cox Result  
+
+Treatment: `r Tlambda`  
+Control: `r Clambda`  
+Reference: `r Rlambda`  
+Treatment is close to 0, use $log(x)$  
+Control is close to 1, leave it as is.  
+Reference is close to 1, leave it as is, or possibly $sqrt{x}$   
+
+### Test Mean Normality using Statistics  
+
+#### Shapiro-Wilk Test  
+
+p-value greater than significance level $α$ =.05, fail to reject null hypothesis (data is normal).  
+H0: The data is normally distributed  
+HA: The data is not normally distributed  
 
 ```{r shapiro_wilk}
 #| echo: false
@@ -386,56 +422,57 @@ Rsw <-shapiro.test(TreatContRef[TreatContRef$Data_leaftype == "Reference",]$gm)
 
 
 ```
-### The Shapiro-Wilk test on the log() transformed data
+
+
 
 ```{r treatment_shapiro_wilk}
 #| echo: false
 #| warning: false
-
+# ## The Shapiro-Wilk test on the log() transformed data
 # this is a special test run on the log() transformed data
 Tswlog <- shapiro.test(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gmLog)
 
 ```
 
-### Treatment vs Transformation
+### Treatment vs Transformation  
 
-The original Treatment data is not normal. However, the p-val improves when the `log()` transformation is applied, showing that the transformed data is normal. \
+The original Treatment data is not normal. However, the p-val improves when the `log()` transformation is applied, showing that the transformed data is normal.  
 **Treatment**
 
-The p-value = `r Tsw[2]` for the Treatment data $α$ =.05.\
+The p-value = `r Tsw[2]` for the Treatment data $α$ =.05  
 
 **Treatment log() Transformation**\
-The p-value = `r Tswlog[2]` for the log() transformed Treatment data $α$ =.05.\
+The p-value = `r Tswlog[2]` for the log() transformed Treatment data $α$ =.05  
 
-### Control and Reference
+### Control and Reference  
 
-**Control**\
-The p-value = `r Csw[2]` for the Control data $α$ =.05.\
+**Control**  
+The p-value = `r Csw[2]` for the Control data $α$ =.05  
 
-**Reference**\
-The p-value = `r Rsw[2]` for Reference data $α$ =.05.\
+**Reference**  
+The p-value = `r Rsw[2]` for Reference data $α$ =.05  
 
-# Are the Means equal between the Treatment and the Control?
+# Are the Means equal between the Treatment and the Control?  
 
-## Boxplot
+## Boxplot  
 
-A boxplot shows the Treatment and Control means and variance.
+A boxplot shows the Treatment and Control means and variance.  
 
 ```{r elev2_means_test}
 #| echo: false
 #| warning: false
 
 # all data, not transformed
-all2 <-  ggplot() +
+all1 <-  ggplot() +
   # geom_boxplot(data = TreatContRef, aes(x = Data_leaftype, y = gm, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
   geom_boxplot(data = TreatContRef[TreatContRef$Data_leaftype == "Treatment",], aes(x = Data_leaftype, y = gm, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
     geom_boxplot(data = TreatContRef[TreatContRef$Data_leaftype == "Control",], aes(x = Data_leaftype, y = gm, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
   # scale_y_continuous(limits=c(0.0, 0.1)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
-  ggtitle(paste("Elevation ", ELEVATION, " - Daily Mean Observations on GasEx_A")) +
+  ggtitle(paste("Elevation ", ELEVATION, "\nOriginal daily Mean \nObservations on GasEx_A")) +
   xlab("Leaf Type") +
   ylab("GasEx_A")
 
-all2
+all1
 
 # plot with transformed Treatment and original Control
 all2 <-  ggplot() +
@@ -444,20 +481,23 @@ all2 <-  ggplot() +
     # geom_boxplot(data = TreatContRef, aes(x = Data_leaftype , y = gm, color = Data_leaftype)) +
   # scale_y_continuous(limits=c(0.0, 0.1)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
   # ggtitle(paste("Elevation ", ELEVATION, " - Daily Mean Observations on GasEx_A")) +
-  ggtitle(paste("log() Tranformed Treatment, Original Control data\nElevation ", ELEVATION, " Daily Mean GaseEx_A", sep = '')) +
+  ggtitle(paste("log() Tranformed Treatment\nOriginal Control data\nElevation ", ELEVATION, " Daily Mean GaseEx_A", sep = '')) +
   xlab("Leaf Type") +
   ylab("GasEx_A")
 
 all2
+
+all1 + all2
 ```
 
 ## Variance Check
 
 ### Bartlett test
-Variance check that\
-H0: The variance among each group is equal.\
-HA: At least one group has a variance that is not equal to the rest.\
-If the p-val is less than a given significance level then reject the null hypothesis and conclude that not all groups have the same variance.
+
+Variance check that  
+H0: The variance among each group is equal.  
+HA: At least one group has a variance that is not equal to the rest.  
+If the p-val is less than a given significance level then reject the null hypothesis and conclude that not all groups have the same variance.  
 
 ```{r}
 #| echo: false
@@ -478,21 +518,25 @@ TrtConbt <- bartlett.test(gm ~ Group, data = finalblt)
 
 
 ```
-The p-value = `r TrtConbt[3]` $α$ = .05.
 
-## Welch's t-test
+Bartlett test p-value = `r TrtConbt[3]` $α$ = .05  
 
-Test the means between two independent normal groups with unequal variance.\
-H0: difference in means is 0
+## Welch's t-test  
 
-## Two Sample T-Test
+Test the means between two independent normal groups with unequal variance.  
+H0: difference in means is 0  
 
-Test the means between two independent normal groups with equal variance.\
+## Two Sample T-Test  
 
+Test the means between two independent normal groups with equal variance.  
+H0: difference in means is 0  
 
 ```{r}
+#| echo: false
+#| warning: false
 # Two Sample T-Test 
 # variance is equal
+
 TreatCont_tt <- t.test(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gmLog, 
        TreatContRef[TreatContRef$Data_leaftype == "Control",]$gm,
        var.equal=TRUE)
@@ -503,14 +547,16 @@ TeatCont_wtt <- t.test(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$
        TreatContRef[TreatContRef$Data_leaftype == "Control",]$gm)
 
 ```
-Normality with Unequal Variance
 
-Normality with Equal Variance
+Welch's t-test: Normality with Unequal Variance    
+p-value = `r TeatCont_wtt[3]`at $α$ = .05  
+t =`r TeatCont_wtt[1]` with a 95% confidence interval \[`r TeatCont_wtt$conf.int[1]`, `r TeatCont_wtt$conf.int[2]`\].
 
-p-value = `r `TreatCont_tt[3]` at $α$ = .05  
-t = `r `TreatCont_tt[1]` with a 95% confidence interval \[`r `TreatCont_tt$conf.int[1]`, `r TreatCont_tt$conf.int[2]`\]. 
+Student t-test: Normality with Equal Variance  
+p-value = `r TreatCont_tt[3]`at $α$ = .05  
+t =`r TreatCont_tt[1]` with a 95% confidence interval \[`r TreatCont_tt$conf.int[1]`, `r TreatCont_tt$conf.int[2]`\].
 
-# Conclusion
+# Conclusion  
 
-Normality could be achieved for Treatment when a transformation of log() was applied. Control and Reference data was already normal. The variances were shown to be equal.\
-**A Two Sample t-test was performed and it showed that the means between the Treatment and Control are not equal.**
+Normality is shown in multiple ways and each suggest a slightly different answer. Through experimentation any transformation did not make a difference in the final result that the Treatment and Control means are different.  
+
