@@ -84,7 +84,8 @@ finaldata$SysObs_date <-as.Date(finaldata$SysObs_date)
 
 # The clock was off at one point, this needs corrected or ignore the values
 # TODO this needs to bin the original cleanind code
-finaldata <- finaldata %>% filter(SysObs_time > 1668543540) %>% arrange(SysObs_date)
+finaldata <- finaldata %>%
+  filter(Data_plant_id == ELEVATION & SysObs_time > 1668543540) %>% arrange(SysObs_date)
 # finaldata <- finaldata %>% filter(!Filenames_filename == "2023-11-22-1138_logdata")
 
 return(finaldata)
