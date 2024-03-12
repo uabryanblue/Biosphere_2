@@ -38,7 +38,7 @@ DATARAW <- "data_raw"
 DATACLEAN <- "data_clean"
 DATAUSER <- "data_user"
 ELEVATION <- 2 # elevation of the experiment, numeric value or 2 or 3
-VARNAME <- "GasEx_A" # this the column name in finaldata where the group and variable are combined
+VARNAME <- "GasEx_gsw" # this the column name in finaldata where the group and variable are combined
 
 # NOTE to self: Look into these for help with graph layout\
 # patchwork TODO !!!!\
@@ -46,11 +46,10 @@ VARNAME <- "GasEx_A" # this the column name in finaldata where the group and var
 
 ```
 
-# Report for elevation: `r ELEVATION`  
-This is a lengthy exploration of data normality and variance in the Treatment and Control data from this experiemnt.  Much of it is for exploration and would not be needed in any final report.  
+# Report for elevation: `r ELEVATION` on `r VARNAME`
+This is an exploration of data normality and variance in the Treatment and Control data from this experiemnt.  Much of it is for exploration and would not be needed in any final report.  
 
 # Load Final Data  
-
 A `final_raw_data.csv` file is used for final analysis. This is a combination of all Treatment, Control, and Reference data for all elevations that was combined from the LICOR text logs in previous steps.
 
 Data is read from a CSV file and `type.convert()` is used to guess the data types.\
@@ -145,7 +144,6 @@ normal_plot <- function(plotdata, leaftype, dfvariable, title) {
 ```
 
 ## OUTLIERS
-
 An observation is an outlier if it is 1.5 times the interquartile range greater than the third quartile (Q3) or 1.5 times the interquartile range less than the first quartile (Q1).
 
 The interquartile range of the value of interest is calculated using the `IQR()` function.
@@ -172,7 +170,7 @@ Q3 <- quantile(finalTreat[[VARNAME]], .75)
 IQR <- IQR(finalTreat[[VARNAME]])
 # subset data where points value is outside 1.5*IQR of Q1 and Q3
 outliersTreat <- subset(finalTreat, finalTreat[[VARNAME]]<(Q1 - 1.5*IQR) | finalTreat[[VARNAME]]>(Q3 + 1.5*IQR))
-newTreat <- subset(finalTreat, !(finalTreat[[VARNAME]]<(Q1 - 1.5*IQR) | finalTreat[[VARNAME]]>(Q3 + 1.5*IQR)))
+newTreat <-      subset(finalTreat, !(finalTreat[[VARNAME]]<(Q1 - 1.5*IQR) | finalTreat[[VARNAME]]>(Q3 + 1.5*IQR)))
 # outliersTreat
 
 finalCont <- subset(finaldata, Data_leaftype == "Control")
@@ -215,343 +213,212 @@ TreatContRef <- mean_plant_data(newfinaldata, ELEVATION, VARNAME)
 The number of Treatment data outliers removed: `r nrow(outliersTreat)`\
 The number of Control data outliers removed: `r nrow(outliersCont)`\
 The number of Reference data outliers removed: `r nrow(outliersRef)`
-
+{{< pagebreak >}}  
 # Data Exploration
 
-Show the normality of the original data vs wrangled data.
+Compare the original data vs wrangled data.
 
-## `r VARNAME` Normality
+## *ALL* Daily Observations of `r VARNAME`
 
-### Normality of *ALL* Daily Observations
-
-Plots of the original data are shown next to the wrangled data with the outliers removed.\
+Plots of the original data are shown next to the wrangled data which have outliers removed.  
 
 ```{r graph_means}
 #| echo: false
 #| warning: false
 
-# original
-n1plot_original <- normal_plot(finaldata, "Treatment", VARNAME, 
-                      paste("Original: Elevation ", ELEVATION, ": \nTreatment - ", VARNAME, sep = ''))
-# n1plot_original
-# new
-n1plot <- normal_plot(newfinaldata, "Treatment", VARNAME, 
-                      paste("Wrangled: Elevation ", ELEVATION, ": \nTreatment - ", VARNAME, sep = ''))
-# n1plot
+# ------------------------------------------------
 
-# original
-n2plot_original <- normal_plot(finaldata, "Control", VARNAME, 
-                      paste("Original: Elevation ", ELEVATION, ": \nControl - ", VARNAME, sep = ''))
-# n2plot_original
-# new
-n2plot <- normal_plot(newfinaldata, "Control", VARNAME, 
-                     paste("Wrangled: Elevation ", ELEVATION, ": \nControl - ", VARNAME,  sep = ''))
-# n2plot
+tdata <- finaldata %>% filter(Data_leaftype == "Treatment" & SysObs_time > 1668543540) %>% arrange(SysObs_date)
+cdata <- finaldata %>% filter(Data_leaftype == "Control" & SysObs_time > 1668543540) %>% arrange(SysObs_date)
+rdata <- finaldata %>% filter(Data_leaftype == "Reference" & SysObs_time > 1668543540) %>% arrange(SysObs_date)
 
-# original
-n3plot_original <- normal_plot(finaldata, "Reference", VARNAME, 
-                      paste("Original: Elevation ", ELEVATION, ": \nReference - ", VARNAME, sep = ''))
-# n3plot_original
+t1 <- ggplot(tdata, aes(x = tdata[[VARNAME]])) +
+  stat_function(
+    fun = dnorm,
+    args = with(tdata, 
+                c(mean = mean(tdata[[VARNAME]]), 
+                  sd = sd(tdata[[VARNAME]])))
+  ) +
+  scale_x_continuous(paste("Treatment - Original values of ", VARNAME, sep = '')) +
+  scale_y_continuous(limits = c(0.0, 65)) # TODO change the scale of data values?
 
-n3plot <- normal_plot(newfinaldata, "Reference", VARNAME, 
-                      paste("Wrangled: Elevation ", ELEVATION, ": \nReference - ", VARNAME, sep = ''))
-# n3plot
+t2 <- ggplot(newTreat, aes(x = newTreat[[VARNAME]])) +
+  stat_function(
+    fun = dnorm,
+    args = with(newTreat, 
+                c(mean = mean(newTreat[[VARNAME]]), 
+                  sd = sd(newTreat[[VARNAME]])))
+  ) +
+  scale_x_continuous(paste("Treatment - Wrangled values of ", VARNAME, sep = '')) +
+  scale_y_continuous(limits = c(0.0, 65))
 
-n1plot_original + n1plot 
-n2plot_original + n2plot
-n3plot_original + n3plot
+# ----------------------------
+
+c1 <- ggplot(cdata, aes(x = cdata[[VARNAME]])) +
+  stat_function(
+    fun = dnorm,
+    args = with(cdata, 
+                c(mean = mean(cdata[[VARNAME]]), 
+                  sd = sd(cdata[[VARNAME]])))
+  ) +
+  scale_x_continuous(paste("Control - Original values of ", VARNAME, sep = '')) +
+  scale_y_continuous(limits = c(0.0, 30))
+
+c2 <- ggplot(newCont, aes(x = newCont[[VARNAME]])) +
+  stat_function(
+    fun = dnorm,
+    args = with(newCont, 
+                c(mean = mean(newCont[[VARNAME]]), 
+                  sd = sd(newCont[[VARNAME]])))
+  ) +
+  scale_x_continuous(paste("Control - Wrangled values of ", VARNAME, sep = '')) +
+  scale_y_continuous(limits = c(0.0, 30))
+
+# ----------------------------
+
+r1 <- ggplot(rdata, aes(x = rdata[[VARNAME]])) +
+  stat_function(
+    fun = dnorm,
+    args = with(rdata, 
+                c(mean = mean(rdata[[VARNAME]]), 
+                  sd = sd(rdata[[VARNAME]])))
+  ) +
+  scale_x_continuous(paste("Reference - Original values of ", VARNAME, sep = '')) +
+  scale_y_continuous(limits = c(0.0, 40))
+
+r2 <- ggplot(newref, aes(x = newref[[VARNAME]])) +
+  stat_function(
+    fun = dnorm,
+    args = with(newref, 
+                c(mean = mean(newref[[VARNAME]]), 
+                  sd = sd(newref[[VARNAME]])))
+  ) +
+  scale_x_continuous(paste("Reference - Wrangled values of ", VARNAME, sep = '')) +
+  scale_y_continuous(limits = c(0.0, 40))
+
+t1 + t2
+c1 + c2
+r1 + r2
+# ------------------------------------------------
+
 ```
-
-## `r VARNAME` Normality
-
-### Normality of *AVERAGE* Observations
-
-A visual normality check for mean values using the `normal_plot()` function.
+{{< pagebreak >}}  
+## AVERAGE Daily Observation of `r VARNAME`  
 
 ```{r}
 #| echo: false
 #| warning: false
-#| 
-# DAILY AVERAGES
-
-n1plot <- normal_plot(TreatContRef, "Treatment", "gm",
-                      paste("Elevation ", ELEVATION, ": Treatment - Daily Mean ", VARNAME, sep = ''))
-n1plot
-
-n2plot <- normal_plot(TreatContRef, "Control", "gm",
-                      paste("Elevation ", ELEVATION, ": Control - Daily Mean ", VARNAME, sep = ''))
-n2plot
-
-n3plot <- normal_plot(TreatContRef, "Reference", "gm",
-                      paste("Elevation ", ELEVATION, ": Reference - Daily Mean ", VARNAME, sep = ''))
-n3plot
-
-n1plot / n2plot / n3plot
-```
-
-## Mean Value Normality Tests
-
-T-test, ANOVA have the assumption that the data is Normal. This is explored visually and using statistics.
-
-If the data is not normal, a transformations can be applied, such as taking the natural log(), square or square root, among others to coerce it into a normal form.
-
-### Q-Q Plots
-
-`qqnorm()` is used to generate Q-Q plots for all mean data.  
-
-```{r QQ_plots}
-#| echo: false
-#| warning: false
-
-# original treatment average values, are not normal
-qqnorm(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gm,
-       main = paste("Q-Q Plot Elevation ", ELEVATION, ": \nTreatment - Daily Mean GaseEx_A", sep = ''))
-qqline(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gm)
-# shapiro.test(Treat)
-
-qqnorm(TreatContRef[TreatContRef$Data_leaftype == "Control",]$gm,
-       main = paste("Q-Q Plot Elevation ", ELEVATION, "\nControl - Daily Mean GaseEx_A", sep = ''))
-qqline(TreatContRef[TreatContRef$Data_leaftype == "Control",]$gm)
-# shapiro.test(Cont)
-
-qqnorm(TreatContRef[TreatContRef$Data_leaftype == "Reference",]$gm,
-       main = paste("Q-Q Plot Elevation ", ELEVATION, "\nReference - Daily Mean GaseEx_A", sep = ''))
-qqline(TreatContRef[TreatContRef$Data_leaftype == "Reference",]$gm)
-
-```
-
-The first Q-Q plot (Treatment) does not look normal. It has a curve that looks exponential.\
-Apply a $log()$ (natural log) transformation to the Treatment data to make it normal.
-
-```{r log_treatment}
-#| echo: false
-#| warning: false
-
-# TRANSFORM NON-NORMAL DATA TO NORMAL USING BOXCOX
-
-library(MASS)
-b <- boxcox(lm(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gm ~ 1), plotit = FALSE)
-# Exact lambda
-Tlambda <- b$x[which.max(b$y)] # exact lambda
-# pick transformation based on BoxCox table using nearest lambda
-# Tlambda
-
-b <- boxcox(lm(TreatContRef[TreatContRef$Data_leaftype == "Control",]$gm ~ 1), plotit = FALSE)
-# Exact lambda)
-# Exact lambda
-Clambda <- b$x[which.max(b$y)] # exact lambda
-# pick transformation based on BoxCox table using nearest lambda
-# Clambda
-
-b <- boxcox(lm(TreatContRef[TreatContRef$Data_leaftype == "Reference",]$gm ~ 1), plotit = FALSE)
-# Exact lambda)
-# Exact lambda
-Rlambda <- b$x[which.max(b$y)] # exact lambda
-# pick transformation based on BoxCox table using nearest lambda
-# Rlambda
-
-# add in a column to TreatContRef
-# gmlog <- 1/sqrt(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gm)
-# CREATE AN EMPTY COLUMN FOR VALUES
-TreatContRef$gmLog <- NaN
-# # ONLY POPULATE OBSERVATION TYPES THAT ARE NEEDED TO BE TRANSFORMED
-# TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gmLog <-  1/sqrt(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gm)
-
-TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gmLog <-  log(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gm)
-TreatContRef[TreatContRef$Data_leaftype == "Control",]$gmLog <-  log(TreatContRef[TreatContRef$Data_leaftype == "Control",]$gm)
-TreatContRef[TreatContRef$Data_leaftype == "Reference",]$gmLog <-  log(TreatContRef[TreatContRef$Data_leaftype == "Reference",]$gm)
-# -----------------
-
-
-# transform using log() and the data becomes normal
-qqnorm(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gmLog,
-       main = paste("log() Tranformed: Q-Q Plot Elevation ", ELEVATION, "\nTreatment - Daily Mean GaseEx_A", sep = ''))
-qqline(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gmLog)
-# shapiro.test(nt)
-
-```
-
-## Box-Cox  
-
-Box-Cox transformation selection can help you find the proper transformation based on the data.  
-If a $\lambda$ value is very close to any value in the table, use the closest transformation.  
-e.g. $\lambda$ 0.14 try to use 0, log(x)  
-Exact equations exist, but they make it harder to interpret results.  
-These can be used as another interpretation of normality. The closer $\lambda$ is to 1, the more normal the data.  
-Box-Cox Transformation Selection  
-| $lambda$ | Transformation  |  
-|------|---------------------|  
-| -2   | $frac{1}{x^2}$      |  
-| -1   | $1/x$               |  
-| -0.5 | $frac{1}{sqrt{x}}$  |  
-| 0    | $log(x)$            |  
-| 0.5  | $sqrt{x}$           |  
-| 1    | $x$                 |  
-| 2    | $x^2$               |
-
-### Box-Cox Result  
-
-Treatment: `r Tlambda`  
-Control: `r Clambda`  
-Reference: `r Rlambda`  
-Treatment is close to 0, use $log(x)$  
-Control is close to 1, leave it as is.  
-Reference is close to 1, leave it as is, or possibly $sqrt{x}$   
-
-### Test Mean Normality using Statistics  
-
-#### Shapiro-Wilk Test  
-
-p-value greater than significance level $α$ =.05, fail to reject null hypothesis (data is normal).  
-H0: The data is normally distributed  
-HA: The data is not normally distributed  
-
-```{r shapiro_wilk}
-#| echo: false
-#| warning: false
-
-Tsw <- shapiro.test(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gm)
-
-Csw <- shapiro.test(TreatContRef[TreatContRef$Data_leaftype == "Control",]$gm)
-
-Rsw <-shapiro.test(TreatContRef[TreatContRef$Data_leaftype == "Reference",]$gm)
-
-
-```
-
-
-
-```{r treatment_shapiro_wilk}
-#| echo: false
-#| warning: false
-# ## The Shapiro-Wilk test on the log() transformed data
-# this is a special test run on the log() transformed data
-Tswlog <- shapiro.test(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gmLog)
-
-```
-
-### Treatment vs Transformation  
-
-The original Treatment data is not normal. However, the p-val improves when the `log()` transformation is applied, showing that the transformed data is normal.  
-**Treatment**
-
-The p-value = `r Tsw[2]` for the Treatment data $α$ =.05  
-
-**Treatment log() Transformation**\
-The p-value = `r Tswlog[2]` for the log() transformed Treatment data $α$ =.05  
-
-### Control and Reference  
-
-**Control**  
-The p-value = `r Csw[2]` for the Control data $α$ =.05  
-
-**Reference**  
-The p-value = `r Rsw[2]` for Reference data $α$ =.05  
-
-# Are the Means equal between the Treatment and the Control?  
-
-## Boxplot  
-
-A boxplot shows the Treatment and Control means and variance.  
-
-```{r elev2_means_test}
-#| echo: false
-#| warning: false
-
+ 
+TreatContRef$Data_leaftype <- factor(TreatContRef$Data_leaftype , levels=c("Treatment", "Control", "Reference"))
 # all data, not transformed
 all1 <-  ggplot() +
   # geom_boxplot(data = TreatContRef, aes(x = Data_leaftype, y = gm, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
-  geom_boxplot(data = TreatContRef[TreatContRef$Data_leaftype == "Treatment",], aes(x = Data_leaftype, y = gm, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
-    geom_boxplot(data = TreatContRef[TreatContRef$Data_leaftype == "Control",], aes(x = Data_leaftype, y = gm, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
-  # scale_y_continuous(limits=c(0.0, 0.1)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
-  ggtitle(paste("Elevation ", ELEVATION, "\nOriginal daily Mean \nObservations on ", VARNAME, sep="")) +
+  geom_boxplot(data = TreatContRef[TreatContRef$Data_leaftype == "Treatment",], 
+               aes(x = Data_leaftype, y = gm, color = Data_leaftype), 
+               outlier.color = "red", outlier.size = 3) +
+  geom_boxplot(data = TreatContRef[TreatContRef$Data_leaftype == "Control",], 
+               aes(x = Data_leaftype, y = gm, color = Data_leaftype), 
+               outlier.color = "red", outlier.size = 3) +
+  geom_boxplot(data = TreatContRef[TreatContRef$Data_leaftype == "Reference",], 
+               aes(x = Data_leaftype, y = gm, color = Data_leaftype), 
+               outlier.color = "red", outlier.size = 3) +  # scale_y_continuous(limits=c(0.0, 0.1)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
+  ggtitle(paste("Elevation ", ELEVATION, "\nDaily Mean Observations on ", VARNAME, sep="")) +
   xlab("Leaf Type") +
   ylab(VARNAME)
 
 all1
 
-# plot with transformed Treatment and original Control
-all2 <-  ggplot() +
-  geom_boxplot(data = TreatContRef[TreatContRef$Data_leaftype == "Treatment",], aes(x = Data_leaftype, y = gmLog, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
-    geom_boxplot(data = TreatContRef[TreatContRef$Data_leaftype == "Control",], aes(x = Data_leaftype, y = gm, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
-    # geom_boxplot(data = TreatContRef, aes(x = Data_leaftype , y = gm, color = Data_leaftype)) +
-  # scale_y_continuous(limits=c(0.0, 0.1)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
-  ggtitle(paste("log() Tranformed Treatment\nOriginal Control data\nElevation ", ELEVATION, " Daily Mean ", VARNAME, sep="")) +
-  xlab("Leaf Type") +
-  ylab(VARNAME)
+```
+{{< pagebreak >}}  
 
-all2
+## one-way ANOVA  
+  H0: All group means are equal.  
+  HA: At least one group mean is different from the rest.   
+  
+  p-val < $α$ reject H0  
+  (https://www.statology.org/anova-assumptions/)  
+  (https://www.statology.org/interpret-anova-results-in-r/)  
 
-all1 + all2
+```{r anova_data}
+
+#fit one-way ANOVA model
+model <- aov(get(VARNAME) ~ Data_leaftype, data = newfinaldata)
+
+summary(model)
 ```
 
-## Variance Check
+{{< pagebreak >}}  
+## Kruskal-Wallis test
+(https://www.statology.org/kruskal-wallis-test-in-r/)  
 
-### Bartlett test
+Use instead of ANOVA
 
-Variance check that  
-H0: The variance among each group is equal.  
-HA: At least one group has a variance that is not equal to the rest.  
-If the p-val is less than a given significance level then reject the null hypothesis and conclude that not all groups have the same variance.  
+Kruskal-Wallis Test Assumptions
+1. Ordinal or Continuous Response Variable – the response variable should be an ordinal or continuous variable. An example of an ordinal variable is a survey response question measured on a Likert Scale (e.g. a 5-point scale from “strongly disagree” to “strongly agree”) and an example of a continuous variable is weight (e.g. measured in pounds).
+
+2. Independence – the observations in each group need to be independent of each other. Usually a randomized design will take care of this.
+
+3. Distributions have similar shapes – the distributions in each group need to have a similar shape.
+
+Test:  
+H0: The median is equal across all groups  
+H1: The median is not equal across all groups  
+p-val < $α$ reject H0  
 
 ```{r}
-#| echo: false
-#| warning: false
-# perform variance check
-
-# We need the gmLog transformation for the Treatment data
-# but the original gm values for the Control data
-treatblt <- cbind(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$Data_leaftype,
-           TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gmLog)
-contblt <- cbind(TreatContRef[TreatContRef$Data_leaftype == "Control",]$Data_leaftype,
-           TreatContRef[TreatContRef$Data_leaftype == "Control",]$gm)
-finalblt <- rbind(treatblt, contblt)
-colnames(finalblt) <- c("Group", "gm")
-
-# check if variance is equal
-TrtConbt <- bartlett.test(gm ~ Group, data = finalblt)
-
-
+#perform Kruskal-Wallis Test 
+kruskal.test(get(VARNAME) ~ Data_leaftype, data = newfinaldata) 
 ```
+{{< pagebreak >}}  
 
-Bartlett test p-value = `r TrtConbt[3]` $α$ = .05  
+## Optional Post Hoc Test After ANOVA  
+(https://www.statology.org/dunnetts-test-r/)  
 
-## Welch's t-test  
-
-Test the means between two independent normal groups with unequal variance.  
-H0: difference in means is 0  
-
-## Two Sample T-Test  
-
-Test the means between two independent normal groups with equal variance.  
-H0: difference in means is 0  
+If one of the groups in the study is considered the control group, then use Dunnett’s test as a post-hoc test.  
 
 ```{r}
-#| echo: false
-#| warning: false
-# Two Sample T-Test 
-# variance is equal
+# 
+# boxplot(get(VARNAME) ~ Data_leaftype,
+#         data = newfinaldata,
+#         main = paste(VARNAME, " by Leaf", sep=''),
+#         xlab = "Leaf",
+#         ylab = VARNAME,
+#         col = "steelblue",
+#         border = "black")
 
-TreatCont_tt <- t.test(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gmLog, 
-       TreatContRef[TreatContRef$Data_leaftype == "Control",]$gm,
-       var.equal=TRUE)
+#load DescTools library
+library(DescTools)
 
-# Welch's t-test
-# Variances not assumed equal
-TeatCont_wtt <- t.test(TreatContRef[TreatContRef$Data_leaftype == "Treatment",]$gmLog, 
-       TreatContRef[TreatContRef$Data_leaftype == "Control",]$gm)
-
+#perform Dunnett's Test
+DunnettTest(x=newfinaldata[[VARNAME]], g=newfinaldata$Data_leaftype)
 ```
+{{< pagebreak >}}  
 
-Welch's t-test: Normality with Unequal Variance    
-p-value = `r TeatCont_wtt[3]`at $α$ = .05  
-t =`r TeatCont_wtt[1]` with a 95% confidence interval \[`r TeatCont_wtt$conf.int[1]`, `r TeatCont_wtt$conf.int[2]`\].
+## Normality of Residuals
+### Q-Q Plot  
 
-Student t-test: Normality with Equal Variance  
-p-value = `r TreatCont_tt[3]`at $α$ = .05  
-t =`r TreatCont_tt[1]` with a 95% confidence interval \[`r TreatCont_tt$conf.int[1]`, `r TreatCont_tt$conf.int[2]`\].
+### Shapiro-Wilk Test for normality of residuals   
+H0: samples come from a normal distribution  
+HA: samples do not come from a normal distribution    
+p-val < $α$ reject H0  
 
-# Conclusion  
+```{r}
+#create Q-Q plot to compare this dataset to a theoretical normal distribution 
+qqnorm(model$residuals)
 
-Normality is shown in multiple ways and each suggest a slightly different answer. Through experimentation any transformation did not make a difference in the final result that the Treatment and Control means are different.  
+#add straight diagonal line to plot
+qqline(model$residuals)
+
+#Conduct Shapiro-Wilk Test for normality 
+shapiro.test(newfinaldata[[VARNAME]])
+```
+{{< pagebreak >}}  
+
+## Equal Variance  
+
+### Bartlett's Test  
+```{r}
+#Create box plots that show distribution of weight loss for each group
+bartlett.test(get(VARNAME) ~ Data_leaftype, data=newfinaldata)
+```
 
