@@ -38,6 +38,7 @@ DATARAW <- "data_raw"
 DATACLEAN <- "data_clean"
 DATAUSER <- "data_user"
 ELEVATION <- 2 # elevation of the experiment, numeric value or 2 or 3
+VARNAME <- "GasEx_A" # this the column name in finaldata where the group and variable are combined
 
 # NOTE to self: Look into these for help with graph layout\
 # patchwork TODO !!!!\
@@ -54,7 +55,7 @@ A `final_raw_data.csv` file is used for final analysis. This is a combination of
 
 Data is read from a CSV file and `type.convert()` is used to guess the data types.\
 Data types that are not correct are manually set to their appropriate values.\
-Data is scrubbed for `GasEx_A` \> 0. Values \<= 0 are considered invalid values.\
+Data is scrubbed for `r VARNAME` > 0. Values <= 0 are considered invalid values.\
 Data is limited to `SysObs_time` \> 1668543540 seconds, the start of the experiment.
 
 ```{r functions}
@@ -79,8 +80,7 @@ finaldata$Data_plant_id <- as.factor(finaldata$Data_plant_id)
 finaldata$SysObs_date <-as.Date(finaldata$SysObs_date)
 # error if <= 0 and arbitrary >= 7
 # TODO this needs to be in the original cleaning code
-#    finaldata <- finaldata %>% filter(GasEx_A > 0 & GasEx_A < 7)
-    finaldata <- finaldata %>% filter(GasEx_A > 0)
+    finaldata <- finaldata %>% filter(VARNAME > 0)
 
 # The clock was off at one point, this needs corrected or ignore the values
 # TODO this needs to bin the original cleanind code
@@ -167,30 +167,30 @@ finaldata <- read_final_data(here(DATAUSER,"final_raw_data.csv"))
 
 # find Q1, Q3, and interquartile range for values in points column
 finalTreat <- subset(finaldata, Data_leaftype == "Treatment")
-Q1 <- quantile(finalTreat$GasEx_A, .25)
-Q3 <- quantile(finalTreat$GasEx_A, .75)
-IQR <- IQR(finalTreat$GasEx_A)
+Q1 <- quantile(finalTreat[[VARNAME]], .25)
+Q3 <- quantile(finalTreat[[VARNAME]], .75)
+IQR <- IQR(finalTreat[[VARNAME]])
 # subset data where points value is outside 1.5*IQR of Q1 and Q3
-outliersTreat <- subset(finalTreat, finalTreat$GasEx_A<(Q1 - 1.5*IQR) | finalTreat$GasEx_A>(Q3 + 1.5*IQR))
-newTreat <- subset(finalTreat, !(finalTreat$GasEx_A<(Q1 - 1.5*IQR) | finalTreat$GasEx_A>(Q3 + 1.5*IQR)))
+outliersTreat <- subset(finalTreat, finalTreat[[VARNAME]]<(Q1 - 1.5*IQR) | finalTreat[[VARNAME]]>(Q3 + 1.5*IQR))
+newTreat <- subset(finalTreat, !(finalTreat[[VARNAME]]<(Q1 - 1.5*IQR) | finalTreat[[VARNAME]]>(Q3 + 1.5*IQR)))
 # outliersTreat
 
 finalCont <- subset(finaldata, Data_leaftype == "Control")
-Q1 <- quantile(finalCont$GasEx_A, .25)
-Q3 <- quantile(finalCont$GasEx_A, .75)
-IQR <- IQR(finalCont$GasEx_A)
+Q1 <- quantile(finalCont[[VARNAME]], .25)
+Q3 <- quantile(finalCont[[VARNAME]], .75)
+IQR <- IQR(finalCont[[VARNAME]])
 # subset data where points value is outside 1.5*IQR of Q1 and Q3
-outliersCont <- subset(finalCont, finalCont$GasEx_A<(Q1 - 1.5*IQR) | finalCont$GasEx_A>(Q3 + 1.5*IQR))
-newCont <- subset(finalCont, !(finalCont$GasEx_A<(Q1 - 1.5*IQR) | finalCont$GasEx_A>(Q3 + 1.5*IQR)))
+outliersCont <- subset(finalCont, finalCont[[VARNAME]]<(Q1 - 1.5*IQR) | finalCont[[VARNAME]]>(Q3 + 1.5*IQR))
+newCont <- subset(finalCont, !(finalCont[[VARNAME]]<(Q1 - 1.5*IQR) | finalCont[[VARNAME]]>(Q3 + 1.5*IQR)))
 # outliersCont
 
 finalRef <- subset(finaldata, Data_leaftype == "Reference")
-Q1 <- quantile(finalRef$GasEx_A, .25)
-Q3 <- quantile(finalRef$GasEx_A, .75)
-IQR <- IQR(finalRef$GasEx_A)
+Q1 <- quantile(finalRef[[VARNAME]], .25)
+Q3 <- quantile(finalRef[[VARNAME]], .75)
+IQR <- IQR(finalRef[[VARNAME]])
 # subset data where points value is outside 1.5*IQR of Q1 and Q3
-outliersRef <- subset(finalRef, finalRef$GasEx_A<(Q1 - 1.5*IQR) | finalRef$GasEx_A>(Q3 + 1.5*IQR))
-newref <- subset(finalRef, !(finalRef$GasEx_A<(Q1 - 1.5*IQR) | finalRef$GasEx_A>(Q3 + 1.5*IQR)))
+outliersRef <- subset(finalRef, finalRef[[VARNAME]]<(Q1 - 1.5*IQR) | finalRef[[VARNAME]]>(Q3 + 1.5*IQR))
+newref <- subset(finalRef, !(finalRef[[VARNAME]]<(Q1 - 1.5*IQR) | finalRef[[VARNAME]]>(Q3 + 1.5*IQR)))
 # outliersRef
 
 # the new df for the final data with outliers that have been removeds
@@ -198,7 +198,7 @@ newfinaldata <- rbind(newTreat, newCont, newref)
 
 # ---------------- AVERAGE DATA ----------------
 # df - interested in daily means of the Treatment, Control, Reference
-TreatContRef <- mean_plant_data(newfinaldata, ELEVATION, "GasEx_A")
+TreatContRef <- mean_plant_data(newfinaldata, ELEVATION, VARNAME)
 
 # # TODO: these are not really needed, remove when it is confirmed they are not in use anywhere.
 # # df - Treatment and Control
@@ -220,7 +220,7 @@ The number of Reference data outliers removed: `r nrow(outliersRef)`
 
 Show the normality of the original data vs wrangled data.
 
-## `GasEx_A` Normality
+## `r VARNAME` Normality
 
 ### Normality of *ALL* Daily Observations
 
@@ -231,30 +231,30 @@ Plots of the original data are shown next to the wrangled data with the outliers
 #| warning: false
 
 # original
-n1plot_original <- normal_plot(finaldata, "Treatment", "GasEx_A", 
-                      paste("Original: Elevation ", ELEVATION, ": \nTreatment - GaseEx_A", sep = ''))
+n1plot_original <- normal_plot(finaldata, "Treatment", VARNAME, 
+                      paste("Original: Elevation ", ELEVATION, ": \nTreatment - ", VARNAME, sep = ''))
 # n1plot_original
 # new
-n1plot <- normal_plot(newfinaldata, "Treatment", "GasEx_A", 
-                      paste("Wrangled: Elevation ", ELEVATION, ": \nTreatment - GaseEx_A", sep = ''))
+n1plot <- normal_plot(newfinaldata, "Treatment", VARNAME, 
+                      paste("Wrangled: Elevation ", ELEVATION, ": \nTreatment - ", VARNAME, sep = ''))
 # n1plot
 
 # original
-n2plot_original <- normal_plot(finaldata, "Control", "GasEx_A", 
-                      paste("Original: Elevation ", ELEVATION, ": \nControl - GaseEx_A", sep = ''))
+n2plot_original <- normal_plot(finaldata, "Control", VARNAME, 
+                      paste("Original: Elevation ", ELEVATION, ": \nControl - ", VARNAME, sep = ''))
 # n2plot_original
 # new
-n2plot <- normal_plot(newfinaldata, "Control", "GasEx_A", 
-                     paste("Wrangled: Elevation ", ELEVATION, ": \nControl - GaseEx_A", sep = ''))
+n2plot <- normal_plot(newfinaldata, "Control", VARNAME, 
+                     paste("Wrangled: Elevation ", ELEVATION, ": \nControl - ", VARNAME,  sep = ''))
 # n2plot
 
 # original
-n3plot_original <- normal_plot(finaldata, "Reference", "GasEx_A", 
-                      paste("Original: Elevation ", ELEVATION, ": \nReference - GaseEx_A", sep = ''))
+n3plot_original <- normal_plot(finaldata, "Reference", VARNAME, 
+                      paste("Original: Elevation ", ELEVATION, ": \nReference - ", VARNAME, sep = ''))
 # n3plot_original
 
-n3plot <- normal_plot(newfinaldata, "Reference", "GasEx_A", 
-                      paste("Wrangled: Elevation ", ELEVATION, ": \nReference - GaseEx_A", sep = ''))
+n3plot <- normal_plot(newfinaldata, "Reference", VARNAME, 
+                      paste("Wrangled: Elevation ", ELEVATION, ": \nReference - ", VARNAME, sep = ''))
 # n3plot
 
 n1plot_original + n1plot 
@@ -262,7 +262,7 @@ n2plot_original + n2plot
 n3plot_original + n3plot
 ```
 
-## `GasEx_A` Normality
+## `r VARNAME` Normality
 
 ### Normality of *AVERAGE* Observations
 
@@ -274,21 +274,16 @@ A visual normality check for mean values using the `normal_plot()` function.
 #| 
 # DAILY AVERAGES
 
-# nt <- log(Treat)
-# n1plot <- normal_plot(TreatContRef, "Treatment", "gm",
-#                       paste("Elevation ", ELEVATION, ": Treatment - Daily Mean GaseEx_A", sep = ''))
-# n1plot
-
 n1plot <- normal_plot(TreatContRef, "Treatment", "gm",
-                      paste("Elevation ", ELEVATION, ": Treatment - Daily Mean GaseEx_A", sep = ''))
+                      paste("Elevation ", ELEVATION, ": Treatment - Daily Mean ", VARNAME, sep = ''))
 n1plot
 
 n2plot <- normal_plot(TreatContRef, "Control", "gm",
-                      paste("Elevation ", ELEVATION, ": Control - Daily Mean GaseEx_A", sep = ''))
+                      paste("Elevation ", ELEVATION, ": Control - Daily Mean ", VARNAME, sep = ''))
 n2plot
 
 n3plot <- normal_plot(TreatContRef, "Reference", "gm",
-                      paste("Elevation ", ELEVATION, ": Reference - Daily Mean GaseEx_A", sep = ''))
+                      paste("Elevation ", ELEVATION, ": Reference - Daily Mean ", VARNAME, sep = ''))
 n3plot
 
 n1plot / n2plot / n3plot
@@ -469,9 +464,9 @@ all1 <-  ggplot() +
   geom_boxplot(data = TreatContRef[TreatContRef$Data_leaftype == "Treatment",], aes(x = Data_leaftype, y = gm, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
     geom_boxplot(data = TreatContRef[TreatContRef$Data_leaftype == "Control",], aes(x = Data_leaftype, y = gm, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
   # scale_y_continuous(limits=c(0.0, 0.1)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
-  ggtitle(paste("Elevation ", ELEVATION, "\nOriginal daily Mean \nObservations on GasEx_A")) +
+  ggtitle(paste("Elevation ", ELEVATION, "\nOriginal daily Mean \nObservations on ", VARNAME, sep="")) +
   xlab("Leaf Type") +
-  ylab("GasEx_A")
+  ylab(VARNAME)
 
 all1
 
@@ -481,10 +476,9 @@ all2 <-  ggplot() +
     geom_boxplot(data = TreatContRef[TreatContRef$Data_leaftype == "Control",], aes(x = Data_leaftype, y = gm, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
     # geom_boxplot(data = TreatContRef, aes(x = Data_leaftype , y = gm, color = Data_leaftype)) +
   # scale_y_continuous(limits=c(0.0, 0.1)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
-  # ggtitle(paste("Elevation ", ELEVATION, " - Daily Mean Observations on GasEx_A")) +
-  ggtitle(paste("log() Tranformed Treatment\nOriginal Control data\nElevation ", ELEVATION, " Daily Mean GaseEx_A", sep = '')) +
+  ggtitle(paste("log() Tranformed Treatment\nOriginal Control data\nElevation ", ELEVATION, " Daily Mean ", VARNAME, sep="")) +
   xlab("Leaf Type") +
-  ylab("GasEx_A")
+  ylab(VARNAME)
 
 all2
 
