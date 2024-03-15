@@ -38,7 +38,7 @@ DATARAW <- "data_raw"
 DATACLEAN <- "data_clean"
 DATAUSER <- "data_user"
 ELEVATION <- 2 # elevation of the experiment, numeric value or 2 or 3
-VARNAME <- "GasEx_gsw" # this the column name in finaldata where the group and variable are combined
+VARNAME <- "GasEx_A" # this the column name in finaldata where the group and variable are combined
 
 # NOTE to self: Look into these for help with graph layout\
 # patchwork TODO !!!!\
@@ -240,7 +240,7 @@ t1 <- ggplot(tdata, aes(x = tdata[[VARNAME]])) +
                   sd = sd(tdata[[VARNAME]])))
   ) +
   scale_x_continuous(paste("Treatment - Original values of ", VARNAME, sep = '')) +
-  scale_y_continuous(limits = c(0.0, 65)) # TODO change the scale of data values?
+  scale_y_continuous(limits = c(0.0, 0.8)) # TODO change the scale of data values?
 
 t2 <- ggplot(newTreat, aes(x = newTreat[[VARNAME]])) +
   stat_function(
@@ -250,7 +250,7 @@ t2 <- ggplot(newTreat, aes(x = newTreat[[VARNAME]])) +
                   sd = sd(newTreat[[VARNAME]])))
   ) +
   scale_x_continuous(paste("Treatment - Wrangled values of ", VARNAME, sep = '')) +
-  scale_y_continuous(limits = c(0.0, 65))
+  scale_y_continuous(limits = c(0.0, 0.8))
 
 # ----------------------------
 
@@ -262,7 +262,7 @@ c1 <- ggplot(cdata, aes(x = cdata[[VARNAME]])) +
                   sd = sd(cdata[[VARNAME]])))
   ) +
   scale_x_continuous(paste("Control - Original values of ", VARNAME, sep = '')) +
-  scale_y_continuous(limits = c(0.0, 30))
+  scale_y_continuous(limits = c(0.0, 0.8))
 
 c2 <- ggplot(newCont, aes(x = newCont[[VARNAME]])) +
   stat_function(
@@ -272,7 +272,7 @@ c2 <- ggplot(newCont, aes(x = newCont[[VARNAME]])) +
                   sd = sd(newCont[[VARNAME]])))
   ) +
   scale_x_continuous(paste("Control - Wrangled values of ", VARNAME, sep = '')) +
-  scale_y_continuous(limits = c(0.0, 30))
+  scale_y_continuous(limits = c(0.0, 0.8))
 
 # ----------------------------
 
@@ -284,7 +284,7 @@ r1 <- ggplot(rdata, aes(x = rdata[[VARNAME]])) +
                   sd = sd(rdata[[VARNAME]])))
   ) +
   scale_x_continuous(paste("Reference - Original values of ", VARNAME, sep = '')) +
-  scale_y_continuous(limits = c(0.0, 40))
+  scale_y_continuous(limits = c(0.0, 0.8))
 
 r2 <- ggplot(newref, aes(x = newref[[VARNAME]])) +
   stat_function(
@@ -294,7 +294,7 @@ r2 <- ggplot(newref, aes(x = newref[[VARNAME]])) +
                   sd = sd(newref[[VARNAME]])))
   ) +
   scale_x_continuous(paste("Reference - Wrangled values of ", VARNAME, sep = '')) +
-  scale_y_continuous(limits = c(0.0, 40))
+  scale_y_continuous(limits = c(0.0, 0.8))
 
 t1 + t2
 c1 + c2
@@ -421,4 +421,23 @@ shapiro.test(newfinaldata[[VARNAME]])
 #Create box plots that show distribution of weight loss for each group
 bartlett.test(get(VARNAME) ~ Data_leaftype, data=newfinaldata)
 ```
+```{r}
+library(plyr)
+ 
 
+df_summary <- newfinaldata %>% filter(Data_plant_id == 2) %>%
+  filter(Data_leaftype == "Treatment" | 
+           Data_leaftype == "Control" | 
+           Data_leaftype == "Reference")
+
+esummary <- ddply(df_summary, .(Filenames_filename, Data_leaftype, SysObs_date), summarise,
+               mean = round(mean(GasEx_A), 2),
+               sd = round(sd(GasEx_A), 2))
+esummary <- na.omit(esummary)
+
+ggplot(esummary, aes(x=SysObs_date, y=mean, color = Data_leaftype,group(Data_leaftype, SysObs_date))) +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), position = position_dodge(0.9), width = .2) +
+  geom_line(size= 0.2) +
+  geom_point(size = 2)
+
+```
