@@ -45,6 +45,7 @@ VARNAME <- "GasEx_A" # this the column name in finaldata where the group and var
 # wrap plot, axis collect
 
 ```
+*Always Restart R before running any script!*  
 
 # Report for elevation: `r ELEVATION` on `r VARNAME`
 This is an exploration of data normality and variance in the Treatment and Control data from this experiemnt.  Much of it is for exploration and would not be needed in any final report.  
@@ -67,28 +68,28 @@ read_final_data <- function(filename) {
   finaldata <- read_csv(filename, 
                         col_names = TRUE, 
                         show_col_types = FALSE) 
-
-# try to auto convert all data types, not all work
-finaldata <- type.convert(finaldata, as.is = TRUE)
-# convert values that were not correctly auto converted
-# finaldata$Data_leaftype <- as.factor(finaldata$Data_leaftype)
-finaldata$Filenames_filename <- as.factor(finaldata$Filenames_filename)
-finaldata$Data_plant_id <- as.factor(finaldata$Data_plant_id)
-# finaldata$SysObs_date <-  as.POSIXct(finaldata$SysObs_date, format = "%Y%m%d %H:%M:%S")
-# This needs converted into a true date type for graphing
-finaldata$SysObs_date <-as.Date(finaldata$SysObs_date)
-# error if <= 0 and arbitrary >= 7
-# TODO this needs to be in the original cleaning code
-    finaldata <- finaldata %>% filter(VARNAME > 0)
-
-# The clock was off at one point, this needs corrected or ignore the values
-# TODO this needs to bin the original cleanind code
-finaldata <- finaldata %>%
-  filter(Data_plant_id == ELEVATION & SysObs_time > 1668543540) %>% arrange(SysObs_date)
-# finaldata <- finaldata %>% filter(!Filenames_filename == "2023-11-22-1138_logdata")
-
-return(finaldata)
-
+  
+  # try to auto convert all data types, not all work
+  finaldata <- type.convert(finaldata, as.is = TRUE)
+  # convert values that were not correctly auto converted
+  finaldata$Data_leaftype <- as.factor(finaldata$Data_leaftype)
+  finaldata$Filenames_filename <- as.factor(finaldata$Filenames_filename)
+  finaldata$Data_plant_id <- as.factor(finaldata$Data_plant_id)
+  # finaldata$SysObs_date <-  as.POSIXct(finaldata$SysObs_date, format = "%Y%m%d %H:%M:%S")
+  # This needs converted into a true date type for graphing
+  finaldata$SysObs_date <-as.Date(finaldata$SysObs_date)
+  # error if <= 0 and arbitrary >= 7
+  # TODO this needs to be in the original cleaning code
+  finaldata <- finaldata %>% filter(VARNAME > 0)
+  
+  # The clock was off at one point, this needs corrected or ignore the values
+  # TODO this needs to bin the original cleanind code
+  finaldata <- finaldata %>%
+    filter(Data_plant_id == ELEVATION & SysObs_time > 1668543540) %>% arrange(SysObs_date)
+  # finaldata <- finaldata %>% filter(!Filenames_filename == "2023-11-22-1138_logdata")
+  
+  return(finaldata)
+  
 }
 
 # standard plot of Treatment, Control, and Reference data
@@ -103,9 +104,9 @@ mean_plant_data <- function(plot_data, plantid, sysobs) {
     arrange(SysObs_date)
   
   plotdf <- plotdf %>%
-  group_by(Filenames_filename, Data_leaftype, SysObs_date) %>%
-  summarise_at((sysobs), list(gm = mean))
-
+    group_by(Filenames_filename, Data_leaftype, SysObs_date) %>%
+    summarise_at((sysobs), list(gm = mean))
+  
   return(plotdf)
 }
 
@@ -115,9 +116,9 @@ mean_plant_data <- function(plot_data, plantid, sysobs) {
 plot_means <- function(plot_data, title="", xlabel="", ylabel=""){
   plot1 <- ggplot() +
     geom_point(data=plot_data, 
-              aes(x = SysObs_date, y = gm, color = Data_leaftype)) +
+               aes(x = SysObs_date, y = gm, color = Data_leaftype)) +
     # geom_line(data=plot_data, 
-              # aes(x = SysObs_date, y = gm, color = Data_leaftype)) +
+    # aes(x = SysObs_date, y = gm, color = Data_leaftype)) +
     ggtitle(title) +
     xlab(xlabel) +
     ylab(ylabel) +
@@ -154,7 +155,7 @@ A new df is created with the Outliers removed. This is used to calculate a df of
 #| echo: FALSE
 #| error: TRUE
 #| warning: FALSE
- 
+
 # the final, combined, and scrubbed data from all LICOR text logs
 finaldata <- read_final_data(here(DATAUSER,"final_raw_data.csv"))
 
@@ -228,10 +229,26 @@ Plots of the original data are shown next to the wrangled data which have outlie
 
 # ------------------------------------------------
 
+# broken out for each of the three plots
+# might be a better way, but this is more clear
 tdata <- finaldata %>% filter(Data_leaftype == "Treatment" & SysObs_time > 1668543540) %>% arrange(SysObs_date)
 cdata <- finaldata %>% filter(Data_leaftype == "Control" & SysObs_time > 1668543540) %>% arrange(SysObs_date)
 rdata <- finaldata %>% filter(Data_leaftype == "Reference" & SysObs_time > 1668543540) %>% arrange(SysObs_date)
 
+# compute a reasonable scale for the Y-axis
+# scalefactor = calculate this percent above the maximum mean for each dataset
+# TODO: this is wrong since the graph is dnorm()
+scalefactor <- 0.34
+tscale <- max(mean(tdata[[VARNAME]])) * scalefactor
+cscale <- max(mean(cdata[[VARNAME]])) * scalefactor
+rscale <- max(mean(rdata[[VARNAME]])) * scalefactor
+
+# keep the scale the same for all plots, find the max of all datasets
+finalscale <- max(tscale, cscale, rscale)
+finalscale
+
+# TREATMENT
+# dnorm plot for original and wrangled  data
 t1 <- ggplot(tdata, aes(x = tdata[[VARNAME]])) +
   stat_function(
     fun = dnorm,
@@ -239,8 +256,11 @@ t1 <- ggplot(tdata, aes(x = tdata[[VARNAME]])) +
                 c(mean = mean(tdata[[VARNAME]]), 
                   sd = sd(tdata[[VARNAME]])))
   ) +
+  ggtitle("dnorm Graphs") + # for the main title
+  # xlab(label) # for the x axis label
+  # ylab(label) # for the y axis label
   scale_x_continuous(paste("Treatment - Original values of ", VARNAME, sep = '')) +
-  scale_y_continuous(limits = c(0.0, 0.8)) # TODO change the scale of data values?
+  scale_y_continuous(limits = c(0.0, finalscale)) # TODO change the scale of data values?
 
 t2 <- ggplot(newTreat, aes(x = newTreat[[VARNAME]])) +
   stat_function(
@@ -250,10 +270,12 @@ t2 <- ggplot(newTreat, aes(x = newTreat[[VARNAME]])) +
                   sd = sd(newTreat[[VARNAME]])))
   ) +
   scale_x_continuous(paste("Treatment - Wrangled values of ", VARNAME, sep = '')) +
-  scale_y_continuous(limits = c(0.0, 0.8))
+  scale_y_continuous(limits = c(0.0, finalscale))
 
 # ----------------------------
 
+# CONTROL
+# dnorm plot for original and wrangled  data
 c1 <- ggplot(cdata, aes(x = cdata[[VARNAME]])) +
   stat_function(
     fun = dnorm,
@@ -262,7 +284,7 @@ c1 <- ggplot(cdata, aes(x = cdata[[VARNAME]])) +
                   sd = sd(cdata[[VARNAME]])))
   ) +
   scale_x_continuous(paste("Control - Original values of ", VARNAME, sep = '')) +
-  scale_y_continuous(limits = c(0.0, 0.8))
+  scale_y_continuous(limits = c(0.0, finalscale))
 
 c2 <- ggplot(newCont, aes(x = newCont[[VARNAME]])) +
   stat_function(
@@ -272,10 +294,12 @@ c2 <- ggplot(newCont, aes(x = newCont[[VARNAME]])) +
                   sd = sd(newCont[[VARNAME]])))
   ) +
   scale_x_continuous(paste("Control - Wrangled values of ", VARNAME, sep = '')) +
-  scale_y_continuous(limits = c(0.0, 0.8))
+  scale_y_continuous(limits = c(0.0, finalscale))
 
 # ----------------------------
 
+# REFERENCE
+# dnorm plot for original and wrangled  data
 r1 <- ggplot(rdata, aes(x = rdata[[VARNAME]])) +
   stat_function(
     fun = dnorm,
@@ -284,7 +308,7 @@ r1 <- ggplot(rdata, aes(x = rdata[[VARNAME]])) +
                   sd = sd(rdata[[VARNAME]])))
   ) +
   scale_x_continuous(paste("Reference - Original values of ", VARNAME, sep = '')) +
-  scale_y_continuous(limits = c(0.0, 0.8))
+  scale_y_continuous(limits = c(0.0, finalscale))
 
 r2 <- ggplot(newref, aes(x = newref[[VARNAME]])) +
   stat_function(
@@ -294,11 +318,12 @@ r2 <- ggplot(newref, aes(x = newref[[VARNAME]])) +
                   sd = sd(newref[[VARNAME]])))
   ) +
   scale_x_continuous(paste("Reference - Wrangled values of ", VARNAME, sep = '')) +
-  scale_y_continuous(limits = c(0.0, 0.8))
+  scale_y_continuous(limits = c(0.0, finalscale))
 
-t1 + t2
-c1 + c2
-r1 + r2
+# plots of same data sets side by side, in 3 rows of 2 columns
+  (t1 + t2) /
+  (c1 + c2) /
+  (r1 + r2)
 # ------------------------------------------------
 
 ```
@@ -308,7 +333,7 @@ r1 + r2
 ```{r}
 #| echo: false
 #| warning: false
- 
+
 TreatContRef$Data_leaftype <- factor(TreatContRef$Data_leaftype , levels=c("Treatment", "Control", "Reference"))
 # all data, not transformed
 all1 <-  ggplot() +
@@ -332,12 +357,12 @@ all1
 {{< pagebreak >}}  
 
 ## one-way ANOVA  
-  H0: All group means are equal.  
-  HA: At least one group mean is different from the rest.   
-  
-  p-val < $α$ reject H0  
-  (https://www.statology.org/anova-assumptions/)  
-  (https://www.statology.org/interpret-anova-results-in-r/)  
+H0: All group means are equal.  
+HA: At least one group mean is different from the rest.   
+
+p-val < $α$ reject H0  
+(https://www.statology.org/anova-assumptions/)  
+(https://www.statology.org/interpret-anova-results-in-r/)  
 
 ```{r anova_data}
 
@@ -421,23 +446,38 @@ shapiro.test(newfinaldata[[VARNAME]])
 #Create box plots that show distribution of weight loss for each group
 bartlett.test(get(VARNAME) ~ Data_leaftype, data=newfinaldata)
 ```
+# Testing Graphs With Error Bars  
+The period with no recorded data is still shown in the line plot.
 ```{r}
-library(plyr)
- 
 
-df_summary <- newfinaldata %>% filter(Data_plant_id == 2) %>%
+# testing error bars in plots
+library(plyr)
+
+# ELEVATION constant is already applied above
+df_summary <- newfinaldata %>%
   filter(Data_leaftype == "Treatment" | 
            Data_leaftype == "Control" | 
            Data_leaftype == "Reference")
 
-esummary <- ddply(df_summary, .(Filenames_filename, Data_leaftype, SysObs_date), summarise,
-               mean = round(mean(GasEx_A), 2),
-               sd = round(sd(GasEx_A), 2))
-esummary <- na.omit(esummary)
 
-ggplot(esummary, aes(x=SysObs_date, y=mean, color = Data_leaftype,group(Data_leaftype, SysObs_date))) +
+# ----------- code works but does not split on missing data
+  # mean values based on a group, and remove any na values
+  esummary <- ddply(df_summary, .(Filenames_filename, Data_leaftype, SysObs_date), summarise,
+                    mean = round(mean(GasEx_A), 2),
+                    sd = round(sd(GasEx_A), 2))
+  esummary <- na.omit(esummary)
+  
+
+p1 <- ggplot(esummary, aes(x=SysObs_date, y=mean, color = Data_leaftype, group(Data_leaftype, SysObs_date))) +
   geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), position = position_dodge(0.9), width = .2) +
-  geom_line(size= 0.2) +
+  geom_line(size = 0.2) +
   geom_point(size = 2)
+
+p2 <- ggplot(esummary, aes(x=SysObs_date, y=mean, color = Data_leaftype,group(Data_leaftype, SysObs_date))) +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), position = position_dodge(0.9), width = .2) +
+  # geom_line(size= 0.2) +
+  geom_point(size = 2)
+
+p1/p2
 
 ```
