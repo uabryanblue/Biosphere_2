@@ -40,6 +40,7 @@ DATACLEAN <- "data_clean"
 DATAUSER <- "data_user"
 
 ```
+*Always Restart R before running any script!*  
 
 ```{r plot_plant}
 #| echo: false
