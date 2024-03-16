@@ -51,6 +51,7 @@ DATAUSER <- "data_user"
 
 
 ```
+*Always Restart R before running any script!*  
 
 ## Function: add_selected_file()
 
@@ -188,10 +189,14 @@ newdf[,"Data_leaftype.y"] <- NULL
 
 colnames(newdf)<-gsub("\\.x","",colnames(newdf))
 newdf <- newdf %>% select(-contains(".y"))
+# # add the week number based on the date
+# newdf <- newdf %>%
+#     mutate(week = strftime(newdf$SysObs_date, format = "%V"))
 
 write_csv(newdf, here(DATAUSER,"final_raw_data.csv"), 
           append = FALSE, 
           col_names = TRUE)
+
 
 
 ```
