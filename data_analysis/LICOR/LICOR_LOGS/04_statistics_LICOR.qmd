@@ -447,7 +447,7 @@ shapiro.test(newfinaldata[[VARNAME]])
 bartlett.test(get(VARNAME) ~ Data_leaftype, data=newfinaldata)
 ```
 # Testing Graphs With Error Bars  
-The period with no recorded data is still shown in the line plot.
+The period with no recorded data is still shown in the line plot.  
 ```{r}
 
 # testing error bars in plots
