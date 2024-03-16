@@ -43,7 +43,10 @@ DATAUSER <- "data_user"
 
 ```
 
-## 01_load_LICOR_logs  
+*Always Restart R before running any script!*  
+
+# 01_load_LICOR_logs  
+
 __All files (read or written) are assumed to be in UTF-8 and not ASCII. The units row contains special characters that will not render unless this is true. If these values do not render correctly in your software, see if there is an option to use UTF-8 or convert them to values you are able to use.__   
 Currently loads one text log from a LICOR data set. It reads each chunk of data that contains a line with "[Header]".  
 All lines are skipped unless a remarks row is found. This continues until a line with "[Data]" is found.  
@@ -54,7 +57,7 @@ All data files are written to a UTF-8, CSV type text file.
 __NOTE:__ Files that end in TXT should be imported into Excel using the import data option otherwise the UTF-8 units values do not import correctly.  
 If a CSV data file is open directly in Excel, DO NOT "Convert large numbers into scientific notation", it may also ask that there are many 'E' values found, should they be treated as exponent values, do not do this either.
 
-### REMARKS:
+## REMARKS:
 Remarks are found in both the [Header] section and [Data] section.  
 There may be zero or more remarks present in either section.  
 All should be read and concatenated into one comma delimited value for output as they are found.  
@@ -65,7 +68,7 @@ After the tab there are two possibilities
 1. "Stability Definition" (ignore)  
 2. the actual remarks text (concatenate to remarks variable as found)  
 
-__EXAMPLE__  
+__EXAMPLE LINES IN LOGFILE__  
 12:44:30	Stability Definition:	A (GasEx): Slp<0.3 Per=15	gsw (GasEx): Slp<0.05 Per=15	F (FlrLS): Slp<5 Per=15  
 12:44:44	tc-shade5
 
@@ -121,7 +124,7 @@ load_data_chunks <- function(OutFile, OutFileName) {
       
       # these three lines appear after [Data] in the file
       # add additional fields for filename, data group, remarks, and leaftype
-# NEW FIELD - add into all 3 paste groups
+      # NEW FIELD - add into all 3 paste groups
       dataGroups <- paste("Filenames", "Data", "Data", "Data",  "Data",
                           readLines(con, n = 1, skipNul = TRUE, warn = FALSE), sep = "\t")
       dataVars   <- paste("filename", "group", "remarks", "plant_id",  "leaftype",
@@ -149,8 +152,8 @@ load_data_chunks <- function(OutFile, OutFileName) {
         # lines starts with and integer record number and tab
         if (str_detect(dataLine, regex("^[0-9]?\t")) &
             !str_detect(dataLine, regex("^[0-9]{2}:[0-9]{2}:[0-9]{2}\t"))) {
- # NEW FIELD - add into this paste
-                   finalString <- paste(OutFileName, groupNumber, remarks, "", "", dataLine, sep = "\t")
+          # NEW FIELD - add into this paste
+          finalString <- paste(OutFileName, groupNumber, remarks, "", "", dataLine, sep = "\t")
           dataLines[nrow(dataLines) + 1,] = finalString
           # } else {
           #   break
@@ -180,8 +183,8 @@ x = c(10,4,6,8,9,8,7,6,12,14,11,9,8,4,5,10,14,12,15,7,10,14,24,28)
 
 # get values of Q1, Q3, and IQR
 summary(x)
-   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-   4.00    7.00    9.50   10.62   12.50   28.00 
+Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+4.00    7.00    9.50   10.62   12.50   28.00 
 
 # get IQR
 IQR(x)
@@ -202,57 +205,57 @@ x[which(x > Tmin & x < Tmax)]
 
 ```{r remove_outliers}
 remove_outliers <- function(raw_data, FileName) {
-# file.path(
+  # file.path(
   # FileName = "2024-02-21-1317_logdata_lvl3"
   # raw_data = maindf[[4]]
-# daydata <- raw_data[raw_data$Filenames_filename==FileName,]$Data_group
+  # daydata <- raw_data[raw_data$Filenames_filename==FileName,]$Data_group
   
-groups <- unique(raw_data$Data_group)
-
+  groups <- unique(raw_data$Data_group)
   
-   for (gr in groups) {
   
-  write_csv(filter(raw_data, (Filenames_filename == FileName & Data_group == gr & GasEx_A < 0)), 
-            paste(DATAUSER, "outliers.csv"), 
-            append = TRUE, 
-            col_names = FALSE)
-  raw_data <- filter(raw_data, !(Filenames_filename == FileName & Data_group == gr & GasEx_A <= 0))
+  for (gr in groups) {
+    
+    write_csv(filter(raw_data, (Filenames_filename == FileName & Data_group == gr & GasEx_A < 0)), 
+              paste(DATAUSER, "outliers.csv"), 
+              append = TRUE, 
+              col_names = FALSE)
+    raw_data <- filter(raw_data, !(Filenames_filename == FileName & Data_group == gr & GasEx_A <= 0))
+    
+    
+    
+    
+    # tmp <- raw_data[raw_data$Filenames_filename == FileName & raw_data$Data_group == "group1",]  # retains NA  
+    tmp <- filter(raw_data, Filenames_filename == FileName & Data_group == gr) # does not retain NA
+    x <- tmp[,"GasEx_A"]
+    # x = c(10,4,6,8,9,8,7,6,12,14,11,9,8,4,5,10,14,12,15,7,10,14,24,28)
+    
+    # get values of Q1, Q3, and IQR
+    
+    sm <- summary(x, digits = 8)
+    
+    # get IQR
+    thresh <- IQR(x)
+    
+    Tmin = sm[2] - (1.5 * thresh) 
+    Tmax = sm[5] + (1.5 * thresh) 
+    
+    # find outlier
+    newlist <- x[which(x < Tmin | x > Tmax)]
+    newlist
+    
+    # remove outlier
+    rmout <- x[which(x > Tmin & x < Tmax)]
+    rmout
+    
+    write_csv(filter(raw_data, (Filenames_filename == FileName & Data_group == gr & GasEx_A == newlist[1])), paste(DATAUSER, "outliers.csv"), 
+              append = TRUE, 
+              col_names = FALSE)
+    
+    raw_data <- filter(raw_data, !(Filenames_filename == FileName & Data_group == gr & GasEx_A == newlist[1])) # does not retain NA
+    raw_data
+  }
   
- 
-
-  
-  # tmp <- raw_data[raw_data$Filenames_filename == FileName & raw_data$Data_group == "group1",]  # retains NA  
-  tmp <- filter(raw_data, Filenames_filename == FileName & Data_group == gr) # does not retain NA
-  x <- tmp[,"GasEx_A"]
-  # x = c(10,4,6,8,9,8,7,6,12,14,11,9,8,4,5,10,14,12,15,7,10,14,24,28)
-  
-  # get values of Q1, Q3, and IQR
-  
-  sm <- summary(x, digits = 8)
-  
-  # get IQR
-  thresh <- IQR(x)
-  
-  Tmin = sm[2] - (1.5 * thresh) 
-  Tmax = sm[5] + (1.5 * thresh) 
-  
-  # find outlier
-  newlist <- x[which(x < Tmin | x > Tmax)]
-  newlist
-  
-  # remove outlier
-  rmout <- x[which(x > Tmin & x < Tmax)]
-  rmout
-  
-  write_csv(filter(raw_data, (Filenames_filename == FileName & Data_group == gr & GasEx_A == newlist[1])), paste(DATAUSER, "outliers.csv"), 
-            append = TRUE, 
-            col_names = FALSE)
-  
-  raw_data <- filter(raw_data, !(Filenames_filename == FileName & Data_group == gr & GasEx_A == newlist[1])) # does not retain NA
-  raw_data
-}
-
-return(raw_data)
+  return(raw_data)
 }
 
 ```
@@ -301,7 +304,7 @@ fix_types <- function(typesdf) {
   typesdf$FLR_ETR	 <-    round(as.numeric(typesdf$FLR_ETR), digits = SIGDIF)
   typesdf$FLR_NPQ <-    round(as.numeric(typesdf$FLR_NPQ), digits = SIGDIF)
   
-
+  
   # LeafQ
   typesdf$LeafQ_Qin <-    round(as.numeric(typesdf$LeafQ_Qin), digits = SIGDIF)
   
@@ -398,7 +401,7 @@ build_select_fieldlist <- function(groupsdf, varsdf) {
   sysdf[1,3] <- groupsdf[3]
   sysdf[1,4] <- groupsdf[4]
   sysdf[1,5] <- groupsdf[5]
-
+  
   # the variable names to add
   sysdf[2,1] <- varsdf[1]
   sysdf[2,2] <- varsdf[2]
@@ -407,7 +410,7 @@ build_select_fieldlist <- function(groupsdf, varsdf) {
   sysdf[2,5] <- varsdf[5]
   # select_field_list <- data.frame(sysdf, select_field_list)
   select_field_list <- cbind(sysdf, select_field_list)
-
+  
   return(select_field_list)
 }
 ```
@@ -427,7 +430,7 @@ main <- function(LogFileName) {
   output <- load_data_chunks(LogFullFileName, LogFileName)
   # print(paste("output: ", head(output[[4]][,1])))
   
-
+  
   
   # output contains tabular data broken into the group, units, var names, and values
   # break them into their own tables for further use
@@ -436,17 +439,17 @@ main <- function(LogFileName) {
   varsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[3]]),'\t',fixed=TRUE)))
   valuesdf <- data.frame(do.call('rbind',strsplit(as.character(output[[4]][,1]),'\t',fixed=TRUE)))
   # print(paste("varsdf: ",varsdf))
-
+  
   # LICOR variable names are not unique, add the group as a suffix to fix it
   full_field_list <- paste(groupsdf[1,], varsdf[1,], sep = "_")
-
+  
   
   # LICOR variable names may contain spaces and other UTF-8 special characters
   # replace them with appropriate values for raw data handling
   full_field_list <- str_replace_all(full_field_list, " ", "_")
   # full_field_list <- str_replace_all(full_field_list, "/", "_div_")
   # full_field_list <- str_replace_all(full_field_list, "'", "_prime_")
-
+  
   # df that need to have column names set to cleaned up field lists
   colnames(valuesdf) <- full_field_list
   colnames(unitsdf) <- full_field_list
@@ -480,12 +483,16 @@ main <- function(LogFileName) {
   
   # write data
   write_files(LogFileName, groupsdf, varsdf, unitsdf, valuesdf, final_data)
-
+  
   return(list(groupsdf, varsdf, unitsdf, valuesdf, final_data))
 }
 ```
 
+## NOTE: the remarks in the data files may not be 100% correct.  
+Changes have been made in the leaf_identification.csv file as needed.
 
+2024-03-13-1130_logdata_lvl2 This day had initial environment in LI-COR configured incorrectly. 
+Log Descriptions were not set correctly and manually set. e.g. Reference and Treatment switched.  
 ```{r process_files}
 
 
