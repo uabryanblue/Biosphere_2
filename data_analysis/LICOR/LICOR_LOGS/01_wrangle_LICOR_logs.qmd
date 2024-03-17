@@ -206,14 +206,8 @@ x[which(x > Tmin & x < Tmax)]
 ```{r remove_outliers}
 #| echo: false
 remove_outliers <- function(raw_data, FileName) {
-  # file.path(
-  # FileName = "2024-02-21-1317_logdata_lvl3"
-  # raw_data = maindf[[4]]
-  # daydata <- raw_data[raw_data$Filenames_filename==FileName,]$Data_group
-  
+
   groups <- unique(raw_data$Data_group)
-  
-  
   for (gr in groups) {
     
     write_csv(filter(raw_data, (Filenames_filename == FileName & Data_group == gr & GasEx_A < 0)), 
@@ -222,16 +216,11 @@ remove_outliers <- function(raw_data, FileName) {
               col_names = FALSE)
     raw_data <- filter(raw_data, !(Filenames_filename == FileName & Data_group == gr & GasEx_A <= 0))
     
-    
-    
-    
     # tmp <- raw_data[raw_data$Filenames_filename == FileName & raw_data$Data_group == "group1",]  # retains NA  
     tmp <- filter(raw_data, Filenames_filename == FileName & Data_group == gr) # does not retain NA
     x <- tmp[,"GasEx_A"]
-    # x = c(10,4,6,8,9,8,7,6,12,14,11,9,8,4,5,10,14,12,15,7,10,14,24,28)
-    
+
     # get values of Q1, Q3, and IQR
-    
     sm <- summary(x, digits = 8)
     
     # get IQR
@@ -274,7 +263,7 @@ fix_types <- function(typesdf) {
   # print("function: fix_types")
   # ggplot, other software has trouble with the large values in the data file
   # SIGDIF specifies the number of significant digits to retain, < 9 works
-  SIGDIF = 8    # default number of digits for data readings
+  SIGDIF = 2    # default number of digits for data readings
   # print(head(typesdf))
   
   # SysObs
@@ -364,6 +353,8 @@ write_files <- function(LogFileName, groupsdf, varsdf, unitsdf, valuesdf, final_
   CleanDataFile <- paste(CleanDataFile, "csv", sep = '.')
   CleanOutput <- here(DATACLEAN, CleanDataFile)
   
+  # build up the CSV file from the cleaned data by data frame
+  # TODO this is not working, it is the same output as the "selected" data
   write_csv(groupsdf, CleanOutput, append = FALSE, col_names = FALSE)
   write_csv(varsdf, CleanOutput, append = TRUE, col_names = FALSE)
   write_csv(unitsdf, CleanOutput, append = TRUE, col_names = FALSE)
@@ -436,8 +427,6 @@ main <- function(LogFileName) {
   
   output <- load_data_chunks(LogFullFileName, LogFileName)
   # print(paste("output: ", head(output[[4]][,1])))
-  
-  
   
   # output contains tabular data broken into the group, units, var names, and values
   # break them into their own tables for further use
