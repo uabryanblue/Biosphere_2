@@ -61,7 +61,7 @@ Read and add the contents of a *LogFileName* to the destination *cleandf* data f
 
 ```{r load_selected_data}
 #| echo: false
-#| 
+
 add_selected_file <- function(LogFileName, cleandf) {
   
   SelectedFilename <- here(DATACLEAN, LogFileName)
@@ -187,7 +187,7 @@ write_csv(leafjoindf, here(DATAUSER, "input", "JOINED_leaf_identification.csv"),
 
 ```{r leaf_identification}
 #| echo: false
-#| 
+
 #__Combine leaf_identification.csv wit the cleandf__
 # add in the leaf identification information that the user has entered
 # this newdf contains only identified leaf rows
