@@ -18,13 +18,15 @@ format:
 
 # Combine Cleaned *Selected* Files
 
-## NOTE: Run 01_wrangle_LICOR_logs.qmd first!
+## NOTE: Run 01_wrangle_LICOR_logs.qmd first!  
 
-*Files are encoded using UTF-8*
+*Always Restart R before running any script!*  
 
-Paths used in this script are absolute. They are generated using the function **here()** combined with the code's relative paths defined as constants.
+__Files are encoded using UTF-8__  
 
-Field names were created by concatenating the LICOR data Group name with the Variable name with a hyphen as a delimiter.
+Paths used in this script are absolute. They are generated using the function **here()** combined with the code's relative paths defined as constants.  
+
+Field names were created by concatenating the LICOR data Group name with the Variable name with a hyphen as a delimiter.  
 
 ```{r setup, include=FALSE}
 #| echo: false
@@ -51,7 +53,7 @@ DATAUSER <- "data_user"
 
 
 ```
-*Always Restart R before running any script!*  
+
 
 ## Function: add_selected_file()
 
@@ -107,16 +109,16 @@ The following columns are provided for the identification of information and to 
 ```{r main}
 #| echo: false
 #| 
-# __Aggregate all the files that were pre-processed and have a prefix of "selected_"__  
-# only work with the clean data that has the selected fields
+# Aggregate all the files that were pre-processed and have a prefix of "selected_"
+# these are the files that only contain values of interest from the selected fields
 FileList <- list.files(DATACLEAN, pattern = "^selected_")
 cleandf <- data.frame()
 
+# build a df that contains all of the selected_ files clean data
 for (FileName in FileList) {
   # print(FileName)
   cleandf <- add_selected_file(FileName, cleandf)
 }
-
 
 # store off all of the combined data
 write_csv(cleandf, here(DATAUSER,"selected_log_data.csv"), 
@@ -129,9 +131,9 @@ write_csv(cleandf, here(DATAUSER,"selected_log_data.csv"),
 
 `cleandf` and `leaf_identification.csv` are combined back into a single CSV file named `final_raw_data.csv`.
 
-NOTE: If the file structure changes in any way in `01_wrangle_LICOR_logs.qmd`, this code needs to be verified it still captures all columns. Change indexes and needed.
+NOTE: If the file structure changes in any way in `01_wrangle_LICOR_logs.qmd`, this code needs to be verified it still captures all columns.
 
-## Generate an JOINED Leaf Identification File   
+## Generate a JOINED Leaf Identification File   
 This joins all lines in the current leaf_identification.csv file with new cleandf.  
 Previously identified rows in leaf_identification.csv will remain and unknown rows from any new data will be added into JOINED_final_raw_data.csv This can be updated to identify the new data.  
 
