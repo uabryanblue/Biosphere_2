@@ -74,7 +74,7 @@ __EXAMPLE LINES IN LOGFILE__
 
 
 ```{r functions}
-#| echo: true
+#| echo: false
 
 # given a fully qualified LI-COR data log file name
 # process it into data frames of the groups, units, var names, data values
@@ -82,12 +82,12 @@ __EXAMPLE LINES IN LOGFILE__
 # add in a remarks column that appends all remark lines as they are found in
 # the [Header] section and within the [Data] section
 load_data_chunks <- function(OutFile, OutFileName) {
-  print("function: load_data_chunks")
-  print(paste("OutFile:", OutFile))
-  print(paste("OutFileName:", OutFileName))
+  # print("function: load_data_chunks")
+  # print(paste("OutFile:", OutFile))
+  # print(paste("OutFileName:", OutFileName))
   
   con <- file(OutFile, "rt")
-  print("start")
+  # print("start")
   
   
   # init vars
@@ -169,7 +169,7 @@ load_data_chunks <- function(OutFile, OutFileName) {
     }
     
   }
-  print("stop")
+  # print("stop")
   close(con)
   
   return(list(dataGroups, dataUnits, dataVars, dataLines))
@@ -204,6 +204,7 @@ x[which(x > Tmin & x < Tmax)]
 
 
 ```{r remove_outliers}
+#| echo: false
 remove_outliers <- function(raw_data, FileName) {
   # file.path(
   # FileName = "2024-02-21-1317_logdata_lvl3"
@@ -265,15 +266,16 @@ remove_outliers <- function(raw_data, FileName) {
 
 
 ```{r functions}
+#| echo: false
 # manipulate the data in valsdf using these varsdf column names
 # special manipulations should go here
 # normal rounding and formatting dates are common manipulations
 fix_types <- function(typesdf) {
-  print("function: fix_types")
+  # print("function: fix_types")
   # ggplot, other software has trouble with the large values in the data file
   # SIGDIF specifies the number of significant digits to retain, < 9 works
   SIGDIF = 8    # default number of digits for data readings
-  print(head(typesdf))
+  # print(head(typesdf))
   
   # SysObs
   typesdf$SysObs_date <-     as.POSIXct(typesdf$SysObs_date, format = "%Y%m%d %H:%M:%S")
@@ -326,7 +328,7 @@ fix_types <- function(typesdf) {
 #| echo: true
 
 select_data <- function(groupsdf, varsdf) {
-  print("function: select_data")
+  # print("function: select_data")
   # variable names are not unique, prepend the group to fix it
   new_field_list <- paste(groupsdf[1,], varsdf[1,], sep = "_")
   new_field_list <- str_replace_all(new_field_list, " ", "_")
@@ -352,9 +354,10 @@ select_data <- function(groupsdf, varsdf) {
 
 __Write Data Files__
 ```{r write_files}
-
+#| echo: false
+#| 
 write_files <- function(LogFileName, groupsdf, varsdf, unitsdf, valuesdf, final_data) {
-  print("function: write_files")
+  # print("function: write_files")
   # write out a text file that Excel can read
   # this file keep LICOR units in UTF-8 with special characters
   CleanDataFile <- paste("cleaned_UTF-8", LogFileName, sep = '_')
@@ -376,6 +379,8 @@ write_files <- function(LogFileName, groupsdf, varsdf, unitsdf, valuesdf, final_
 ```
 
 ```{r add_user_variables}
+#| echo: false
+#| 
 build_select_fieldlist <- function(groupsdf, varsdf) {
   # select the names for the columns of interest
   # UTF-8 CSV text file to keep units in proper form
@@ -383,7 +388,7 @@ build_select_fieldlist <- function(groupsdf, varsdf) {
   # select_logdata_fields.csv must exist in the DATAUSER directory
   # three lines are required, one for the group, variable, and units
   # as they appear in the LICOR logs
-  print("function: build_select_fieldlist()")
+  # print("function: build_select_fieldlist()")
   
   SelectDataFile <- "select_logdata_fields.csv"
   SelectInput <- here(DATAUSER, "input", SelectDataFile)
@@ -417,8 +422,10 @@ build_select_fieldlist <- function(groupsdf, varsdf) {
 
 __Processing Data from data_raw folder__  
 ```{r main}
+#| echo: false
+#| 
 main <- function(LogFileName) {
-  print("function: main()")
+  # print("function: main()")
   
   
   # LogFileName <- FileName # TODO !!!!!! testing with one file only !!!!!!
@@ -491,10 +498,14 @@ main <- function(LogFileName) {
 ## NOTE: the remarks in the data files may not be 100% correct.  
 Changes have been made in the leaf_identification.csv file as needed.
 
-2024-03-13-1130_logdata_lvl2 This day had initial environment in LI-COR configured incorrectly. 
-Log Descriptions were not set correctly and manually set. e.g. Reference and Treatment switched.  
-```{r process_files}
+## NOTE LICOR logs default to start with the date "YYYY-MM-DD"
+This ensures only these files are read. If files are not named in this convention, this will not work.  
 
+2024-03-13-1130_logdata_lvl2 This day had the initial LI-COR environment  configured incorrectly. 
+Log Descriptions were not set correctly and manually set. e.g. Reference and Treatment switched.  
+
+```{r process_files}
+#| echo: false
 
 # NOTE LICOR logs default to start with the date "YYYY-MM-DD"
 # this ensures only these files are read
@@ -513,5 +524,7 @@ for (FileName in FileList) {
   # 4 - valuesdf
   # 5 - final_data (selected data df)
 }
+
+
 ```
 

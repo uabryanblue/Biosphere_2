@@ -58,6 +58,8 @@ DATAUSER <- "data_user"
 Read and add the contents of a *LogFileName* to the destination *cleandf* data frame.
 
 ```{r load_selected_data}
+#| echo: false
+#| 
 add_selected_file <- function(LogFileName, cleandf) {
   
   SelectedFilename <- here(DATACLEAN, LogFileName)
@@ -103,7 +105,8 @@ The following columns are provided for the identification of information and to 
 `Data_leaftype` - is a user-defined value to identify the leaf on the plant used for LICOR readings. These need not be unique and will be averaged per `Data_group` and `Filenames_filename` into a single value for future processing. `Treatment`, `Control`, and `Reference` should exist for each group of readings for each plant in the experiment. Additional values can be assigned for leaves that are not explicitly part of the experiment.
 
 ```{r main}
-
+#| echo: false
+#| 
 # __Aggregate all the files that were pre-processed and have a prefix of "selected_"__  
 # only work with the clean data that has the selected fields
 FileList <- list.files(DATACLEAN, pattern = "^selected_")
@@ -116,7 +119,7 @@ for (FileName in FileList) {
 
 
 # store off all of the combined data
-write_csv(cleandf, here(DATAUSER,"combined_selected_log_data.csv"), 
+write_csv(cleandf, here(DATAUSER,"selected_log_data.csv"), 
           append = FALSE, 
           col_names = TRUE)
 
@@ -128,8 +131,15 @@ write_csv(cleandf, here(DATAUSER,"combined_selected_log_data.csv"),
 
 NOTE: If the file structure changes in any way in `01_wrangle_LICOR_logs.qmd`, this code needs to be verified it still captures all columns. Change indexes and needed.
 
-```{r leaf_data}
+## Generate an JOINED Leaf Identification File   
+This joins all lines in the current leaf_identification.csv file with new cleandf.  
+Previously identified rows in leaf_identification.csv will remain and unknown rows from any new data will be added into JOINED_final_raw_data.csv This can be updated to identify the new data.  
 
+__NOTE: JOINED_final_raw_data.csv is overwritten each time this is ran, be sure to rename it to {leaf_identification.csv} after editing the JOINED file.__  
+
+```{r empty_joined_data}
+#| echo: false
+#| 
 # __Generate an Empty Leaf Identification File__   
 # store off the first columns of the combined data to generate a file
 # used for manual identification of information that is not contained 
@@ -140,7 +150,7 @@ write_csv(cleandf[,1:6],
           append = FALSE, 
           col_names = TRUE)
 
-
+# __Generate the JOINED Leaf Identification File__   
 # join all lines in the current leaf_identification.csv file with cleandf
 # previously identified rows will remain and unknown rows will be added
 # JOINED_final_raw_data.csv can be continued to be edited once done,
@@ -150,29 +160,32 @@ leafdf <- read_csv(here(DATAUSER, "input", "leaf_identification.csv"),
                    show_col_types = FALSE) 
 leafjoindf <-left_join(cleandf, leafdf, by = c('Filenames_filename', 'Data_group', 'SysObs_obs'))
 # join causes duplication of column names
+# rename the required columns and remove the ones that are duplicats
 leafjoindf <- rename(leafjoindf, c("Data_remarks" = "Data_remarks.x", 
                                   "Data_plant_id" = "Data_plant_id.y", 
                                   "Data_leaftype" = "Data_leaftype.y",
                                   "SysObs_date" = "SysObs_date.x"))
-# colmun names with ".x" are kept
-# column names with ".y" are removed as they do not contain data
 leafjoindf[,"Data_remarks.y"] <- NULL
 leafjoindf[,"Data_plant_id.x"] <- NULL
 leafjoindf[,"Data_leaftype.x"] <- NULL
 leafjoindf[,"SysObs_date.y"] <- NULL
 
+# general column name cleanup to get rid of remaining .x and .y columns
 colnames(leafjoindf)<-gsub("\\.x","",colnames(leafjoindf))
 leafjoindf <- leafjoindf %>% select(-contains(".y"))
 
-# after renaming the fields are in the wrong location, put them back
+# the fields are in the wrong order from the joine and cleanup, put them back
 leafjoindf <- leafjoindf %>% relocate(c(Data_remarks, Data_plant_id, Data_leaftype), .after = Data_group)
+
 # final file that the user should continue to edit
-# then rename by removing the "JOINED_" 
 write_csv(leafjoindf, here(DATAUSER, "input", "JOINED_leaf_identification.csv"), 
           append = FALSE, 
           col_names = TRUE)
+```
 
-
+```{r leaf_identification}
+#| echo: false
+#| 
 #__Combine leaf_identification.csv wit the cleandf__
 # add in the leaf identification information that the user has entered
 # this newdf contains only identified leaf rows
@@ -196,7 +209,5 @@ newdf <- newdf %>% select(-contains(".y"))
 write_csv(newdf, here(DATAUSER,"final_raw_data.csv"), 
           append = FALSE, 
           col_names = TRUE)
-
-
 
 ```
