@@ -37,7 +37,7 @@ here::here()
 DATARAW <- "data_raw" 
 DATACLEAN <- "data_clean"
 DATAUSER <- "data_user"
-ELEVATION <- 2 # elevation of the experiment, numeric value or 2 or 3
+ELEVATION <- 2 # elevation of the experiment, numeric value of 2 or 3
 VARNAME <- "GasEx_A" # this the column name in finaldata where the group and variable are combined
 
 # NOTE to self: Look into these for help with graph layout\
@@ -157,7 +157,9 @@ A new df is created with the Outliers removed. This is used to calculate a df of
 #| warning: FALSE
 
 # the final, combined, and scrubbed data from all LICOR text logs
-finaldata <- read_final_data(here(DATAUSER,"final_raw_data.csv"))
+filename <- here(DATAUSER, "final_raw_data.csv")
+
+finaldata <- read_final_data(filename)
 
 # OUTLIERS
 # Define an observation to be an outlier if it is 1.5 times the 
@@ -446,38 +448,4 @@ shapiro.test(newfinaldata[[VARNAME]])
 #Create box plots that show distribution of weight loss for each group
 bartlett.test(get(VARNAME) ~ Data_leaftype, data=newfinaldata)
 ```
-# Testing Graphs With Error Bars  
-The period with no recorded data is still shown in the line plot.  
-```{r}
 
-# testing error bars in plots
-library(plyr)
-
-# ELEVATION constant is already applied above
-df_summary <- newfinaldata %>%
-  filter(Data_leaftype == "Treatment" | 
-           Data_leaftype == "Control" | 
-           Data_leaftype == "Reference")
-
-
-# ----------- code works but does not split on missing data
-  # mean values based on a group, and remove any na values
-  esummary <- ddply(df_summary, .(Filenames_filename, Data_leaftype, SysObs_date), summarise,
-                    mean = round(mean(GasEx_A), 2),
-                    sd = round(sd(GasEx_A), 2))
-  esummary <- na.omit(esummary)
-  
-
-p1 <- ggplot(esummary, aes(x=SysObs_date, y=mean, color = Data_leaftype, group(Data_leaftype, SysObs_date))) +
-  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), position = position_dodge(0.9), width = .2) +
-  geom_line(size = 0.2) +
-  geom_point(size = 2)
-
-p2 <- ggplot(esummary, aes(x=SysObs_date, y=mean, color = Data_leaftype,group(Data_leaftype, SysObs_date))) +
-  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), position = position_dodge(0.9), width = .2) +
-  # geom_line(size= 0.2) +
-  geom_point(size = 2)
-
-p1/p2
-
-```
