@@ -176,83 +176,6 @@ load_data_chunks <- function(OutFile, OutFileName) {
   
 }
 ```
-https://www.reneshbedre.com/blog/find-outliers.html
-
-## Example IQR
-x = c(10,4,6,8,9,8,7,6,12,14,11,9,8,4,5,10,14,12,15,7,10,14,24,28)
-
-# get values of Q1, Q3, and IQR
-summary(x)
-Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-4.00    7.00    9.50   10.62   12.50   28.00 
-
-# get IQR
-IQR(x)
-[1] 5.5
-
-# get threshold values for outliers
-Tmin = 7-(1.5*5.5) 
-Tmax = 12.50+(1.5*5.5) 
-
-# find outlier
-x[which(x < Tmin | x > Tmax)]
-[1] 24 28
-
-# remove outlier
-x[which(x > Tmin & x < Tmax)]
-[1] 10  4  6  8  9  8  7  6 12 14 11  9  8  4  5 10 14 12 15  7 10 14
-
-
-```{r remove_outliers}
-#| echo: false
-remove_outliers <- function(raw_data, FileName) {
-
-  groups <- unique(raw_data$Data_group)
-  for (gr in groups) {
-    
-    write_csv(filter(raw_data, (Filenames_filename == FileName & Data_group == gr & GasEx_A < 0)), 
-              paste(DATAUSER, "outliers.csv"), 
-              append = TRUE, 
-              col_names = FALSE)
-    raw_data <- filter(raw_data, !(Filenames_filename == FileName & Data_group == gr & GasEx_A <= 0))
-    
-    # tmp <- raw_data[raw_data$Filenames_filename == FileName & raw_data$Data_group == "group1",]  # retains NA  
-    tmp <- filter(raw_data, Filenames_filename == FileName & Data_group == gr) # does not retain NA
-    x <- tmp[,"GasEx_A"]
-
-    # get values of Q1, Q3, and IQR
-    sm <- summary(x, digits = 8)
-    
-    # get IQR
-    thresh <- IQR(x)
-    
-    Tmin = sm[2] - (1.5 * thresh) 
-    Tmax = sm[5] + (1.5 * thresh) 
-    
-    # find outlier
-    newlist <- x[which(x < Tmin | x > Tmax)]
-    newlist
-    
-    # remove outlier
-    rmout <- x[which(x > Tmin & x < Tmax)]
-    rmout
-    
-    write_csv(filter(raw_data, (Filenames_filename == FileName & Data_group == gr & GasEx_A == newlist[1])), paste(DATAUSER, "outliers.csv"), 
-              append = TRUE, 
-              col_names = FALSE)
-    
-    raw_data <- filter(raw_data, !(Filenames_filename == FileName & Data_group == gr & GasEx_A == newlist[1])) # does not retain NA
-    raw_data
-  }
-  
-  return(raw_data)
-}
-
-```
-
-
-
-
 
 ```{r functions}
 #| echo: false
@@ -490,7 +413,7 @@ Changes have been made in the leaf_identification.csv file as needed.
 ## NOTE LICOR logs default to start with the date "YYYY-MM-DD"
 This ensures only these files are read. If files are not named in this convention, this will not work.  
 
-2024-03-13-1130_logdata_lvl2 This day had the initial LI-COR environment  configured incorrectly. 
+2024-03-13-1130_logdata_lvl2 This day had the initial LI-COR environment configured incorrectly. 
 Log Descriptions were not set correctly and manually set. e.g. Reference and Treatment switched.  
 
 ```{r process_files}
