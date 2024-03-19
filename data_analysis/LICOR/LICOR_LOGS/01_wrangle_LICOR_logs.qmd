@@ -49,6 +49,8 @@ DATAUSER <- "data_user"
 
 __All files (read or written) are assumed to be in UTF-8, not ASCII. The units row contains special characters that will not render unless this is true. If these values do not render correctly in your software, see if there is an option to use UTF-8 or convert them to values you can use.__   
   
+Paths used in this script are absolute. They are generated using the function **here()** combined with the code's relative paths defined as constants.  
+  
 Copy all text logs that need to be process into the "data_raw" folder. These should never be touched and treated as read only files. Files are selected from "data_raw" searching for files that start with the regex `^[0-9]{4}-[0-9]{2}-[0-9]{2}` which is the standard LI-COR date format.  
   
 Loads one text log from a LI-COR data set. It reads each chunk of data that contains a line with "[Header]". 
