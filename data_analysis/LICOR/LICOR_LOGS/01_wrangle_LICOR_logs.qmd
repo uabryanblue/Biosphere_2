@@ -360,7 +360,7 @@ build_select_fieldlist <- function(groupsdf, varsdf) {
 
 # Processing Data from data_raw folder  
 LI-COR text logs are read and parsed into a usable format  
-A file named "UTF-8_headers.csv" is created that contains the first three rows of a data block. Group name, Unit, Variable names.  
+In the folder "data_clean" a file named "UTF-8_headers.csv" is created that contains the first three rows of a data block. Group name, Unit, Variable names.  
   
 ## Variable Names  
 Variable names are not unique, append a prefix of Group name "_" Variable name. e.g. LIC-COR group = "GasEx", variable = "A" the final variable name is "GasEx_A"  
