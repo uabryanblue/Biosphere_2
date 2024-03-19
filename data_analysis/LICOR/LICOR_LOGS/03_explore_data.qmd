@@ -1,5 +1,5 @@
 ---
-title: "LICOR Data Processing"
+title: "LI-COR Data Exploration"
 author: "Bryan Blue"
 e-mail: 'bryanblue@arizona.edu'
 date: "Last Generated: `r Sys.Date()`"
@@ -20,58 +20,10 @@ NOTE to self: Look into these for help with graph layout
 patchwork TODO !!!!  
 wrap plot, axis collect
 
-```{r raw_plots}
-#| echo: FALSE
-#| error: TRUE
-#| warning: FALSE
-
-read_and_clean_data <- function(filename) {
-  # TODO this fails unless r is restarted first! WHY?
-  fname <- here(DATAUSER, "final_raw_data.csv")
-  finaldata <- read_csv(fname, # "final_raw_data.csv"
-                        col_names = TRUE, 
-                        show_col_types = FALSE) 
-  
-# change any value in the df that is < zero to NA, invalid data
-finaldata[finaldata < 0] <- NA
-# set to NA based on column and condition
-# finaldata <- finaldata %>% mutate(GasEx_A = replace(GasEx_A, which(GasEx_A > 13L), NA))
-
-t<- finaldata[finaldata$GasEx_A > 5,]$GasEx_A
-
-  # try to auto convert all data types, not all work
-  finaldata <- type.convert(finaldata, as.is = TRUE)
-  # convert values that were not correctly auto converted
-  # TODO add in the type cleanup code, or new function
-  finaldata$Data_leaftype <- as.factor(finaldata$Data_leaftype)
-  finaldata$Filenames_filename <- as.factor(finaldata$Filenames_filename)
-  finaldata$Data_plant_id <- as.factor(finaldata$Data_plant_id)
-  # finaldata$SysObs_date <-  as.POSIXct(finaldata$SysObs_date, format = "%Y%m%d %H:%M:%S")
-  # This needs converted into a true date type for graphing
-  # add a column of just the data value
-  finaldata$SysObs_date <- as.Date(finaldata$SysObs_date)
-  
-  # bad values if <= 0, and only interested in valid leaf types
-  #filter(varname > 0) %>%
-  finaldata <- finaldata %>% 
-    filter(Data_leaftype == "Treatment" |
-             Data_leaftype == "Control" |
-             Data_leaftype == "Reference") 
-  # The clock was off at one point, this needs corrected or ignore the values
-  # TODO this needs to be in the original cleaning code
-  # bad values if < 0, and only interested in valid leaf types
-  finaldata <- finaldata %>% filter(SysObs_time > 1668543540) %>% arrange(SysObs_date)
-  # finaldata <- finaldata %>% filter(!Filenames_filename == "2023-11-22-1138_logdata")
-  
-  return(finaldata)
-}
-
-finaldata <- read_and_clean_data("final_raw_data.csv")
-```
-
-
 ```{r setup, include=FALSE}
+#| warning: false
 #| echo: false
+#| error: false
 
 knitr::opts_chunk$set(echo = FALSE)
 require(tidyverse)
@@ -95,10 +47,72 @@ DATAUSER <- "data_user"
 
 ```
 *Always Restart R before running any script!*  
-# Daily Mean Functions
-```{r daily_mean_data}
-#| echo: false
+  
+## NOTE: Run 02_load_clean_LICOR_logs.qmd first!  
+  
+Use "final_raw_data.csv" in the "data_user" folder.   
+  
+The data consists of the variables of interest found in the "select_logdata_fields.csv" file in the "data_user/input/" folder that were assembled in previous steps.
+  
+## Data Validation  
+  
+Many values in the LI-COR data contain invalid values such as any that are < 0. Any value less than 0 is converted to NA over the entire dataframe.  
+  
+The clock was off at the beginning of the experiment. The data are filtered for values of when the experiment started SysObs_time > 1668543540  
+  
+Only "Data_leaftype" values of "Treatment", "Control", and "Reference" are used. Any other user assigned values are ignored.   
+Outliers: Many variables show distant outliers in graphs. Outlier routines based on IQR were tried.    
+It did not work on the entire variable's data because it is not linear. Data at the tails were removed.  
+It was also tried on a daily group. This did not work as there were many sets of data per day that only contained a couple values, or showed very high variance. This resulted in the complete drop of that day's values.  
+Outliers were not removed for this data exploration.  
+  
+{{< pagebreak >}}
+```{r raw_plots}
 #| warning: false
+#| echo: false
+#| error: false
+
+read_and_clean_data <- function(filename) {
+  # TODO this fails unless r is restarted first! WHY?
+  fname <- here(DATAUSER, "final_raw_data.csv")
+  finaldata <- read_csv(fname, # "final_raw_data.csv"
+                        col_names = TRUE, 
+                        show_col_types = FALSE) 
+  
+  # change any value in the df that is < zero to NA, invalid data
+  finaldata[finaldata < 0] <- NA
+  
+  # try to auto convert all data types, not all work
+  finaldata <- type.convert(finaldata, as.is = TRUE)
+  # convert values that were not correctly auto converted
+  # TODO add in the type cleanup code, or new function
+  finaldata$Data_leaftype <- as.factor(finaldata$Data_leaftype)
+  finaldata$Filenames_filename <- as.factor(finaldata$Filenames_filename)
+  finaldata$Data_plant_id <- as.factor(finaldata$Data_plant_id)
+  
+  # NOTE: this observation is turned into a date, not date/time, this is not correct
+  # are new variable for "date" needs added
+  # finaldata$SysObs_date <-  as.POSIXct(finaldata$SysObs_date, format = "%Y%m%d %H:%M:%S")
+  finaldata$SysObs_date <- as.Date(finaldata$SysObs_date)
+  
+  # only interested in values for this experiment
+  finaldata <- finaldata %>% 
+    filter(Data_leaftype == "Treatment" |
+             Data_leaftype == "Control" |
+             Data_leaftype == "Reference") 
+  
+  # The clock was off at one point, this needs corrected or ignore the values
+  finaldata <- finaldata %>% filter(SysObs_time > 1668543540) %>% arrange(SysObs_date)
+  
+  return(finaldata)
+}
+
+```
+
+```{r daily_mean_data}
+#| warning: false
+#| echo: false
+#| error: false
 
 # calculate the daily means of a given column in sysobs
 mean_plant_data <- function(finaldata, plantid, sysobs) {
@@ -121,21 +135,25 @@ plot_means <- function(plot_data, title="", xlabel="", ylabel=""){
                aes(x = SysObs_date, y = gm, color = Data_leaftype)) +
     # geom_line(data=plot_data, 
     # aes(x = SysObs_date, y = gm, color = Data_leaftype)) +
+        scale_color_manual(name='Leaf',
+                       breaks=c('Treatment', 'Control', 'Reference'),
+                       values=c('Treatment'='#F8766D', 'Control'='#619CFF', 'Reference'='#00BA38'))+
     ggtitle(title) +
     xlab(xlabel) +
     ylab(ylabel) +
     # scale_y_continuous(limits=c(0.0, 6.0))   +
     #     date_breaks = "10 sec",  expand = expansion(0)) +
-    geom_smooth(method=lm, se=FALSE, col='red', size=2) +
+    geom_smooth(method=lm, se=FALSE, col='#F8766D', size=2) +
     theme(axis.text.x=element_text(angle=60, hjust=1))
   
   return(plot1)
 }
 ```
-{{< pagebreak >}}
 
-```{r plot_plant}
+```{r plot_box_plant}
+#| warning: false
 #| echo: false
+#| error: false
 
 plot_plant_line <- function(finaldata, plantid, fname, plantvar) {
   # TODO the filter for the leaftype needs removed, it should graph
@@ -147,14 +165,21 @@ plot_plant_line <- function(finaldata, plantid, fname, plantvar) {
                           finaldata$Data_leaftype == "Reference"), ]
   
   if (nrow(plant) > 0) {
-    plot <- ggplot() +
+      
+    # display the variable name, not the internal name
+      dispvarname <- str_split(plantvar, "_")[[1]][2]
+      
+       plot <- ggplot() +
       # geom_point(data = final_data, 
       geom_line(data=plant, 
                 aes(x = SysObs_obs, y = get(plantvar), color = Data_leaftype)) +
       # geom_line(data = final_data, aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
-      ggtitle(paste("Level ", plantid, " LICOR Readings ", fname)) +
-      xlab("SysObs_obs") +
-      ylab(plantvar) +
+      ggtitle(paste("Level ", plantid, " LI-COR Readings ", fname)) +
+      xlab("Observation Number") +
+      ylab(dispvarname) +
+    scale_color_manual(name='Leaf',
+                       breaks=c('Treatment', 'Control', 'Reference'),
+                       values=c('Treatment'='#F8766D', 'Control'='#619CFF', 'Reference'='#00BA38'))+
       # scale_y_continuous(limits=c(0.0, 0.2), breaks=c(0, 0.1, 0.2, 0.5))   +
       # scale_x_datetime(date_labels = ("%M:%S"),
       #     date_breaks = "10 sec",  expand = expansion(0)) +
@@ -166,13 +191,21 @@ plot_plant_line <- function(finaldata, plantid, fname, plantvar) {
 variable_boxplot <- function(finaldata, lclevel, lcvariable) {
   
   elevation <- mean_plant_data(finaldata, lclevel, lcvariable)
+  # display the variable name, not the internal name
+  dispvarname <- str_split(lcvariable, "_")[[1]][2]
   
   p <- ggplot() +
-    geom_boxplot(data = elevation, aes(x = Data_leaftype , y = gm, color = Data_leaftype), outlier.color = "red", outlier.size = 3) +
+    geom_boxplot(data = elevation, 
+                 aes(x = Data_leaftype , y = gm, color = Data_leaftype), 
+                 outlier.color = "#F8766D", 
+                 outlier.size = 2) +
     # scale_y_continuous(limits=c(1.0, 2.8)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
-    ggtitle(paste("LICOR Daily Mean Observations for Elevation ", lclevel, " on ", lcvariable, sep = '')) +
+    ggtitle(paste("LI-COR Observations for Elevation ", lclevel, " on ", dispvarname, sep = '')) +
+    scale_color_manual(name='Leaf',
+                       breaks=c('Treatment', 'Control', 'Reference'),
+                       values=c('Treatment'='#F8766D', 'Control'='#619CFF', 'Reference'='#00BA38'))+
     xlab("Leaf Type") +
-    ylab(lcvariable)
+    ylab(dispvarname)
   
   return(p)
   
@@ -181,35 +214,17 @@ variable_boxplot <- function(finaldata, lclevel, lcvariable) {
 ```
 
 
-https://www.reneshbedre.com/blog/find-outliers.html
-
-## Example IQR
-x = c(10,4,6,8,9,8,7,6,12,14,11,9,8,4,5,10,14,12,15,7,10,14,24,28)
-
-# get values of Q1, Q3, and IQR
-summary(x)
-Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-4.00    7.00    9.50   10.62   12.50   28.00 
-
-# get IQR
-IQR(x)
-[1] 5.5
-
-# get threshold values for outliers
-Tmin = 7-(1.5*5.5) 
-Tmax = 12.50+(1.5*5.5) 
-
-# find outlier
-x[which(x < Tmin | x > Tmax)]
-[1] 24 28
-
-# remove outlier
-x[which(x > Tmin & x < Tmax)]
-[1] 10  4  6  8  9  8  7  6 12 14 11  9  8  4  5 10 14 12 15  7 10 14
-
 ```{r remove_outliers}
+#| warning: false
 #| echo: false
+#| error: false
 
+# -----------------
+# (https://www.reneshbedre.com/blog/find-outliers.html)
+
+# look at all data for a given variable and look for outliers
+# this does NOT work as the data is not linear
+# values at the high or low ends can be removed
 remove_outliers <- function(indata, elevation, leaftype, varname) {
   # elevation <- 3
   # varname <- "GasEx_A"
@@ -263,7 +278,8 @@ remove_outliers <- function(indata, elevation, leaftype, varname) {
   return(no_outliers)
 }
 
-
+# Processing at a set of six readings does not work!
+# Too few data points, and there are many invalid entries with NA values
 remove_observation_outliers <- function(indata, elevation, leaftype, varname) {
   # testing data
   # indata <- finaldata
@@ -276,24 +292,16 @@ remove_observation_outliers <- function(indata, elevation, leaftype, varname) {
   # init df for final output
   no_outliers <- data.frame()
   
-  # break in to observation groups and process at this level
+  # break into observation groups and process at this level
   # not entire population of leaf type
   groups <- unique(indata$Filenames_filename)
-  # TODO removed loop for testing
   for (gr in groups) {
     
-    # deugging
-    # write_csv(filter(raw_data, (Filenames_filename == FileName & Data_group == gr)), 
-    #           paste(DATAUSER, "outliers.csv"), 
-    #           append = TRUE, 
-    #           col_names = FALSE)
     # select all data from one log, for a given elevation and leaftype
     outlier_data <- filter(indata, (Filenames_filename == gr &
                                       Data_plant_id == elevation & 
                                       Data_leaftype == leaftype))
     
-    # tmp <- raw_data[raw_data$Filenames_filename == FileName & raw_data$Data_group == "group1",]  # retains NA  
-    # tmp <- filter(raw_data, Filenames_filename == FileName & Data_group == gr) # does not retain NA
     x <- outlier_data[,varname]
     x <- x[[varname]]
     # get values of Q1, Q3, and IQR
@@ -314,10 +322,6 @@ remove_observation_outliers <- function(indata, elevation, leaftype, varname) {
     rmout <- x[which(x > Tmin & x < Tmax)]
     # rmout
     
-    # write_csv(filter(raw_data, (Filenames_filename == gr & GasEx_A == newlist[1])), paste(DATAUSER, "outliers.csv"), 
-    #           append = TRUE, 
-    #           col_names = FALSE)
-    
     no_outliers <- rbind(no_outliers, outlier_data[ outlier_data[[varname]] %in% rmout, ])
     
   }
@@ -327,9 +331,14 @@ remove_observation_outliers <- function(indata, elevation, leaftype, varname) {
 }
 
 ```
-# Plot Measurement Data By Variable  
-Each daily observation data set is plotted based on a variable of interest.  
-```{r }
+# Plots By Variable per Day
+  
+Every daily observation data set is plotted based on a variable of interest.  This variable can be easily changed to explore other data sets. 
+```{r plot_var_per_day}
+#| warning: false
+#| echo: false
+#| error: false
+
 # t <- finaldata %>% filter(Data_leaftype == "Reference") %>% select(GasEx_A)
 
 # TODO testing, hard code for now
@@ -364,6 +373,7 @@ varname <- "GasEx_A"
 # process_data <- finaldata
 # process_data <- no_zero_data
 
+finaldata <- read_and_clean_data("final_raw_data.csv")
 
 
 # finaldata <- process_data
@@ -381,250 +391,297 @@ for (FileName in unique(finaldata$Filenames_filename)) {
 
 ```
 {{< pagebreak >}}
-
-
-# Daily Means Graphs
-__dates issues need filled in here__
-
-Elevation 2 graphs are the most complete as elevation 3 did not have accurate data collection until mid-February. Thermocouple movement caused misleading readings.  
-
-The long consistent negative slope is due to a lack of measurements for several weeks before January until the start of January. 
-
-## LICOR Daily Mean Observations on GasEx_A  
-
-```{r graph_means_GasEx_A}
-#| echo: false
-#| warning: false
-
-
-# GRAPH: GasEx_A
-elevation2 <- mean_plant_data(finaldata, "2", "GasEx_A")
-plot2 <- plot_means(elevation2, "Elevation 2 Daily Means GasEx_A", "SysObs_date", "GasEx_A") 
-elevation3 <- mean_plant_data(finaldata, "3", "GasEx_A")
-plot3 <- plot_means(elevation3, "Elevation 3 Daily Means GasEx_A", "SysObs_date", "GasEx_A") 
-
-plot2
-plot3
-
-# use patchwork to arrange the two plots on top of each other for comparison
-plot2 / plot3
-
-pb2 <- variable_boxplot(finaldata, "2", "GasEx_A")
-pb3 <- variable_boxplot(finaldata, "3", "GasEx_A")
-
-pb2
-pb3
-# use patchwork to arrange the two plots on top of each other for comparison
-pb2 / pb3
-
-
-# 
-# elevation2 <- mean_plant_data(outlier_data, "2", "GasEx_A")
-# plot2 <- plot_means(elevation2, "Elevation 2 Daily Means GasEx_A", "SysObs_date", "GasEx_A") 
-# elevation3 <- mean_plant_data(outlier_data, "3", "GasEx_A")
-# plot3 <- plot_means(elevation3, "Elevation 3 Daily Means GasEx_A", "SysObs_date", "GasEx_A") 
-# 
-# plot2
-# plot3
-# 
-# # use patchwork to arrange the two plots on top of each other for comparison
-# plot2 / plot3
-# 
-# pb2 <- variable_boxplot(outlier_data, "2", "GasEx_A")
-# pb3 <- variable_boxplot(outlier_data, "3", "GasEx_A")
-# 
-# pb2
-# pb3
-# # use patchwork to arrange the two plots on top of each other for comparison
-# pb2 / pb3
-
-
-```
-
+# Box-Plots of ALL Data
+Raw data from all observations are included in these boxplots.  
+  
+Elevation 2 graphs are the most complete and accurate.   
+Elevation 3 did not have accurate data collection until mid-February. Thermocouple movement caused misleading readings on some dates.  
+  
+Variables were selected to explore ALL of the data. These can easily have more added by changing the calls to the plots elevation and variable.
 {{< pagebreak >}}
 
-## LICOR Daily Mean Observations on GasEx_gsw  
-
-```{r graph_means_GasEx_gsw}
-#| echo: false
+```{r boxplotss}
 #| warning: false
-
-# GRAPH: GasEx_gsw
-elevation2 <- mean_plant_data(finaldata, "2", "GasEx_gsw")
-plot2 <- plot_means(elevation2, "Elevation 2 Daily Means GasEx_gsw", "SysObs_date", "GasEx_gsw") 
-elevation3 <- mean_plant_data(finaldata, "3", "GasEx_gsw")
-plot3 <- plot_means(elevation3, "Elevation 3 Daily Means GasEx_gsw", "SysObs_date", "GasEx_gsw") 
-
-plot2
-plot3
-# use patchwork to arrange the two plots on top of each other for comparison
-plot2 / plot3
-
-pb2 <- variable_boxplot(finaldata, "2", "GasEx_gsw")
-pb3 <- variable_boxplot(finaldata, "3", "GasEx_gsw")
-
-pb2
-pb3
-# use patchwork to arrange the two plots on top of each other for comparison
-pb2 / pb3
-
-
-```
-{{< pagebreak >}}
-
-## LICOR Daily Mean Observations on GasEx_VPDleaf
-
-```{r graph_means_GasEx_VPDleaf}
 #| echo: false
-#| warning: false
-#| 
-# GRAPH: GasEx_VPDleaf
-elevation2 <- mean_plant_data(finaldata, "2", "GasEx_VPDleaf")
-plot2 <- plot_means(elevation2, "Elevation 2 Daily Means GasEx_VPDleaf", "SysObs_date", "GasEx_VPDleaf") 
-elevation3 <- mean_plant_data(finaldata, "3", "GasEx_VPDleaf")
-plot3 <- plot_means(elevation3, "Elevation 3 Daily Means GasEx_VPDleaf", "SysObs_date", "GasEx_VPDleaf") 
-
-plot2
-plot3
-# use patchwork to arrange the two plots on top of each other for comparison
-plot2 / plot3
-
-pb2 <- variable_boxplot(finaldata, "2", "GasEx_VPDleaf")
-pb3 <- variable_boxplot(finaldata, "3", "GasEx_VPDleaf")
-
-pb2
-pb3
-# use patchwork to arrange the two plots on top of each other for comparison
-pb2 / pb3
+#| error: false
 
 
-```
-{{< pagebreak >}}
+variable_boxplot(finaldata, "2", "GasEx_A") 
+variable_boxplot(finaldata, "3", "GasEx_A")
 
-## LICOR Daily Mean Observations on Meas_Tleaf
+variable_boxplot(finaldata, "2", "GasEx_gsw")
+variable_boxplot(finaldata, "3", "GasEx_gsw")
 
-```{r graph_means_Meas_Tleaf}
-#| echo: false
-#| warning: false
-#| 
-# GRAPH: Meas_Tleaf
-elevation2 <- mean_plant_data(finaldata, "2", "Meas_Tleaf")
-plot2 <- plot_means(elevation2, "Elevation 2 Daily Means Meas_Tleaf", "SysObs_date", "Meas_Tleaf") 
-elevation3 <- mean_plant_data(finaldata, "3", "GasEx_A")
-plot3 <- plot_means(elevation3, "Elevation 3 Daily Means Meas_Tleaf", "SysObs_date", "Meas_Tleaf") 
+variable_boxplot(finaldata, "2", "GasEx_VPDleaf")
+variable_boxplot(finaldata, "3", "GasEx_VPDleaf")
 
-plot2
-plot3
-# use patchwork to arrange the two plots on top of each other for comparison
-plot2 / plot3
-
-pb2 <- variable_boxplot(finaldata, "2", "Meas_Tleaf")
-pb3 <- variable_boxplot(finaldata, "3", "Meas_Tleaf")
-
-pb2
-pb3
-# use patchwork to arrange the two plots on top of each other for comparison
-pb2 / pb3
-
+variable_boxplot(finaldata, "2", "Meas_Tleaf")
+variable_boxplot(finaldata, "3", "Meas_Tleaf")
 
 ```
 
-
-```{r test_error_bars2}
+```{r graphs_with_error_bars}
+#| warning: false
+#| echo: false
+#| error: false
 
 # testing error bars in plots
 
-ELEVATION <- 2
-VARNAME <- "GasEx_A"
 # ELEVATION constant is already applied above
 # remove any leaf type that is not part of the experiment
-df_summary <- finaldata %>% filter(Data_plant_id == ELEVATION) %>%
-  filter(Data_leaftype == "Treatment" | 
-           Data_leaftype == "Control" | 
-           Data_leaftype == "Reference")
+# ELEVATION <- 3
+# VARNAME <- "GasEx_gsw"
+# graphit <- function(ELEVATION, VARNAME) {
+#   
+#   dispvarname <- str_split(VARNAME, "_")[[1]][2]
+#   print(dispvarname)  
+#   
+#   df_summary <- finaldata %>% filter(Data_plant_id == ELEVATION) %>%
+#     filter(Data_leaftype == "Treatment" | 
+#              Data_leaftype == "Control" | 
+#              Data_leaftype == "Reference")
+#   
+#   
+#   # ----------- code works but does not split line on missing data
+#   # mean values based on a group, and remove any na values
+#   esummary <- plyr::ddply(df_summary, .(Filenames_filename, Data_leaftype, SysObs_date), summarise,
+#                           mean = round(mean(get(VARNAME)), 2),
+#                           sd = round(sd(get(VARNAME)), 2))
+#   # esummary <- na.omit(esummary)
+#   
+#   
+#   p1 <- ggplot(esummary, 
+#                aes(x = SysObs_date, y = mean, color = Data_leaftype, 
+#                    group(Data_leaftype, SysObs_date))) +
+#     geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd),
+#                   position = position_dodge(0.9), width = 0.2) +
+#     geom_line(linewidth = 0.3) +
+#     geom_point(size = 2) +
+#     scale_color_manual(name='Leaf',
+#                        breaks=c('Treatment', 'Control', 'Reference'),
+#                        values=c('Treatment'='#F8766D', 'Control'='#619CFF', 'Reference'='#00BA38'))+
+#     theme(axis.text.x=element_text(angle=60, hjust=1)) + 
+#     scale_x_date(date_breaks = "1 week", date_labels =  "%b %d") +
+#     ggtitle(paste("Weekly Mean ", dispvarname, " for Elevation ", ELEVATION, sep = '')) +
+#     xlab("Week of Observation") +
+#     ylab(paste("mean ", dispvarname, " (µmol m⁻² s⁻¹)", sep = '')) 
+# }
+
+```
+
+# Daily MEANS  
+ 
+Line graphs for daily mean values are plotted with error bars.  
+ 
+Breaks in lines indicate that there is no data at a point in between the ends of the lines. These are normally results of invalid data for that day, such as values < 0 that were converted to NAs.  
+{{< pagebreak >}}
+  
+
+```{r run_error_graphs}
+#| warning: false
+#| echo: false
+#| error: false
+
+# TODO WHY DOES THIS NOT WORK!!! CAN NOT PASS VARIABLES TO FUNCTION
+# GLOBAL VARIABLES WORK
+grapherror <-function() {
+  # ELEVATION <- e
+  # VNAME <- o
+  dispvarname <- str_split(VNAME, "_")[[1]][2]
+  
+  # remove any leaf type that is not part of the experiment
+  df_summary <- finaldata %>% filter(Data_plant_id == ELEVATION) %>%
+    filter(Data_leaftype == "Treatment" | 
+             Data_leaftype == "Control" | 
+             Data_leaftype == "Reference")
+  
+  
+  # ----------- code works but does not split line on missing data
+  # mean values based on a group, and remove any NA values
+  esummary <- ddply(df_summary, .(Filenames_filename, Data_leaftype, SysObs_date), summarise,
+                    mean = round(mean(get(VNAME)), 2),
+                    sd = round(sd(get(VNAME)), 2))
+  # esummary <- na.omit(esummary)
+  
+  p1 <- ggplot(esummary, 
+               aes(x = SysObs_date, y = mean, color = Data_leaftype, 
+                   group(Data_leaftype, SysObs_date))) +
+    geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd),
+                  position = position_dodge(0.9), width = 0.2) +
+    geom_line(linewidth = 0.3) +
+    geom_point(size = 2) +
+    scale_color_manual(name='Leaf',
+                       breaks=c('Treatment', 'Control', 'Reference'),
+                       values=c('Treatment'='#F8766D', 'Control'='#619CFF', 'Reference'='#00BA38'))+
+    theme(axis.text.x=element_text(angle=60, hjust=1)) + 
+    scale_x_date(date_breaks = "1 week", date_labels =  "%b %d") +
+    ggtitle(paste("Weekly Mean ", dispvarname, " for Elevation ", ELEVATION, sep = '')) +
+    xlab("Week of Observation") +
+    ylab(paste("mean ", dispvarname, " (µmol m⁻² s⁻¹)", sep = '')) 
+  
+  return(p1)
+  
+}
+
+# TODO WHY DOES THIS NOT WORK!!! CAN NOT PASS VARIABLES TO FUNCTION
+# GLOBAL VARIABLES WORK
+ELEVATION <- 2
+VNAME <- "GasEx_A"
+grapherror()
+ELEVATION <- 3
+VNAME <-"GasEx_A"
+grapherror()
+
+ELEVATION <- 2
+VNAME <- "GasEx_gsw"
+grapherror()
+ELEVATION <- 3
+VNAME <-"GasEx_gsw"
+grapherror()
+
+ELEVATION <- 2
+VNAME <- "GasEx_VPDleaf"
+grapherror()
+ELEVATION <- 3
+VNAME <-"GasEx_VPDleaf"
+grapherror()
+
+ELEVATION <- 2
+VNAME <- "Meas_Tleaf"
+grapherror()
+ELEVATION <- 3
+VNAME <-"Meas_Tleaf"
+grapherror()
 
 
-# ----------- code works but does not split line on missing data
-# mean values based on a group, and remove any na values
-esummary <- ddply(df_summary, .(Filenames_filename, Data_leaftype, SysObs_date), summarise,
-                  mean = round(mean(get(VARNAME)), 2),
-                  sd = round(sd(get(VARNAME)), 2))
-esummary <- na.omit(esummary)
+```
 
-dispvarname <- str_split(VARNAME, "_")[[1]][2]
 
-p1 <- ggplot(esummary, 
-             aes(x = SysObs_date, y = mean, color = Data_leaftype, 
-                 group(Data_leaftype, SysObs_date))) +
-  geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd),
-                position = position_dodge(0.9), width = 0.2) +
-  geom_line(linewidth = 0.3) +
-  geom_point(size = 2) +
-  scale_color_manual(name='Leaf',
-                     breaks=c('Treatment', 'Control', 'Reference'),
-                     values=c('Treatment'='#F8766D', 'Control'='#619CFF', 'Reference'='#00BA38'))+
-  theme(axis.text.x=element_text(angle=60, hjust=1)) + 
-  scale_x_date(date_breaks = "1 week", date_labels =  "%b %d") +
-  ggtitle(paste("Weekly Mean ", dispvarname, " for Elevation ", ELEVATION, sep = '')) +
-  xlab("Week of Observation") +
-  ylab(paste("mean ", dispvarname, " (µmol m⁻² s⁻¹)", sep = '')) 
 
-p1
 
-p2 <- ggplot(esummary, aes(x=SysObs_date, y=mean, color = Data_leaftype, group(Data_leaftype, SysObs_date))) +
-  geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), position = position_dodge(0.9), width = 0.2) +
-  # geom_line(size= 0.2) +
-  geom_point(size = 2)
-
-p1/p2
+```{r test_error_bars2}
+#| warning: false
+#| echo: false
+#| error: false
+#| 
+# # testing error bars in plots
+# 
+# ELEVATION <- 2
+# VARNAME <- "GasEx_gsw"
+# dispvarname <- str_split(VARNAME, "_")[[1]][2]
+# 
+# # remove any leaf type that is not part of the experiment
+# df_summary <- finaldata %>% filter(Data_plant_id == ELEVATION) %>%
+#   filter(Data_leaftype == "Treatment" | 
+#            Data_leaftype == "Control" | 
+#            Data_leaftype == "Reference")
+# 
+# 
+# # ----------- code works but does not split line on missing data
+# # mean values based on a group, and remove any NA values
+# esummary <- ddply(df_summary, .(Filenames_filename, Data_leaftype, SysObs_date), summarise,
+#                   mean = round(mean(get(VARNAME)), 2),
+#                   sd = round(sd(get(VARNAME)), 2))
+# # esummary <- na.omit(esummary)
+# 
+# p1 <- ggplot(esummary, 
+#              aes(x = SysObs_date, y = mean, color = Data_leaftype, 
+#                  group(Data_leaftype, SysObs_date))) +
+#   geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd),
+#                 position = position_dodge(0.9), width = 0.2) +
+#   geom_line(linewidth = 0.3) +
+#   geom_point(size = 2) +
+#   scale_color_manual(name='Leaf',
+#                      breaks=c('Treatment', 'Control', 'Reference'),
+#                      values=c('Treatment'='#F8766D', 'Control'='#619CFF', 'Reference'='#00BA38'))+
+#   theme(axis.text.x=element_text(angle=60, hjust=1)) + 
+#   scale_x_date(date_breaks = "1 week", date_labels =  "%b %d") +
+#   ggtitle(paste("Weekly Mean ", dispvarname, " for Elevation ", ELEVATION, sep = '')) +
+#   xlab("Week of Observation") +
+#   ylab(paste("mean ", dispvarname, " (µmol m⁻² s⁻¹)", sep = '')) 
+# 
+# p1
+# 
+# p2 <- ggplot(esummary, aes(x=SysObs_date, y=mean, color = Data_leaftype, group(Data_leaftype, SysObs_date))) +
+#   geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), 
+#                 position = position_dodge(0.9), width = 0.2) +
+#   # geom_line(size= 0.2) +
+#   geom_point(size = 2) +
+#   scale_color_manual(name='Leaf',
+#                      breaks=c('Treatment', 'Control', 'Reference'),
+#                      values=c('Treatment'='#F8766D', 'Control'='#619CFF', 'Reference'='#00BA38'))+
+#   theme(axis.text.x=element_text(angle=60, hjust=1)) + 
+#   scale_x_date(date_breaks = "1 week", date_labels =  "%b %d") +
+#   ggtitle(paste("Weekly Mean ", dispvarname, " for Elevation ", ELEVATION, sep = '')) +
+#   xlab("Week of Observation") +
+#   ylab(paste("mean ", dispvarname, " (µmol m⁻² s⁻¹)", sep = '')) 
+# 
+# p2
+# 
+# p1/p2
 
 ```
 
 
 ```{r test_error_bars3}
+#| warning: false
+#| echo: false
+#| error: false
 
-# testing error bars in plots
-
-
-# ELEVATION constant is already applied above
-# remove any leaf type that is not part of the experiment
-ELEVATION <- 3
-VARNAME <- "GasEx_A"
-df_summary <- finaldata %>% filter(Data_plant_id == ELEVATION) %>%
-  filter(Data_leaftype == "Treatment" | 
-           Data_leaftype == "Control" | 
-           Data_leaftype == "Reference")
-
-
-# ----------- code works but does not split line on missing data
-# mean values based on a group, and remove any na values
-esummary <- plyr::ddply(df_summary, .(Filenames_filename, Data_leaftype, SysObs_date), summarise,
-                        mean = round(mean(get(VARNAME)), 2),
-                        sd = round(sd(get(VARNAME)), 2))
-esummary <- na.omit(esummary)
-
-
-p1 <- ggplot(esummary, 
-             aes(x = SysObs_date, y = mean, color = Data_leaftype, 
-                 group(Data_leaftype, SysObs_date))) +
-  geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), 
-                position = position_dodge(0.9), width = .2) +
-  geom_line(size = 0.2) +
-  geom_point(size = 2) +
-  theme(axis.text.x=element_text(angle=60, hjust=1)) + 
-  scale_x_date(date_breaks = "1 week", date_labels =  "%b %d") +
-  ggtitle(paste("Daily Mean ", VARNAME, " Observations for Elevation ", ELEVATION, sep = '')) +
-  xlab("Week of Observation") +
-  ylab(paste("mean ", VARNAME, sep = '')) 
-
-p1
-
-p2 <- ggplot(esummary, aes(x=SysObs_date, y=mean, color = Data_leaftype,group(Data_leaftype, SysObs_date))) +
-  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), position = position_dodge(0.9), width = .2) +
-  # geom_line(size= 0.2) +
-  geom_point(size = 2)
-
-p1/p2
+# # testing error bars in plots
+# 
+# # ELEVATION constant is already applied above
+# # remove any leaf type that is not part of the experiment
+# ELEVATION <- 3
+# VARNAME <- "GasEx_A"
+# df_summary <- finaldata %>% filter(Data_plant_id == ELEVATION) %>%
+#   filter(Data_leaftype == "Treatment" | 
+#            Data_leaftype == "Control" | 
+#            Data_leaftype == "Reference")
+# 
+# 
+# # ----------- code works but does not split line on missing data
+# # mean values based on a group, and remove any na values
+# esummary <- plyr::ddply(df_summary, .(Filenames_filename, Data_leaftype, SysObs_date), summarise,
+#                         mean = round(mean(get(VARNAME)), 2),
+#                         sd = round(sd(get(VARNAME)), 2))
+# # esummary <- na.omit(esummary)
+# 
+# 
+# p1 <- ggplot(esummary, 
+#              aes(x = SysObs_date, y = mean, color = Data_leaftype, 
+#                  group(Data_leaftype, SysObs_date))) +
+#   geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd),
+#                 position = position_dodge(0.9), width = 0.2) +
+#   geom_line(linewidth = 0.3) +
+#   geom_point(size = 2) +
+#   scale_color_manual(name='Leaf',
+#                      breaks=c('Treatment', 'Control', 'Reference'),
+#                      values=c('Treatment'='#F8766D', 'Control'='#619CFF', 'Reference'='#00BA38'))+
+#   theme(axis.text.x=element_text(angle=60, hjust=1)) + 
+#   scale_x_date(date_breaks = "1 week", date_labels =  "%b %d") +
+#   ggtitle(paste("Weekly Mean ", dispvarname, " for Elevation ", ELEVATION, sep = '')) +
+#   xlab("Week of Observation") +
+#   ylab(paste("mean ", dispvarname, " (µmol m⁻² s⁻¹)", sep = '')) 
+# 
+# p1
+# 
+# p2 <- ggplot(esummary, aes(x=SysObs_date, y=mean, color = Data_leaftype, group(Data_leaftype, SysObs_date))) +
+#   geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), 
+#                 position = position_dodge(0.9), width = 0.2) +
+#   # geom_line(size= 0.2) +
+#   geom_point(size = 2) +
+#   scale_color_manual(name='Leaf',
+#                      breaks=c('Treatment', 'Control', 'Reference'),
+#                      values=c('Treatment'='#F8766D', 'Control'='#619CFF', 'Reference'='#00BA38'))+
+#   theme(axis.text.x=element_text(angle=60, hjust=1)) + 
+#   scale_x_date(date_breaks = "1 week", date_labels =  "%b %d") +
+#   ggtitle(paste("Weekly Mean ", dispvarname, " for Elevation ", ELEVATION, sep = '')) +
+#   xlab("Week of Observation") +
+#   ylab(paste("mean ", dispvarname, " (µmol m⁻² s⁻¹)", sep = '')) 
+# p2 
+# 
+# p1/p2
 
 ```
 
