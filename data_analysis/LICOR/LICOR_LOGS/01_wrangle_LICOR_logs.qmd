@@ -1,5 +1,5 @@
 ---
-title: "LICOR Data Processing"
+title: "LI-COR Text Log Processing"
 author: "Bryan Blue"
 e-mail: 'bryanblue@arizona.edu'
 date: "Last Generated: `r Sys.Date()`"
@@ -47,34 +47,44 @@ DATAUSER <- "data_user"
 
 # 01_load_LICOR_logs  
 
-__All files (read or written) are assumed to be in UTF-8 and not ASCII. The units row contains special characters that will not render unless this is true. If these values do not render correctly in your software, see if there is an option to use UTF-8 or convert them to values you are able to use.__   
-Currently loads one text log from a LICOR data set. It reads each chunk of data that contains a line with "[Header]".  
-All lines are skipped unless a remarks row is found. This continues until a line with "[Data]" is found.  
-All data and remarks lines are read and assigned a group number to keep the related records together. This repeats until the end of file every time a "[Header]" line is found..  
-The original group names, field names, and units are stored off in separate data frames from the first [Data] chunk.  
-There are variable names that are not unique e.g. "time". Therefore the variable names are a concatenation of the group name and the variable name separated by an underscore. e.g. group "SysObs" and variable "time" are converted into a new name of "SysObs_time"    
+__All files (read or written) are assumed to be in UTF-8, not ASCII. The units row contains special characters that will not render unless this is true. If these values do not render correctly in your software, see if there is an option to use UTF-8 or convert them to values you can use.__   
+  
+Copy all text logs that need to be process into the "data_raw" folder. These should never be touched and treated as read only files. Files are selected from "data_raw" searching for files that start with the regex `^[0-9]{4}-[0-9]{2}-[0-9]{2}` which is the standard LI-COR date format.  
+  
+Loads one text log from a LI-COR data set. It reads each chunk of data that contains a line with "[Header]". 
+All lines are skipped unless a remarks row is found. This continues until a line with "[Data]" is found. All data and remarks lines are read, and a group number is assigned to keep the related records together. This repeats until the end of the file every time a "[Header]" line is found.  
+  
+The original group names, field names, and units are stored in separate data frames from the first [Data] chunk.  
+Some variable names are not unique, e.g., "time". Therefore, the variable names are a concatenation of the group name, and an underscore separates the variable name. e.g., group "SysObs" and variable "time" are converted into a new name of "SysObs_time"   
+  
 All data files are written to a UTF-8, CSV type text file.  
-__NOTE:__ Files that end in TXT should be imported into Excel using the import data option otherwise the UTF-8 units values do not import correctly.  
-If a CSV data file is open directly in Excel, DO NOT "Convert large numbers into scientific notation", it may also ask that there are many 'E' values found, should they be treated as exponent values, do not do this either.
-
+__NOTE:__ Files that end in TXT should be imported into Excel using the import data option; otherwise, the UTF-8 unit values do not import correctly.  
+If a CSV data file is opened directly in Excel, DO NOT "Convert large numbers into scientific notation." Excel may also ask if there are many 'E' values found, which should be treated as exponent values. Do not do this either.
+  
 ## REMARKS:
-Remarks are found in both the [Header] section and [Data] section.  
+Remarks are found in the [Header] and [Data] sections.  
 There may be zero or more remarks present in either section.  
-All should be read and concatenated into one comma delimited value for output as they are found.  
-This means that the remarks field can change as data records are read and more remarks are found.  
-
+All should be read and concatenated into one comma-delimited value for output as they are found.  
+This means the remarks field can change as data records are read and more remarks are found.  
+  
 Remarks start with time followed by a tab character.  
 After the tab there are two possibilities  
 1. "Stability Definition" (ignore)  
-2. the actual remarks text (concatenate to remarks variable as found)  
-
-__EXAMPLE LINES IN LOGFILE__  
+2. the actual remarks text (concatenate to remarks variable as found)
+  
+Remarks in the LI-COR log start with time followed by a tab character.  
+After the tab there are two possibilities  
+1. "Stability Definition" (ignore)  
+2. the actual remarks text (concatenated to a remarks variable as they are found)  
+  
+__EXAMPLE of REMARKS LINES IN LI-COR LOGFILE__  
+The first line is ignored, while the second is a remark.  
 12:44:30	Stability Definition:	A (GasEx): Slp<0.3 Per=15	gsw (GasEx): Slp<0.05 Per=15	F (FlrLS): Slp<5 Per=15  
 12:44:44	tc-shade5
-
-
-```{r functions}
+```{r load_data_chunks}
+#| warning: false
 #| echo: false
+#| error: false
 
 # given a fully qualified LI-COR data log file name
 # process it into data frames of the groups, units, var names, data values
@@ -178,7 +188,10 @@ load_data_chunks <- function(OutFile, OutFileName) {
 ```
 
 ```{r functions}
+#| warning: false
 #| echo: false
+#| error: false
+
 # manipulate the data in valsdf using these varsdf column names
 # special manipulations should go here
 # normal rounding and formatting dates are common manipulations
@@ -237,7 +250,9 @@ fix_types <- function(typesdf) {
 
 
 ```{r select_data}
-#| echo: true
+#| warning: false
+#| echo: false
+#| error: false
 
 select_data <- function(groupsdf, varsdf) {
   # print("function: select_data")
@@ -264,17 +279,24 @@ select_data <- function(groupsdf, varsdf) {
 
 ```
 
-__Write Data Files__
 ```{r write_files}
+#| warning: false
 #| echo: false
-#| 
+#| error: false
+
 write_files <- function(LogFileName, groupsdf, varsdf, unitsdf, valuesdf, final_data) {
   # print("function: write_files")
   # write out a text file that Excel can read
   # this file keep LICOR units in UTF-8 with special characters
-  CleanDataFile <- paste("cleaned_UTF-8", LogFileName, sep = '_')
-  CleanDataFile <- paste(CleanDataFile, "csv", sep = '.')
+  CleanDataFile <- paste("cleaned_UTF-8", LogFileName, ".csv", sep = '_')
+  # CleanDataFile <- paste(CleanDataFile, "csv", sep = '.')
   CleanOutput <- here(DATACLEAN, CleanDataFile)
+  
+  # create CSV files for just the groups, variable names and units
+  HeaderOutput <- here(DATACLEAN, "UTF-8_headers.csv")
+  write_csv(groupsdf, HeaderOutput, append = FALSE, col_names = FALSE)
+  write_csv(varsdf, HeaderOutput, append = TRUE, col_names = FALSE)
+  write_csv(unitsdf, HeaderOutput, append = TRUE, col_names = FALSE)
   
   # build up the CSV file from the cleaned data by data frame
   # TODO this is not working, it is the same output as the "selected" data
@@ -283,7 +305,7 @@ write_files <- function(LogFileName, groupsdf, varsdf, unitsdf, valuesdf, final_
   write_csv(unitsdf, CleanOutput, append = TRUE, col_names = FALSE)
   write_csv(valuesdf, CleanOutput, append = TRUE, col_names = FALSE)
   
-  SelectedDataFile <- paste("selected", LogFileName, sep = '_')
+  SelectedDataFile <- paste("selected_UTF-8", LogFileName, sep = '_')
   SelectedDataFile <- paste(SelectedDataFile, "csv", sep = '.')
   SelectedOutput <- here(DATACLEAN, SelectedDataFile)
   
@@ -293,8 +315,10 @@ write_files <- function(LogFileName, groupsdf, varsdf, unitsdf, valuesdf, final_
 ```
 
 ```{r add_user_variables}
+#| warning: false
 #| echo: false
-#| 
+#| error: false
+
 build_select_fieldlist <- function(groupsdf, varsdf) {
   # select the names for the columns of interest
   # UTF-8 CSV text file to keep units in proper form
@@ -334,22 +358,33 @@ build_select_fieldlist <- function(groupsdf, varsdf) {
 }
 ```
 
-__Processing Data from data_raw folder__  
+# Processing Data from data_raw folder  
+LI-COR text logs are read and parsed into a usable format  
+A file named "UTF-8_headers.csv" is created that contains the first three rows of a data block. Group name, Unit, Variable names.  
+  
+## Variable Names  
+Variable names are not unique, append a prefix of Group name "_" Variable name. e.g. LIC-COR group = "GasEx", variable = "A" the final variable name is "GasEx_A"  
+These variable names contain spaces, these are replaced with "_".  
+  
+## Subset of Data  
+Consists of the fields contained in the file "data_user" folder named "selected_log_data.csv" are used to join with all of the data to produce a file that contains just the variables needed for future processing.  
+
 ```{r main}
+#| warning: false
 #| echo: false
-#| 
+#| error: false
+
 main <- function(LogFileName) {
   # print("function: main()")
-  
-  
-  # LogFileName <- FileName # TODO !!!!!! testing with one file only !!!!!!
-  # LogFileName <- FileList[1] # TODO !!!!!! testing with one file only !!!!!!
-  # LogFileName <- "2023-11-15-1148_logdata"
-  
+
   LogFullFileName <- here(DATARAW, LogFileName)
   
+  # parse and load all of the LI-COR text logs, return as a list
+  # output[[1]] = groups
+  # output[[2]] = units
+  # output[[3]] = variables
+  # output[[4]][,1] = data values
   output <- load_data_chunks(LogFullFileName, LogFileName)
-  # print(paste("output: ", head(output[[4]][,1])))
   
   # output contains tabular data broken into the group, units, var names, and values
   # break them into their own tables for further use
@@ -357,11 +392,9 @@ main <- function(LogFileName) {
   unitsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[2]]),'\t',fixed=TRUE)))
   varsdf <- data.frame(do.call('rbind',strsplit(as.character(output[[3]]),'\t',fixed=TRUE)))
   valuesdf <- data.frame(do.call('rbind',strsplit(as.character(output[[4]][,1]),'\t',fixed=TRUE)))
-  # print(paste("varsdf: ",varsdf))
-  
-  # LICOR variable names are not unique, add the group as a suffix to fix it
+
+  # LICOR variable names are not unique, add the group as a prefix to fix it "GasEx_A"
   full_field_list <- paste(groupsdf[1,], varsdf[1,], sep = "_")
-  
   
   # LICOR variable names may contain spaces and other UTF-8 special characters
   # replace them with appropriate values for raw data handling
@@ -407,17 +440,13 @@ main <- function(LogFileName) {
 }
 ```
 
-## NOTE: the remarks in the data files may not be 100% correct.  
-Changes have been made in the leaf_identification.csv file as needed.
 
-## NOTE LICOR logs default to start with the date "YYYY-MM-DD"
-This ensures only these files are read. If files are not named in this convention, this will not work.  
-
-2024-03-13-1130_logdata_lvl2 This day had the initial LI-COR environment configured incorrectly. 
-Log Descriptions were not set correctly and manually set. e.g. Reference and Treatment switched.  
+## Processed Files
 
 ```{r process_files}
+#| warning: false
 #| echo: false
+#| error: false
 
 # NOTE LICOR logs default to start with the date "YYYY-MM-DD"
 # this ensures only these files are read
