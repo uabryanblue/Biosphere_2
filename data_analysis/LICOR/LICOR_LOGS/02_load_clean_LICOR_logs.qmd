@@ -132,49 +132,47 @@ write_csv(cleandf, here(DATAUSER,"selected_log_data.csv"),
 #| echo: false
 #| error: false
 
-# NOT NEEDED, OLD CODE
-# 
-# # __Generate an Empty Leaf Identification File__   
-# # store off the first columns of the combined data to generate a file
-# # used for manual identification of information that is not contained 
-# # within the LICOR data  
-# # NOTE: this file is generated every time, any edits will be lost
-# write_csv(cleandf[,1:6], 
-#           here(DATAUSER, "input", "EMPTY_leaf_identification.csv"), 
-#           append = FALSE, 
+# DEFUNCT CODE __Generate an Empty Leaf Identification File__
+# store off the first columns of the combined data to generate a file
+# used for manual identification of information that is not contained
+# within the LICOR data
+# NOTE: this file is generated every time, any edits will be lost
+# write_csv(cleandf[,1:6],
+#           here(DATAUSER, "input", "EMPTY_leaf_identification.csv"),
+#           append = FALSE,
 #           col_names = TRUE)
 # 
-# # __Generate the JOINED Leaf Identification File__   
-# # join all lines in the current leaf_identification.csv file with cleandf
-# # previously identified rows will remain and unknown rows will be added
-# # JOINED_final_raw_data.csv can be continued to be edited once done,
-# # it should replace the leaf_identification.csv file for future processing
-# leafdf <- read_csv(here(DATAUSER, "input", "leaf_identification.csv"), 
-#                    col_names = TRUE, 
-#                    show_col_types = FALSE) 
-# leafjoindf <-left_join(cleandf, leafdf, by = c('Filenames_filename', 'Data_group', 'SysObs_obs'))
-# # join causes duplication of column names
-# # rename the required columns and remove the ones that are duplicats
-# leafjoindf <- rename(leafjoindf, c("Data_remarks" = "Data_remarks.x", 
-#                                   "Data_plant_id" = "Data_plant_id.y", 
-#                                   "Data_leaftype" = "Data_leaftype.y",
-#                                   "SysObs_date" = "SysObs_date.x"))
-# leafjoindf[,"Data_remarks.y"] <- NULL
-# leafjoindf[,"Data_plant_id.x"] <- NULL
-# leafjoindf[,"Data_leaftype.x"] <- NULL
-# leafjoindf[,"SysObs_date.y"] <- NULL
-# 
-# # general column name cleanup to get rid of remaining .x and .y columns
-# colnames(leafjoindf)<-gsub("\\.x","",colnames(leafjoindf))
-# leafjoindf <- leafjoindf %>% select(-contains(".y"))
-# 
-# # the fields are in the wrong order from the joine and cleanup, put them back
-# leafjoindf <- leafjoindf %>% relocate(c(Data_remarks, Data_plant_id, Data_leaftype), .after = Data_group)
-# 
-# # final file that the user should continue to edit
-# write_csv(leafjoindf, here(DATAUSER, "input", "JOINED_leaf_identification.csv"), 
-#           append = FALSE, 
-#           col_names = TRUE)
+# __Generate the JOINED Leaf Identification File__
+# join all lines in the current leaf_identification.csv file with cleandf
+# previously identified rows will remain and unknown rows will be added
+# JOINED_final_raw_data.csv can be continued to be edited once done,
+# it should replace the leaf_identification.csv file for future processing
+leafdf <- read_csv(here(DATAUSER, "input", "leaf_identification.csv"),
+                   col_names = TRUE,
+                   show_col_types = FALSE)
+leafjoindf <-left_join(cleandf, leafdf, by = c('Filenames_filename', 'Data_group', 'SysObs_obs'))
+# join causes duplication of column names
+# rename the required columns and remove the ones that are duplicats
+leafjoindf <- rename(leafjoindf, c("Data_remarks" = "Data_remarks.x",
+                                  "Data_plant_id" = "Data_plant_id.y",
+                                  "Data_leaftype" = "Data_leaftype.y",
+                                  "SysObs_date" = "SysObs_date.x"))
+leafjoindf[,"Data_remarks.y"] <- NULL
+leafjoindf[,"Data_plant_id.x"] <- NULL
+leafjoindf[,"Data_leaftype.x"] <- NULL
+leafjoindf[,"SysObs_date.y"] <- NULL
+
+# general column name cleanup to get rid of remaining .x and .y columns
+colnames(leafjoindf)<-gsub("\\.x","",colnames(leafjoindf))
+leafjoindf <- leafjoindf %>% select(-contains(".y"))
+
+# the fields are in the wrong order from the joine and cleanup, put them back
+leafjoindf <- leafjoindf %>% relocate(c(Data_remarks, Data_plant_id, Data_leaftype), .after = Data_group)
+
+# final file that the user should continue to edit
+write_csv(leafjoindf, here(DATAUSER, "input", "JOINED_leaf_identification.csv"),
+          append = FALSE,
+          col_names = TRUE)
 ```
 
 ```{r leaf_identification}
