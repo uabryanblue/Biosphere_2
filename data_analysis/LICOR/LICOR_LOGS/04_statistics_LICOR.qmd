@@ -61,36 +61,71 @@ Data is limited to `SysObs_time` \> 1668543540 seconds, the start of the experim
 ```{r functions}
 #| echo: false
 #| warning: false
-
-read_final_data <- function(filename) {
-  
-  # finaldata <- read_csv(here(DATAUSER,"final_raw_data.csv"), 
-  finaldata <- read_csv(filename, 
+read_and_clean_data <- function() {
+  # TODO this fails unless r is restarted first! WHY?
+  fname <- here(DATAUSER, "final_raw_data.csv")
+  finaldata <- read_csv(fname, # "final_raw_data.csv"
                         col_names = TRUE, 
                         show_col_types = FALSE) 
+  
+  # change any value in the df that is < zero to NA, invalid data
+  finaldata[finaldata < 0] <- NA
   
   # try to auto convert all data types, not all work
   finaldata <- type.convert(finaldata, as.is = TRUE)
   # convert values that were not correctly auto converted
+  # TODO add in the type cleanup code, or new function
   finaldata$Data_leaftype <- as.factor(finaldata$Data_leaftype)
   finaldata$Filenames_filename <- as.factor(finaldata$Filenames_filename)
   finaldata$Data_plant_id <- as.factor(finaldata$Data_plant_id)
+  
+  # NOTE: this observation is turned into a date, not date/time, this is not correct
+  # are new variable for "date" needs added
   # finaldata$SysObs_date <-  as.POSIXct(finaldata$SysObs_date, format = "%Y%m%d %H:%M:%S")
-  # This needs converted into a true date type for graphing
-  finaldata$SysObs_date <-as.Date(finaldata$SysObs_date)
-  # error if <= 0 and arbitrary >= 7
-  # TODO this needs to be in the original cleaning code
-  finaldata <- finaldata %>% filter(VARNAME > 0)
+  finaldata$SysObs_date <- as.Date(finaldata$SysObs_date)
+  
+  # only interested in values for this experiment
+  finaldata <- finaldata %>% 
+    filter(Data_leaftype == "Treatment" |
+             Data_leaftype == "Control" |
+             Data_leaftype == "Reference") 
   
   # The clock was off at one point, this needs corrected or ignore the values
-  # TODO this needs to bin the original cleanind code
-  finaldata <- finaldata %>%
-    filter(Data_plant_id == ELEVATION & SysObs_time > 1668543540) %>% arrange(SysObs_date)
-  # finaldata <- finaldata %>% filter(!Filenames_filename == "2023-11-22-1138_logdata")
+  finaldata <- finaldata %>% filter(SysObs_time > 1668543540) %>% arrange(SysObs_date)
   
   return(finaldata)
-  
 }
+
+# THIS SHOULD NOT BE USED
+# read_final_data <- function(filename) {
+#   
+#   # finaldata <- read_csv(here(DATAUSER,"final_raw_data.csv"), 
+#   finaldata <- read_csv(filename, 
+#                         col_names = TRUE, 
+#                         show_col_types = FALSE) 
+#   
+#   # try to auto convert all data types, not all work
+#   finaldata <- type.convert(finaldata, as.is = TRUE)
+#   # convert values that were not correctly auto converted
+#   finaldata$Data_leaftype <- as.factor(finaldata$Data_leaftype)
+#   finaldata$Filenames_filename <- as.factor(finaldata$Filenames_filename)
+#   finaldata$Data_plant_id <- as.factor(finaldata$Data_plant_id)
+#   # finaldata$SysObs_date <-  as.POSIXct(finaldata$SysObs_date, format = "%Y%m%d %H:%M:%S")
+#   # This needs converted into a true date type for graphing
+#   finaldata$SysObs_date <-as.Date(finaldata$SysObs_date)
+#   # error if <= 0 and arbitrary >= 7
+#   # TODO this needs to be in the original cleaning code
+#   finaldata <- finaldata %>% filter(VARNAME > 0)
+#   
+#   # The clock was off at one point, this needs corrected or ignore the values
+#   # TODO this needs to bin the original cleanind code
+#   finaldata <- finaldata %>%
+#     filter(Data_plant_id == ELEVATION & SysObs_time > 1668543540) %>% arrange(SysObs_date)
+#   # finaldata <- finaldata %>% filter(!Filenames_filename == "2023-11-22-1138_logdata")
+#   
+#   return(finaldata)
+#   
+# }
 
 # standard plot of Treatment, Control, and Reference data
 # plot_data is the df to plot 
@@ -159,8 +194,8 @@ A new df is created with the Outliers removed. This is used to calculate a df of
 # the final, combined, and scrubbed data from all LICOR text logs
 filename <- here(DATAUSER, "final_raw_data.csv")
 
-finaldata <- read_final_data(filename)
-
+# finaldata <- read_final_data(filename)
+finaldata <- read_and_clean_data()
 # OUTLIERS
 # Define an observation to be an outlier if it is 1.5 times the 
 # interquartile range greater than the third quartile (Q3) or 1.5 times the 
@@ -168,27 +203,27 @@ finaldata <- read_final_data(filename)
 
 # find Q1, Q3, and interquartile range for values in points column
 finalTreat <- subset(finaldata, Data_leaftype == "Treatment")
-Q1 <- quantile(finalTreat[[VARNAME]], .25)
-Q3 <- quantile(finalTreat[[VARNAME]], .75)
-IQR <- IQR(finalTreat[[VARNAME]])
+Q1 <- quantile(finalTreat[[VARNAME]], .25, na.rm = TRUE)
+Q3 <- quantile(finalTreat[[VARNAME]], .75, na.rm = TRUE)
+IQR <- IQR(finalTreat[[VARNAME]], na.rm = TRUE)
 # subset data where points value is outside 1.5*IQR of Q1 and Q3
 outliersTreat <- subset(finalTreat, finalTreat[[VARNAME]]<(Q1 - 1.5*IQR) | finalTreat[[VARNAME]]>(Q3 + 1.5*IQR))
 newTreat <-      subset(finalTreat, !(finalTreat[[VARNAME]]<(Q1 - 1.5*IQR) | finalTreat[[VARNAME]]>(Q3 + 1.5*IQR)))
 # outliersTreat
 
 finalCont <- subset(finaldata, Data_leaftype == "Control")
-Q1 <- quantile(finalCont[[VARNAME]], .25)
-Q3 <- quantile(finalCont[[VARNAME]], .75)
-IQR <- IQR(finalCont[[VARNAME]])
+Q1 <- quantile(finalCont[[VARNAME]], .25, na.rm = TRUE)
+Q3 <- quantile(finalCont[[VARNAME]], .75, na.rm = TRUE)
+IQR <- IQR(finalCont[[VARNAME]], na.rm = TRUE)
 # subset data where points value is outside 1.5*IQR of Q1 and Q3
 outliersCont <- subset(finalCont, finalCont[[VARNAME]]<(Q1 - 1.5*IQR) | finalCont[[VARNAME]]>(Q3 + 1.5*IQR))
 newCont <- subset(finalCont, !(finalCont[[VARNAME]]<(Q1 - 1.5*IQR) | finalCont[[VARNAME]]>(Q3 + 1.5*IQR)))
 # outliersCont
 
 finalRef <- subset(finaldata, Data_leaftype == "Reference")
-Q1 <- quantile(finalRef[[VARNAME]], .25)
-Q3 <- quantile(finalRef[[VARNAME]], .75)
-IQR <- IQR(finalRef[[VARNAME]])
+Q1 <- quantile(finalRef[[VARNAME]], .25, na.rm = TRUE)
+Q3 <- quantile(finalRef[[VARNAME]], .75, na.rm = TRUE)
+IQR <- IQR(finalRef[[VARNAME]], na.rm = TRUE)
 # subset data where points value is outside 1.5*IQR of Q1 and Q3
 outliersRef <- subset(finalRef, finalRef[[VARNAME]]<(Q1 - 1.5*IQR) | finalRef[[VARNAME]]>(Q3 + 1.5*IQR))
 newref <- subset(finalRef, !(finalRef[[VARNAME]]<(Q1 - 1.5*IQR) | finalRef[[VARNAME]]>(Q3 + 1.5*IQR)))
@@ -233,20 +268,20 @@ Plots of the original data are shown next to the wrangled data which have outlie
 
 # broken out for each of the three plots
 # might be a better way, but this is more clear
-tdata <- finaldata %>% filter(Data_leaftype == "Treatment" & SysObs_time > 1668543540) %>% arrange(SysObs_date)
-cdata <- finaldata %>% filter(Data_leaftype == "Control" & SysObs_time > 1668543540) %>% arrange(SysObs_date)
-rdata <- finaldata %>% filter(Data_leaftype == "Reference" & SysObs_time > 1668543540) %>% arrange(SysObs_date)
+tdata <- finaldata %>% filter(Data_leaftype == "Treatment") %>% arrange(SysObs_date)
+cdata <- finaldata %>% filter(Data_leaftype == "Control") %>% arrange(SysObs_date)
+rdata <- finaldata %>% filter(Data_leaftype == "Reference") %>% arrange(SysObs_date)
 
 # compute a reasonable scale for the Y-axis
 # scalefactor = calculate this percent above the maximum mean for each dataset
 # TODO: this is wrong since the graph is dnorm()
 scalefactor <- 0.34
-tscale <- max(mean(tdata[[VARNAME]])) * scalefactor
-cscale <- max(mean(cdata[[VARNAME]])) * scalefactor
-rscale <- max(mean(rdata[[VARNAME]])) * scalefactor
+tscale <- max(mean(tdata[[VARNAME]], na.rm = TRUE)) * scalefactor
+cscale <- max(mean(cdata[[VARNAME]], na.rm = TRUE)) * scalefactor
+rscale <- max(mean(rdata[[VARNAME]], na.rm = TRUE)) * scalefactor
 
 # keep the scale the same for all plots, find the max of all datasets
-finalscale <- max(tscale, cscale, rscale)
+finalscale <- max(tscale, cscale, rscale, na.rm = TRUE)
 finalscale
 
 # TREATMENT
@@ -255,8 +290,8 @@ t1 <- ggplot(tdata, aes(x = tdata[[VARNAME]])) +
   stat_function(
     fun = dnorm,
     args = with(tdata, 
-                c(mean = mean(tdata[[VARNAME]]), 
-                  sd = sd(tdata[[VARNAME]])))
+                c(mean = mean(tdata[[VARNAME]], na.rm = TRUE), 
+                  sd = sd(tdata[[VARNAME]], na.rm = TRUE)))
   ) +
   ggtitle("dnorm Graphs") + # for the main title
   # xlab(label) # for the x axis label
@@ -268,8 +303,8 @@ t2 <- ggplot(newTreat, aes(x = newTreat[[VARNAME]])) +
   stat_function(
     fun = dnorm,
     args = with(newTreat, 
-                c(mean = mean(newTreat[[VARNAME]]), 
-                  sd = sd(newTreat[[VARNAME]])))
+                c(mean = mean(newTreat[[VARNAME]], na.rm = TRUE), 
+                  sd = sd(newTreat[[VARNAME]], na.rm = TRUE)))
   ) +
   scale_x_continuous(paste("Treatment - Wrangled values of ", VARNAME, sep = '')) +
   scale_y_continuous(limits = c(0.0, finalscale))
@@ -282,8 +317,8 @@ c1 <- ggplot(cdata, aes(x = cdata[[VARNAME]])) +
   stat_function(
     fun = dnorm,
     args = with(cdata, 
-                c(mean = mean(cdata[[VARNAME]]), 
-                  sd = sd(cdata[[VARNAME]])))
+                c(mean = mean(cdata[[VARNAME]], na.rm = TRUE), 
+                  sd = sd(cdata[[VARNAME]], na.rm = TRUE)))
   ) +
   scale_x_continuous(paste("Control - Original values of ", VARNAME, sep = '')) +
   scale_y_continuous(limits = c(0.0, finalscale))
@@ -292,8 +327,8 @@ c2 <- ggplot(newCont, aes(x = newCont[[VARNAME]])) +
   stat_function(
     fun = dnorm,
     args = with(newCont, 
-                c(mean = mean(newCont[[VARNAME]]), 
-                  sd = sd(newCont[[VARNAME]])))
+                c(mean = mean(newCont[[VARNAME]], na.rm = TRUE), 
+                  sd = sd(newCont[[VARNAME]], na.rm = TRUE)))
   ) +
   scale_x_continuous(paste("Control - Wrangled values of ", VARNAME, sep = '')) +
   scale_y_continuous(limits = c(0.0, finalscale))
@@ -306,8 +341,8 @@ r1 <- ggplot(rdata, aes(x = rdata[[VARNAME]])) +
   stat_function(
     fun = dnorm,
     args = with(rdata, 
-                c(mean = mean(rdata[[VARNAME]]), 
-                  sd = sd(rdata[[VARNAME]])))
+                c(mean = mean(rdata[[VARNAME]], na.rm = TRUE), 
+                  sd = sd(rdata[[VARNAME]], na.rm = TRUE)))
   ) +
   scale_x_continuous(paste("Reference - Original values of ", VARNAME, sep = '')) +
   scale_y_continuous(limits = c(0.0, finalscale))
@@ -316,8 +351,8 @@ r2 <- ggplot(newref, aes(x = newref[[VARNAME]])) +
   stat_function(
     fun = dnorm,
     args = with(newref, 
-                c(mean = mean(newref[[VARNAME]]), 
-                  sd = sd(newref[[VARNAME]])))
+                c(mean = mean(newref[[VARNAME]], na.rm = TRUE), 
+                  sd = sd(newref[[VARNAME]], na.rm = TRUE)))
   ) +
   scale_x_continuous(paste("Reference - Wrangled values of ", VARNAME, sep = '')) +
   scale_y_continuous(limits = c(0.0, finalscale))
