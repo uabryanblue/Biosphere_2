@@ -68,12 +68,7 @@ Remarks are found in the [Header] and [Data] sections.
 There may be zero or more remarks present in either section.  
 All should be read and concatenated into one comma-delimited value for output as they are found.  
 This means the remarks field can change as data records are read and more remarks are found.  
-  
-Remarks start with time followed by a tab character.  
-After the tab there are two possibilities  
-1. "Stability Definition" (ignore)  
-2. the actual remarks text (concatenate to remarks variable as found)
-  
+
 Remarks in the LI-COR log start with time followed by a tab character.  
 After the tab there are two possibilities  
 1. "Stability Definition" (ignore)  
@@ -366,7 +361,7 @@ In the folder "data_clean" a file named "UTF-8_headers.csv" is created that cont
   
 ## Variable Names  
 Variable names are not unique, append a prefix of Group name "_" Variable name. e.g. LIC-COR group = "GasEx", variable = "A" the final variable name is "GasEx_A"  
-These variable names contain spaces, these are replaced with "_".  
+These variable names contain spaces, these are replaced with and underscore "\_".  
   
 ## Subset of Data  
 Consists of the fields contained in the file "data_user" folder named "selected_log_data.csv" are used to join with all of the data to produce a file that contains just the variables needed for future processing.  
