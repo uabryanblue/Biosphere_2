@@ -106,7 +106,8 @@ mean_plant_data <- function(plot_data, plantid, sysobs) {
   
   plotdf <- plotdf %>%
   group_by(Filenames_filename, Data_leaftype, SysObs_date) %>%
-  summarise_at((sysobs), list(gm = mean))
+    # use median instead of mean due to variance in variables
+  summarise_at((sysobs), list(gm = median))
 
   return(plotdf)
 }
@@ -138,7 +139,10 @@ normal_plot <- function(plotdata, leaftype, dfvariable, title) {
   nplot <- ggplot(plotdata[plotdata$Data_leaftype==leaftype,], aes(x = get(dfvariable))) +
     stat_function(
       fun = dnorm,
-      args = with(plotdata, c(mean = mean(get(dfvariable)), sd = sd(get(dfvariable))))
+      args = with(plotdata, 
+                  # use median instead of mean due to variable variation
+                  c(mean = median(get(dfvariable)), 
+                              sd = sd(get(dfvariable))))
     ) +
     scale_x_continuous(title)
   return(nplot)
@@ -147,7 +151,7 @@ normal_plot <- function(plotdata, leaftype, dfvariable, title) {
 
 
 ```{r lr}
-filename <- here(DATAUSER,"final_data.csv")
+filename <- here(DATAUSER,"final_raw_data.csv")
 finaldata <- read_final_data(filename)
 
 
