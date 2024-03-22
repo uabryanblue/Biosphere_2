@@ -143,7 +143,7 @@ plot_means <- function(plot_data, title="", xlabel="", ylabel=""){
     ylab(ylabel) +
     # scale_y_continuous(limits=c(0.0, 6.0))   +
     #     date_breaks = "10 sec",  expand = expansion(0)) +
-    geom_smooth(method=lm, se=FALSE, col='#F8766D', size=2) +
+    geom_smooth(se=FALSE, col='#F8766D', size=2) +
     theme(axis.text.x=element_text(angle=60, hjust=1))
   
   return(plot1)
@@ -390,6 +390,8 @@ for (FileName in unique(finaldata$Filenames_filename)) {
 }
 
 ```
+__Where is 2024-01-17-1143_logdata_lvl2, group1, 11:51:05 ref, 11:51:05 ref, 2,	Reference	1__
+
 {{< pagebreak >}}
 # Box-Plots of ALL Data
 Raw data from all observations are included in these boxplots.  
@@ -499,7 +501,9 @@ grapherror <-function() {
   # ----------- code works but does not split line on missing data
   # mean values based on a group, and remove any NA values
   esummary <- ddply(df_summary, .(Filenames_filename, Data_leaftype, SysObs_date), summarise,
-                    mean = round(mean(get(VNAME)), 2),
+                    # data is too variable for mean, use median
+                    mean = round(median(get(VNAME)), 2),
+                    # mean = round(mean(get(VNAME)), 2),
                     sd = round(sd(get(VNAME)), 2))
   # esummary <- na.omit(esummary)
   
@@ -515,9 +519,9 @@ grapherror <-function() {
                        values=c('Treatment'='#F8766D', 'Control'='#619CFF', 'Reference'='#00BA38'))+
     theme(axis.text.x=element_text(angle=60, hjust=1)) + 
     scale_x_date(date_breaks = "1 week", date_labels =  "%b %d") +
-    ggtitle(paste("Weekly Mean ", dispvarname, " for Elevation ", ELEVATION, sep = '')) +
+    ggtitle(paste("Weekly Median ", dispvarname, " for Elevation ", ELEVATION, sep = '')) +
     xlab("Week of Observation") +
-    ylab(paste("mean ", dispvarname, " (µmol m⁻² s⁻¹)", sep = '')) 
+    ylab(paste("median ", dispvarname, " (µmol m⁻² s⁻¹)", sep = '')) 
   
   return(p1)
   

@@ -140,7 +140,8 @@ mean_plant_data <- function(plot_data, plantid, sysobs) {
   
   plotdf <- plotdf %>%
     group_by(Filenames_filename, Data_leaftype, SysObs_date) %>%
-    summarise_at((sysobs), list(gm = mean))
+    # variables are too variable use median instead of mean
+    summarise_at((sysobs), list(gm = median))
   
   return(plotdf)
 }
@@ -172,7 +173,11 @@ normal_plot <- function(plotdata, leaftype, dfvariable, title) {
   nplot <- ggplot(plotdata[plotdata$Data_leaftype==leaftype,], aes(x = get(dfvariable))) +
     stat_function(
       fun = dnorm,
-      args = with(plotdata, c(mean = mean(get(dfvariable)), sd = sd(get(dfvariable))))
+      args = with(plotdata, 
+                # data is too variable for mean use median
+                c(mean = median(cdata[[dfvariable]], na.rm = TRUE), 
+                # c(mean = mean(cdata[[VARNAME]], na.rm = TRUE), 
+                    sd = sd(get(dfvariable))))
     ) +
     scale_x_continuous(title)
   return(nplot)
@@ -290,7 +295,9 @@ t1 <- ggplot(tdata, aes(x = tdata[[VARNAME]])) +
   stat_function(
     fun = dnorm,
     args = with(tdata, 
-                c(mean = mean(tdata[[VARNAME]], na.rm = TRUE), 
+                # data is too variable, use median
+                c(mean = median(tdata[[VARNAME]], na.rm = TRUE), 
+                # c(mean = mean(tdata[[VARNAME]], na.rm = TRUE), 
                   sd = sd(tdata[[VARNAME]], na.rm = TRUE)))
   ) +
   ggtitle("dnorm Graphs") + # for the main title
@@ -303,7 +310,9 @@ t2 <- ggplot(newTreat, aes(x = newTreat[[VARNAME]])) +
   stat_function(
     fun = dnorm,
     args = with(newTreat, 
-                c(mean = mean(newTreat[[VARNAME]], na.rm = TRUE), 
+                # data is too variable, use median
+                c(mean = median(newTreat[[VARNAME]], na.rm = TRUE),
+                  # c(mean = mean(newTreat[[VARNAME]], na.rm = TRUE), 
                   sd = sd(newTreat[[VARNAME]], na.rm = TRUE)))
   ) +
   scale_x_continuous(paste("Treatment - Wrangled values of ", VARNAME, sep = '')) +
@@ -317,7 +326,9 @@ c1 <- ggplot(cdata, aes(x = cdata[[VARNAME]])) +
   stat_function(
     fun = dnorm,
     args = with(cdata, 
-                c(mean = mean(cdata[[VARNAME]], na.rm = TRUE), 
+                # data is too variable for mean use median
+                c(mean = median(cdata[[VARNAME]], na.rm = TRUE), 
+                # c(mean = mean(cdata[[VARNAME]], na.rm = TRUE), 
                   sd = sd(cdata[[VARNAME]], na.rm = TRUE)))
   ) +
   scale_x_continuous(paste("Control - Original values of ", VARNAME, sep = '')) +
@@ -327,7 +338,9 @@ c2 <- ggplot(newCont, aes(x = newCont[[VARNAME]])) +
   stat_function(
     fun = dnorm,
     args = with(newCont, 
-                c(mean = mean(newCont[[VARNAME]], na.rm = TRUE), 
+                # data is too variable for mean use median
+                c(mean = median(newCont[[VARNAME]], na.rm = TRUE), 
+                # c(mean = mean(newCont[[VARNAME]], na.rm = TRUE), 
                   sd = sd(newCont[[VARNAME]], na.rm = TRUE)))
   ) +
   scale_x_continuous(paste("Control - Wrangled values of ", VARNAME, sep = '')) +
@@ -341,7 +354,9 @@ r1 <- ggplot(rdata, aes(x = rdata[[VARNAME]])) +
   stat_function(
     fun = dnorm,
     args = with(rdata, 
-                c(mean = mean(rdata[[VARNAME]], na.rm = TRUE), 
+                  # data is too variable for mean use median
+                c(mean = median(rdata[[VARNAME]], na.rm = TRUE), 
+                # c(mean = mean(cdata[[VARNAME]], na.rm = TRUE),  
                   sd = sd(rdata[[VARNAME]], na.rm = TRUE)))
   ) +
   scale_x_continuous(paste("Reference - Original values of ", VARNAME, sep = '')) +
@@ -351,7 +366,9 @@ r2 <- ggplot(newref, aes(x = newref[[VARNAME]])) +
   stat_function(
     fun = dnorm,
     args = with(newref, 
-                c(mean = mean(newref[[VARNAME]], na.rm = TRUE), 
+                  # data is too variable for mean use median
+                c(mean = median(newref[[VARNAME]], na.rm = TRUE), 
+                # c(mean = mean(cdata[[VARNAME]], na.rm = TRUE), 
                   sd = sd(newref[[VARNAME]], na.rm = TRUE)))
   ) +
   scale_x_continuous(paste("Reference - Wrangled values of ", VARNAME, sep = '')) +
@@ -384,7 +401,7 @@ all1 <-  ggplot() +
   geom_boxplot(data = TreatContRef[TreatContRef$Data_leaftype == "Reference",], 
                aes(x = Data_leaftype, y = gm, color = Data_leaftype), 
                outlier.color = "red", outlier.size = 3) +  # scale_y_continuous(limits=c(0.0, 0.1)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
-  ggtitle(paste("Elevation ", ELEVATION, "\nDaily Mean Observations on ", VARNAME, sep="")) +
+  ggtitle(paste("Elevation ", ELEVATION, "\nDaily Median Observations on ", VARNAME, sep="")) +
   xlab("Leaf Type") +
   ylab(VARNAME)
 
@@ -452,7 +469,7 @@ If one of the groups in the study is considered the control group, then use Dunn
 library(DescTools)
 
 #perform Dunnett's Test
-DunnettTest(x=newfinaldata[[VARNAME]], g=newfinaldata$Data_leaftype)
+DunnettTest(x = newfinaldata[[VARNAME]], g = newfinaldata$Data_leaftype)
 ```
 {{< pagebreak >}}  
 
