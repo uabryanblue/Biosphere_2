@@ -28,6 +28,7 @@ require(tidyr)
 library(ggplot2)
 library(here)
 library(patchwork)
+source(here("LICOR_LOGS_functions.R"))
 
 # start in the current project directory
 # this ensures relative paths will work
@@ -41,11 +42,43 @@ DATACLEAN <- "data_clean"
 DATAUSER <- "data_user"
 ELEVATION <- 2 # elevation of the experiment, numeric value of 2 or 3
 VARNAME <- "GasEx_A" # this the column name in finaldata where the group and variable are combined
+FIGSTORAGE <- "figures" # the relative path to store ggplots
 
 ```
 
 ```{r plot_plant}
 #| echo: false
+
+fname <- here(DATAUSER, "final_raw_data.csv")
+finaldata <- read_and_clean_data(fname)
+
+# rm(b)
+# rm(c)
+# rm(t)
+# rm(LCVar)
+# rm(VARNAME)
+# library(lubridate)
+# 
+# LCVar = "GasEx_gsw"
+# DLType = "Treatment"
+# DLElevation = 2
+#   b <- finaldata %>% 
+#     select(Filenames_filename, Data_plant_id, Data_leaftype, SysObs_date, GasEx_gsw) %>% 
+#     filter(Data_leaftype == "Treatment", Data_plant_id == 2) %>%
+#     group_by(Filenames_filename) %>% 
+#     mutate(N2 = median(GasEx_gsw, na.rm = TRUE)) %>%
+#     ungroup()
+#   
+#   b <- finaldata[,c("Filenames_filename", "Data_plant_id", "Data_leaftype", "SysObs_date", "GasEx_gsw")] %>%
+#     group_by( Filenames_filename) %>%
+#     mutate(N2 = median(GasEx_gsw, na.rm = TRUE)) #%>%
+#     # ungroup()
+# 
+# source(here("LICOR_LOGS_functions.R"))
+# b <- graph_leaf_ci(DLData = finaldata, DLElevation = 2, DLType = "Treatment", LCVar = "GasEx_A") 
+# c <- graph_leaf_ci(DLData = finaldata, DLElevation = 2, DLType = "Treatment", LCVar = "GasEx_gsw") 
+# 
+# b/c
 
 plot_plant_line <- function(finaldata, plantid, fname, plantvar) {
   # TODO the filter for the leaftype needs removed, it should graph
@@ -74,143 +107,12 @@ plot_plant_line <- function(finaldata, plantid, fname, plantvar) {
   return(plot)
 }
 
-# ggplot() +
-#     # geom_point(data = final_data,
-#     geom_point(data=subset(final_data, data_group=="group1"),
-#                aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
-#     # geom_line(data = final_data, aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
-#     # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-# #     # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-# #     # geom_line(data = final_data, aes(x = date, y = temperature, color = sensor_id)) +
-# #     # geom_line(data = final_data, aes(x = date, y = TEMP_THREE_FOOT_HEIGHT, color = "CEAC")) +
-# #     ggtitle("LICOR Test Graph - GasEx gsw - REFERENCE LEAF") +
-# #     xlab("SysObs_date") +
-# #     ylab("GasEx_gsw") +
-# #     scale_y_continuous(limits=c(0.0, 0.2), breaks=c(0, 0.1, 0.2, 0.5)) +
-# #     scale_x_datetime(date_labels = ("%M:%S"),
-# #         date_breaks = "10 sec",  expand = expansion(0)) +
-# #     theme(axis.text.x=element_text(angle=60, hjust=1))
 ```
 
 NOTE to self: Look into these for help with graph layout  
 patchwork TODO !!!!  
 wrap plot, axis collect
 
-```{r raw_plots}
-#| echo: FALSE
-#| error: TRUE
-#| warning: FALSE
-
-read_and_clean_data <- function(filename) {
-  # TODO this fails unless r is restarted first! WHY?
-  fname <- here(DATAUSER, "final_raw_data.csv")
-  finaldata <- read_csv(fname, # "final_raw_data.csv"
-                        col_names = TRUE, 
-                        show_col_types = FALSE) 
-  
-  # change any value in the df that is < zero to NA, invalid data
-  finaldata[finaldata < 0] <- NA
-  
-  # try to auto convert all data types, not all work
-  finaldata <- type.convert(finaldata, as.is = TRUE)
-  # convert values that were not correctly auto converted
-  # TODO add in the type cleanup code, or new function
-  finaldata$Data_leaftype <- as.factor(finaldata$Data_leaftype)
-  finaldata$Filenames_filename <- as.factor(finaldata$Filenames_filename)
-  finaldata$Data_plant_id <- as.factor(finaldata$Data_plant_id)
-  
-  # NOTE: this observation is turned into a date, not date/time, this is not correct
-  # are new variable for "date" needs added
-  # finaldata$SysObs_date <-  as.POSIXct(finaldata$SysObs_date, format = "%Y%m%d %H:%M:%S")
-  finaldata$SysObs_date <- as.Date(finaldata$SysObs_date)
-  
-  # only interested in values for this experiment
-  finaldata <- finaldata %>% 
-    filter(Data_leaftype == "Treatment" |
-             Data_leaftype == "Control" |
-             Data_leaftype == "Reference") 
-  
-  # The clock was off at one point, this needs corrected or ignore the values
-  finaldata <- finaldata %>% filter(SysObs_time > 1668543540) %>% arrange(SysObs_date)
-  
-  return(finaldata)
-}
-
-# finaldata <- read_csv(here(DATAUSER,"final_raw_data.csv"), 
-#                       col_names = TRUE, 
-#                       show_col_types = FALSE) 
-# # try to auto convert all data types, not all work
-# finaldata <- type.convert(finaldata, as.is = TRUE)
-# # convert values that were not correctly auto converted
-# finaldata$Data_leaftype <- as.factor(finaldata$Data_leaftype)
-# finaldata$Filenames_filename <- as.factor(finaldata$Filenames_filename)
-# finaldata$Data_plant_id <- as.factor(finaldata$Data_plant_id)
-# # finaldata$SysObs_date <-  as.POSIXct(finaldata$SysObs_date, format = "%Y%m%d %H:%M:%S")
-# # This needs converted into a true date type for graphing
-# finaldata$SysObs_date <-as.Date(finaldata$SysObs_date)
-# # error if <= 0 and arbitrary >= 7
-# # TODO this needs to be in the original cleaning code
-# # finaldata <- finaldata %>% filter(GasEx_A > 0 & GasEx_A < 7)
-# finaldata <- finaldata %>% filter(VARNAME > 0 & 
-#                                     (Data_leaftype == "Treatment" | Data_leaftype == "Control" | Data_leaftype == "Reference"))
-# # The clock was off at one point, this needs corrected or ignore the values
-# # TODO this needs to bin the original cleanind code
-# finaldata <- finaldata %>% filter(SysObs_time > 1668543540) %>% arrange(SysObs_date)
-# # finaldata <- finaldata %>% filter(!Filenames_filename == "2023-11-22-1138_logdata")
-# 
-# # RAW DATA PLOTS
-# for (FileName in unique(finaldata$Filenames_filename)) {
-#   # print(paste("Generate Plot: ", FileName, " PlantID: ", 
-#   # print(FileName)
-#   # plot one days readings as a line chart
-#   myplot <- plot_plant_line(finaldata, 
-#                             plantid = finaldata[finaldata$Filenames_filename==FileName,]$Data_plant_id, 
-#                             FileName, "GasEx_A")
-#   print(myplot)
-#   
-#   
-# }
-
-
-read_and_clean_data <- function(filename) {
-  # TODO this fails unless r is restarted first! WHY?
-  fname <- here(DATAUSER, "final_raw_data.csv")
-  finaldata <- read_csv(fname, # "final_raw_data.csv"
-                        col_names = TRUE, 
-                        show_col_types = FALSE) 
-  
-  # change any value in the df that is < zero to NA, invalid data
-  finaldata[finaldata < 0] <- NA
-  
-  # try to auto convert all data types, not all work
-  finaldata <- type.convert(finaldata, as.is = TRUE)
-  # convert values that were not correctly auto converted
-  # TODO add in the type cleanup code, or new function
-  finaldata$Data_leaftype <- as.factor(finaldata$Data_leaftype)
-  finaldata$Filenames_filename <- as.factor(finaldata$Filenames_filename)
-  finaldata$Data_plant_id <- as.factor(finaldata$Data_plant_id)
-  
-  # NOTE: this observation is turned into a date, not date/time, this is not correct
-  # are new variable for "date" needs added
-  # finaldata$SysObs_date <-  as.POSIXct(finaldata$SysObs_date, format = "%Y%m%d %H:%M:%S")
-  finaldata$SysObs_date <- as.Date(finaldata$SysObs_date)
-  
-  # only interested in values for this experiment
-  finaldata <- finaldata %>% 
-    filter(Data_leaftype == "Treatment" |
-             Data_leaftype == "Control" |
-             Data_leaftype == "Reference") 
-  
-  # The clock was off at one point, this needs corrected or ignore the values
-  finaldata <- finaldata %>% filter(SysObs_time > 1668543540) %>% arrange(SysObs_date)
-  
-  return(finaldata)
-}
-
-finaldata <- read_and_clean_data("final_raw_data.csv")
-
-
-```
 
 ```{r}
 # plot_lf <- function(lt, lid, lvar) {
@@ -284,7 +186,7 @@ p1
     # return(lfsum)
 # }
 
-p <- plot_lf("Treatment", 2, "GasEx_VPDleaf")
+# p <- plot_lf("Treatment", 2, "GasEx_VPDleaf")
 # p
 
 ```
@@ -597,71 +499,14 @@ p2
 p1/p2
 
 ```
-```{r variable_trend_graphs}
-
-# variable_trend_by_leaftype <- function(lf_type, lf_elevation) {
-#   # leaftype <- "Treatment"
-#   lf_elevacion <- 2
-#   lf_var <- "GasEx_gsw"
-#   print(lf_type)
-#   print(lf_elevation)
-#   print(lf_var)
-#   # ELEVATION <- leaf_elevation
-#   # VARNAME <- leaf_varname
-#   # ELEVATION constant is already applied above
-#   # remove any leaf type that is not part of the experiment
-#   df_summary <- finaldata %>% filter(Data_plant_id == lf_elevation) %>%
-#     filter(Data_leaftype == lf_type) # |
-#     # Data_leaftype == "Control" |
-#   # Data_leaftype == "Reference")
-# 
-#   # ----------- code works but does not split line on missing data
-#   # mean values based on a group, and remove any na values
-#   lf_summary <- ddply(df_summary, .(Filenames_filename, Data_leaftype, SysObs_date),
-#                       summarise,
-#                       # data is too variable, use median not mean
-#                       mean = round(median(get(lf_var)), 2),
-#                       sd = round(sd(get(lf_var)), 2))
-#   lf_summary <- na.omit(lf_summary)
-#   
-#   lf_plot <- ggplot(lf_summary,
-#                     aes(x = SysObs_date,  y = mean, color = Data_leaftype)) + 
-#     # group(Data_leaftype, SysObs_date))) +
-#     #            aes(y = mean, color = Data_leaftype, 
-#     #                group(Data_leaftype, SysObs_date))) +
-#     # geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd),
-#     #               position = position_dodge(0.9), width = .2) +
-#     # scale_color_manual(name='Leaf',
-#     #                    breaks=c('Treatment'),
-#     #                    values=c('Treatment'='#F8766D'))+
-#     # geom_line(size = 0.2) +
-#     geom_point(size = 2) 
-#     # geom_smooth() + #add linear trend line
-#     # ggtitle(paste("Daily Median ", lf_var, " Elevation ", lf_elevation, "\n",
-#     #               "Trendline with 95% Confidence Interval", sep = '')) +
-#     # xlab("Week of Observation") +
-#     # ylab(paste("median ", lf_var, sep = ''))
-#   
-#   return(lf_plot)  
-# }
-
-
-# c2 <- variable_trend_by_leaftype("Treatment", 2)
-# c2 <- variable_trend_by_leaftype("Treatment", 2, "GasEx_A")
-# 
-# c2
-# 
-# c3 <- variable_trend_by_leaftype("Treatment", 2, "GasEx_VPDleaf")
-# c3
-
-# c2/c3
-```
 
 
 ```{r treatment_95}
 
 ELEVATION <- 2
 VARNAME <- "GasEx_A"
+# VARNAME <- "GasEx_VPDleaf"
+
 # ELEVATION constant is already applied above
 # remove any leaf type that is not part of the experiment
 df_summary <- finaldata %>% filter(Data_plant_id == ELEVATION) %>%
@@ -698,7 +543,12 @@ t1 <- ggplot(esummaryT,
   xlab("Week of Observation") +
   ylab(paste("median ", VARNAME, sep = ''))
 
+
+
+
 t1
+ggsave(here(FIGSTORAGE,'treatment_median_lvl2_GasEx_A_ci.jpg'))#, width=3, height=6, units='in')
+# ggsave('treatment_median_lvl2_GasEx_VPDleaf_ci.jpg')#, width=3, height=6, units='in')
 
 
 ELEVATION <- 2
@@ -740,8 +590,11 @@ t2 <- ggplot(esummaryT,
   ylab(paste("median ", VARNAME, sep = ''))
 
 t2
+ggsave(here(FIGSTORAGE,'treatment_median_lvl2_GasEx_gsw_ci.jpg'))#, width=3, height=6, units='in')
 
-t1/pt
+t1/t2
+ggsave(here(FIGSTORAGE,'treatment_median_lvl2_GasEx_A_vs_gsw_ci.jpg'))#, width=3, height=6, units='in')
+
 ```
 
 
@@ -789,6 +642,7 @@ c1 <- ggplot(esummaryT,
   ylab(paste("median ", VARNAME, sep = ''))
 
 c1
+ggsave(here(FIGSTORAGE, 'control_median_lvl2_GasEx_A_ci.jpg')) #, width=3, height=6, units='in')
 
 
 ELEVATION <- 2
@@ -832,15 +686,19 @@ c2 <- ggplot(esummaryT,
   ylab(paste("median ", VARNAME, sep = ''))
 
 c2
+ggsave(here(FIGSTORAGE, 'control_median_lvl2_GasEx_gsw_ci.jpg'))#, width=3, height=6, units='in')
+
 
 c1/c2
+ggsave(here(FIGSTORAGE, 'control_median_lvl2_GasEx_A_vs_gsw_ci.jpg'))#, width=3, height=6, units='in')
+
 ```
 
 
 ```{r reference_95}
 
 ELEVATION <- 2
-VARNAME <- "GasEx_VPDleaf"
+VARNAME <- "GasEx_A"
 # ELEVATION constant is already applied above
 # remove any leaf type that is not part of the experiment
 df_summary <- finaldata %>% filter(Data_plant_id == ELEVATION) %>%
@@ -878,10 +736,11 @@ r1 <- ggplot(esummaryT,
   ylab(paste("median ", VARNAME, sep = ''))
 
 r1
+ggsave(here(FIGSTORAGE, 'control_median_lvl2_GasEx_A_ci.jpg'))#, width=3, height=6, units='in')
 
 
 ELEVATION <- 2
-VARNAME <- "GasEx_RHcham"
+VARNAME <- "GasEx_gsw"
 # ELEVATION constant is already applied above
 # remove any leaf type that is not part of the experiment
 df_summary <- finaldata %>% filter(Data_plant_id == ELEVATION) %>%
@@ -919,8 +778,16 @@ r2 <- ggplot(esummaryT,
   ylab(paste("median ", VARNAME, sep = ''))
 
 r2
+ggsave(here(FIGSTORAGE, 'reference_median_lvl2_GasEx_gsw_ci.jpg')) #, width=3, height=6, units='in')
 
 r1/r2
+ggsave(here(FIGSTORAGE, 'reference_median_lvl2_GasEx_A_vs_gsw_ci.jpg')) #, width=3, height=6, units='in')
+
+t1/c1/r1
+ggsave(here(FIGSTORAGE, 'all_median_lvl2_GasEx_A_ci.jpg'), width=8, height=10, units='in')
+
+t2/c2/r2
+ggsave('all_median_lvl2_GasEx_gsw_ci.jpg', width=8, height=10, units='in')
 ```
 
 
