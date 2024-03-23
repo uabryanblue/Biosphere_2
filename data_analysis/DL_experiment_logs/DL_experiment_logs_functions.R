@@ -1,18 +1,42 @@
 # common functions for LICOR-LOGS project
 
-read_and_clean_data <- function(filename) {
-  # TODO this fails unless r is restarted first! WHY?
-  # fname <- here(DATAUSER, "final_raw_data.csv")
-  finaldata <- read_csv(filename, # "final_raw_data.csv"
-                        col_names = FALSE,
-                        colnames(c("sensor_datetime", "Obs_number", "DL_datetime", "sensor_MAC")),
-                        show_col_types = FALSE) 
+read_climate_log_data <- function() {
+  # look at all files in all sub directories specified by DATARAW
+  # any filename that starts with "CLIMATE" for the Temperature Humidity Pressure sensor is read into a single df
+  # this is the aspirated sensor hung next to the experiment
+  raw_climate_dl_data <- as.vector(grep("DL1", list.files(here(DATARAW), recursive = TRUE, pattern = "^CLIMATE"), value = TRUE))  %>%
+    map_df(~read_csv(here(DATARAW, .),
+                     col_names = 
+                       c("DL_datetime", "Obs_number", "sensor_datetime", "sensor_MAC", "temp_C", "RH", "pressure", "readings_averaged"),
+                     show_col_types = FALSE,))
   
+  return(raw_climate_dl_data)
+}
+
+read_TRC_log_data <- function() {
+  # any filename that starts with "TRC" for the Temperature Relay Control unit is read into a single df
+  # this is the unit that regulates and controlls heating to the warmed leaf, it also records temperatures
+  # for the Treatment, Control, Reference leaves and the heating pads, one is on and one is always off
+  # each thermocouple reading also has it's cold junction recorded
+  # each cold junction temperature should be the same value or errors are introduced among measurements
+  raw_TRC_dl_data <- as.vector(grep("DL1", list.files(here(DATARAW), recursive = TRUE, pattern = "^TRC"), value = TRUE))  %>%
+    map_df(~read_csv(here(DATARAW, .),
+                     col_names = 
+                       c("DL_datetime", "Obs_number", "sensor_datetime", "sensor_MAC", "T1", "T2", "T3", "T4", "T5", "CJ1", "CJ2", "CJ3", "CJ4", "CJ5"),
+                     show_col_types = FALSE,))
+
+  
+  return(raw_TRC_dl_data)
+}
+
+
+# OLD REFERENCES REMOVE LATER ------------------------------ 
+
   # change any value in the df that is < zero to NA, invalid data
   # finaldata[finaldata < 0] <- NA
   
   # try to auto convert all data types, not all work
-  finaldata <- type.convert(finaldata, as.is = TRUE)
+  # finaldata <- type.convert(finaldata, as.is = TRUE)
   # convert values that were not correctly auto converted
   # TODO add in the type cleanup code, or new function
   # finaldata$Data_leaftype <- as.factor(finaldata$Data_leaftype)
@@ -32,9 +56,9 @@ read_and_clean_data <- function(filename) {
   # 
   # The clock was off at one point, this needs corrected or ignore the values
   # finaldata <- finaldata %>% filter(SysObs_time > 1668543540) %>% arrange(SysObs_date)
-  
-  return(finaldata)
-}
+#   
+#   return(finaldata)
+# }
 
 
 
