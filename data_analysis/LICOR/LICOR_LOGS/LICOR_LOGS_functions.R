@@ -2,8 +2,8 @@
 
 read_and_clean_data <- function(filename) {
   # TODO this fails unless r is restarted first! WHY?
-  fname <- here(DATAUSER, "final_raw_data.csv")
-  finaldata <- read_csv(fname, # "final_raw_data.csv"
+  # fname <- here(DATAUSER, "final_raw_data.csv")
+  finaldata <- read_csv(filename, # "final_raw_data.csv"
                         col_names = TRUE, 
                         show_col_types = FALSE) 
   
@@ -34,3 +34,6 @@ read_and_clean_data <- function(filename) {
   
   return(finaldata)
 }
+
+
+
