@@ -337,8 +337,8 @@ T3 <- plot_MAC_date_range(TRC_dl_data %>%
 T3
 
 
-d.begin <- "2024-01-01 00:00:00"
-d.end <-"2024-02-01 00:00:00"
+d.begin <- "2024-03-01 00:00:00"
+d.end <-"2024-04-01 00:00:00"
 title_begin <- format.Date(d.begin, "%D")
 title_end <- format.Date(d.end, "%D")
 
@@ -364,9 +364,11 @@ tdiff <- cbind(Treatment, Reference)
 tdiff$diff <- tdiff$T1 - tdiff$T3
 tdiff_mean <- round(mean(tdiff$diff, na.rm = TRUE), 1)
 tdiff_sd <- round(sd(tdiff$diff, na.rm = TRUE), 1)
-
+tdiff_median <- round(median(tdiff$diff, na.rm = TRUE), 1)
 title1 <- paste("Temperature Difference between Treatment and Reference for level", pdata$level,sep = " ")
-Ttitle <- paste(title1, "\n Mean:", tdiff_mean, "SD:", tdiff_sd,  sep = " ")
+title2 <- paste(title_begin, "-", title_end)
+title3 <- paste("Mean: ", tdiff_mean,  ", Median: ", tdiff_median, ", SD: ", tdiff_sd, sep = "")
+Ttitle <- paste(title1, title2, title3, sep = "\n")
 
 
 
@@ -383,7 +385,7 @@ plotdiff <- ggplot() +
   geom_line(data = tdiff, 
             aes(x = DL_datetime, y = T3, color = "Reference"), 
             size = 1) +
-  ggtitle(paste("Temperature Difference between Treatment and Reference\nMean Difference:", tdiff_mean, sep = " ")) +
+  ggtitle(Ttitle) +
   xlab("Day of Month") +
   ylab("Temperature Difference (C)") +
       scale_color_manual(name='Thermocouple',
@@ -395,6 +397,12 @@ plotdiff <- ggplot() +
                    expand = expansion(0)) +
   theme(axis.text.x=element_text(angle = 60, hjust = 1))
 
+# ggsave(here("figures", "deltaT_lvl2_november_2023.jpg"), plot = last_plot(), width = 8, height = 6)
+# ggsave(here("figures", "deltaT_lvl2_december_2023.jpg"), plot = last_plot(), width = 8, height = 6)
+# ggsave(here("figures", "deltaT_lvl2_january_2024.jpg"), plot = last_plot(), width = 8, height = 6)
+# ggsave(here("figures", "deltaT_lvl2_february_2024.jpg"), plot = last_plot(), width = 8, height = 6)
+# ggsave(here("figures", "deltaT_lvl2_march_2024.jpg"), plot = last_plot(), width = 8, height = 6)
+
 
 plotdiff
 
@@ -404,34 +412,35 @@ plotdiff
 
 
 
-```{r}
+```{r boxplot_all_TC}
 
-d.begin <- "2024-01-01 00:00:00"
-d.end <-"2024-02-01 00:00:00"
+d.begin <- "2023-11-01 00:00:00"
+d.end <-"2024-03-01 00:00:00"
 title_begin <- format.Date(d.begin, "%D")
 title_end <- format.Date(d.end, "%D")
 
 pmac <- "48E7295552AD"
-# pdata <- MACmap %>% 
-#   filter(MAC == pmac) %>% 
-#   select(role, name, level)
 
 TCdata <- TRC_dl_data %>% 
   filter(DL_datetime >= as.POSIXct(d.begin) & 
            DL_datetime <= as.POSIXct(d.end) &
            sensor_MAC == pmac) 
 
+# the TC names need to be in one row for this plot
 long <- TCdata %>% 
   pivot_longer(
-    cols = starts_with("T") #, 
-    # names_to = "year",
+    cols = starts_with("T") , 
+    names_to = "Thermocouple",
     # values_to = "value"
 )
 
-ggplot() +
+title1 <- paste("Thermocouple Values for level", pdata$level, sep = " ")
+Ttitle <- paste(title1, "\n", title_begin, "-", title_end, sep = " ")
+
+p <- ggplot() +
   geom_boxplot(data = long, 
-               aes(x = name , y = value, color = name),
-               outlier.color = "pink", outlier.size = 1) +
+               aes(x = Thermocouple , y = value, color = Thermocouple),
+               outlier.color = "red", outlier.size = 1) +
   # scale_fill_discrete(labels=c('Treatment', 'Control', "Reference", "Heated Pad", "Non-Heated Pad"))+
   # scale_color_manual(name='Thermocouple',
                      # breaks=c('T1', 'T2', 'T3', 'T4', 'T5'),
@@ -440,11 +449,13 @@ ggplot() +
   values = c('#F8766D', '#619CFF', '#00BA38', 'red', 'blue'),
   breaks=c('T1', 'T2', 'T3', 'T4', 'T5'),
   labels = c('Treatment', 'Control', "Reference", "Heated Pad", "Non-Heated Pad"))+
-  # scale_y_continuous(limits=c(1.0, 2.8)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
-  ggtitle("Thermocouple Values") +
+  scale_y_continuous(limits=c(20.0, 50.0), breaks=c(20, 30, 40, 50)) +
+  ggtitle(Ttitle) +
   xlab("TC Number") +
   ylab("Temperature (C)")
- 
+
+ggsave(here("figures", "TC_boxplot_lvl2_nov_1-2023_mar_3-2024.jpg"), plot = last_plot(), width = 8, height = 6)
+
  p
 ```
 
