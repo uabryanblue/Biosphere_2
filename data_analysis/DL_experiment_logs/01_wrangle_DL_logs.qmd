@@ -2,9 +2,7 @@
 title: "Wrangle Experimental Datalogger Sensor Data"
 author: "Bryan Blue"
 format: html
-
 ---
-
 
 ```{r init}
 #| echo: false
@@ -28,104 +26,425 @@ DATAUSER <- "data_user"
 ```
 
 ## Load Data Logger Data
-Many climate and TRC data logs exist. Read them all into a "raw_" df  
-Run unique on each df due to an SD card not erased before being reused.  
-Break each log into the individual sensors values which correspond to the MAC address in the file.  
+
+Many climate and TRC data logs exist. Read them all into a "raw\_" df\
+Run unique on each df due to an SD card not erased before being reused.\
+Break each log into the individual sensors values which correspond to the MAC address in the file.
 
 ### Data Issues
-Are all of the logs from a valid start dates?  
-There are more MAC address than should be here for the actual experiment. These need identified and removed.  
-TRC data has duplication of 2 MAC addresses. One in the all capital MAC format, and one in the colon version. These need combined or removed.  
-TRC has one line that is NA which needs removed.  
+
+Are all of the logs from a valid start dates?\
+There are more MAC address than should be here for the actual experiment. These need identified and removed.\
+TRC data has duplication of 2 MAC addresses. One in the all capital MAC format, and one in the colon version. These need combined or removed.\
+TRC has one line that is NA which needs removed.
+
+### Hardware Inventory  
+Use MAC address to reference the function of the microprocessor. It appears in logs and should be considered the primary key to the data.  
+
+| ID  | DATE      | DEVICE             | FUNCTION    | MAC               | DESCRIPTION      | Level |
+|-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+| M01 | 9/24/2023 | ESP8266 NodeMCU V2 | Data Logger | 48:55:19:DF:29:86 | DL1 - TIMESERVER | 1     |
+| M02 | 9/24/2023 | ESP8266 NodeMCU V2 | Data Logger | 8C:AA:B5:4D:7F:18 | DL2              | 1     |
+| M05 | 9/25/2033 | ESP8266 NodeMCU V2 | THP Sensor  | 48:e7:29:53:67:2e | THP2             | 2     |
+| M08 | 9/25/2023 | ESP8266 NodeMCU V2 | TRC Sensor  | 48:e7:29:55:52:ad | TRC              | 2     |
+| M04 | 9/25/2023 | ESP8266 NodeMCU V2 | THP Sensor  | 48:55:19:df:28:48 | THP3             | 3     |
+| M09 | 9/24/2023 | ESP8266 NodeMCU V2 | TRC Sensor  | 48:e7:29:53:7e:2c | TRC              | 3     |
+
+: Hardware Inventory
 
 ```{r dl_log_loading}
 #| echo: false
 #| warning: false
-#
+
+# create mapping of MAC to function
+# MAC address are convered from : notation to character string without delimeters
+MACmap <- data.frame(matrix(ncol = 5, nrow = 0))
+colnames(MACmap) <- c('MAC', 'role', 'name', 'level', 'notes')
+MACmap[nrow(MACmap) + 1,] = c("485519DF2986", "data logger", "DL1", "1", "TIMESERVER")
+MACmap[nrow(MACmap) + 1,] = c("8CAAB54D7F18", "data logger", "DL2", "1", "Backup")
+MACmap[nrow(MACmap) + 1,] = c("48E72953672E", "Climate Sensor", "THP2", "2", "")
+MACmap[nrow(MACmap) + 1,] = c("485519DF2848", "Climate Sensor", "THP3", "3", "")
+MACmap[nrow(MACmap) + 1,] = c("48E7295552AD", "Warming Device Control", "TRC", "2", "")
+MACmap[nrow(MACmap) + 1,] = c("48E729537E2C", "Warming Device Control", "TRC", "3", "")
+
+
 # read in all climate and TRC data
 # run unique as there is overlap when an SD card was not erased before reuse
 raw_climate_dl_data <- read_climate_log_data()
-
 raw_TRC_dl_data <- read_TRC_log_data()
 
 # remove seconds from date/time fields, only precision to minutes
-raw_climate_dl_data$sensor_datetime <- format(as.POSIXct(raw_climate_dl_data$sensor_datetime), "%d-%m-%Y %H:%M")
-raw_climate_dl_data$DL_datetime <- format(as.POSIXct(raw_climate_dl_data$DL_datetime), "%d-%m-%Y %H:%M")
-raw_climate_dl_data$sensor_datetime <- as.POSIXct(raw_climate_dl_data$sensor_datetime)
+# raw_climate_dl_data$sensor_datetime <- format(as.POSIXct(raw_climate_dl_data$sensor_datetime), "%d-%m-%Y %H:%M:00")
+# raw_climate_dl_data$DL_datetime <- format(as.POSIXct(raw_climate_dl_data$DL_datetime), "%d-%m-%Y %H:%M:00")
+
+raw_climate_dl_data$DL_datetime <- format(as.POSIXct(raw_climate_dl_data$DL_datetime), "%Y-%m-%d %H:%M:00")
+raw_climate_dl_data$sensor_datetime <- format(as.POSIXct(raw_climate_dl_data$sensor_datetime), "%Y-%m-%d %H:%M:00")
+
 raw_climate_dl_data$DL_datetime <- as.POSIXct(raw_climate_dl_data$DL_datetime)
+raw_climate_dl_data$sensor_datetime <- as.POSIXct(raw_climate_dl_data$sensor_datetime)
 
+raw_TRC_dl_data$DL_datetime <- format(as.POSIXct(raw_TRC_dl_data$DL_datetime), "%Y-%m-%d %H:%M:00")
+raw_TRC_dl_data$sensor_datetime <- as.POSIXct(format(as.POSIXct(raw_TRC_dl_data$sensor_datetime), "%Y-%m-%d %H:%M:00"))
 
-raw_TRC_dl_data$sensor_datetime <- as.POSIXct(format(as.POSIXct(raw_TRC_dl_data$sensor_datetime), "%d-%m-%Y %H:%M"))
-raw_TRC_dl_data$DL_datetime <- as.POSIXct(raw_TRC_dl_data$DL_datetime), "%d-%m-%Y %H:%M")
+raw_TRC_dl_data$DL_datetime <- as.POSIXct(raw_TRC_dl_data$DL_datetime)
+raw_TRC_dl_data$sensor_datetime <- as.POSIXct(raw_TRC_dl_data$sensor_datetime)
 
 climate_dl_data <- raw_climate_dl_data %>% distinct(DL_datetime, sensor_datetime, sensor_MAC, .keep_all=TRUE)
 TRC_dl_data <- raw_TRC_dl_data %>% distinct(DL_datetime, sensor_datetime, sensor_MAC, .keep_all=TRUE)
 
 # list out the unique MAC addresses found in all the logs
-unique(raw_climate_dl_data$sensor_MAC)
+climateMAC <- unique(raw_climate_dl_data$sensor_MAC)
+print("Found Climate MAC addresses: ")
+print(climateMAC)
 
-climate_dl_data_48E72953672E <- climate_dl_data %>% dplyr::filter(sensor_MAC == "48E72953672E") 
-climate_dl_data_485519DF2848 <- climate_dl_data %>% dplyr::filter(sensor_MAC == "485519DF2848") 
-climate_dl_data_48E72952E8D2 <- climate_dl_data %>% dplyr::filter(sensor_MAC == "48E72952E8D2") 
+# climate_dl_data_48E72953672E <- climate_dl_data %>% dplyr::filter(sensor_MAC == "48E72953672E") 
+# climate_dl_data_485519DF2848 <- climate_dl_data %>% dplyr::filter(sensor_MAC == "485519DF2848") 
+# climate_dl_data_48E72952E8D2 <- climate_dl_data %>% dplyr::filter(sensor_MAC == "48E72952E8D2") 
 
 # list out the unique MAC addresses found in all the logs
-unique(raw_TRC_dl_data$sensor_MAC)
+TRCMAC <- unique(raw_TRC_dl_data$sensor_MAC)
+print("Found TRC MAC addresses: ")
+print(TRCMAC)
 
-TRC_dl_data_48E729537E2C <- TRC_dl_data %>% dplyr::filter(sensor_MAC == "48E729537E2C") 
-TRC_dl_data_48E7295552AD <- TRC_dl_data %>% dplyr::filter(sensor_MAC == "48E7295552AD") 
-TRC_dl_data_48E72953672E <- TRC_dl_data %>% dplyr::filter(sensor_MAC == "48E72953672E") 
-TRC_dl_data_48E7295348F8 <- TRC_dl_data %>% dplyr::filter(sensor_MAC == "48E7295348F8") 
+print("Using Climate MAC addresses: ")
+print(MACmap[MACmap$role == "THP Climate Sensor",]$MAC)
+
+print("Using TRC MAC addresses: ")
+print(MACmap[MACmap$role == "TRC Warming Device Control",]$MAC)
+
+# filter out anything except the MAC addresses in use for this analysis
+TRC_dl_data<- TRC_dl_data %>% 
+  dplyr::filter(TRC_dl_data$sensor_MAC %in% MACmap[MACmap$role == "Warming Device Control",]$MAC)
+climate_dl_data <- climate_dl_data %>% 
+  dplyr::filter(climate_dl_data$sensor_MAC %in% MACmap[MACmap$role == "Climate Sensor",]$MAC)
+
+#c("48E7295552AD", "48E729537E2C")) 
+# MACmap[MACmap$`function` == "TRC Warming Device Control",]$MAC
+# TRC_dl_data_48E729537E2C <- TRC_dl_data %>% dplyr::filter(sensor_MAC == "48E729537E2C") 
+# TRC_dl_data_48E7295552AD <- TRC_dl_data %>% dplyr::filter(sensor_MAC == "48E7295552AD") 
+# TRC_dl_data_48E72953672E <- TRC_dl_data %>% dplyr::filter(sensor_MAC == "48E72953672E") 
+# TRC_dl_data_48E7295348F8 <- TRC_dl_data %>% dplyr::filter(sensor_MAC == "48E7295348F8") 
+
 # These colon version of the MAC address also appear as the all capital version above
 # TODO why did this happen? It is a software version difference.
 # TODO only 3 MAC addresses are valid, the fourth would be testing
-TRC_dl_data_48E7295348F8_2 <- TRC_dl_data %>% dplyr::filter(sensor_MAC == "48:e7:29:53:48:f8") 
-TRC_dl_data_48E7295552AD_2 <- TRC_dl_data %>% dplyr::filter(sensor_MAC == "48:e7:29:55:52:ad") 
+# TRC_dl_data_48E7295348F8_2 <- TRC_dl_data %>% dplyr::filter(sensor_MAC == "48:e7:29:53:48:f8") 
+# TRC_dl_data_48E7295552AD_2 <- TRC_dl_data %>% dplyr::filter(sensor_MAC == "48:e7:29:55:52:ad") 
 
 
 ```
 
-## Log Cleanup  
-Remove seconds, only need minutes  
+```{r plot_functions}
+
+plot_MAC_date_range <- function(df, plotvar, plcolor, title = "") {
+  
+  plotT <- ggplot() +
+    # geom_point(data = final_data, 
+    geom_line(data = df, 
+              aes(x = DL_datetime, y = .data[[plotvar]], color = plotvar), 
+              size = 1) +
+    ggtitle(title) +
+    xlab("Day of Month") +
+    ylab(plotvar) +
+    # scale_color_manual(name='MAC',
+    #                    breaks=c('Treatment', 'Control', 'Reference'),
+    #                    values=c('Treatment'='#F8766D', 'Control'='#619CFF', 'Reference'='#00BA38'))+
+    # scale_y_continuous(limits=c(0.0, 0.2), breaks=c(0, 0.1, 0.2, 0.5))   +
+    scale_x_datetime(date_labels = ("%d"),
+                     date_breaks = "days", 
+                     expand = expansion(0)) +
+    theme(axis.text.x=element_text(angle = 60, hjust = 1))
+  
+  return(plotT)
+}
+
+# testing start --------------------
+# pmac <- "48E72953672E"
+# pdata <- MACmap %>% 
+#   filter(MAC == pmac) %>% 
+#   select(role, name, level)
+# 
+# d.begin <- "2023-12-01 00:00:00"
+# d.end <-"2024-01-01 00:00:00"
+# title_begin <- format.Date(d.begin, "%D")
+# title_end <- format.Date(d.end, "%D")
+# 
+# title1 <- paste("Temperature for", pdata$role, "level", pdata$level, sep = " ")
+# Ttitle <- paste(title1, "\n", title_begin, "-", title_end, sep = " ")
+# 
+# p1 <- plot_MAC_date_range(climate_dl_data %>% 
+#                            filter(DL_datetime >= as.POSIXct(d.begin) & 
+#                                     DL_datetime <= as.POSIXct(d.end) &
+#                                     sensor_MAC == pmac), "temp_C", "#619CFF", Ttitle)
+# 
+# p1
+
+# testing stop --------------------
+
+```
 
 ```{r test_graphs}
-s <- raw_climate_dl_data %>% filter(DL_datetime >= as.POSIXct("2024-03-01 00:00:00") & 
-                                      DL_datetime <= as.POSIXct("2024-04-01 00:00:00") &
-                                      sensor_MAC == "48E72953672E")
 
-plotT <- ggplot() +
-  # geom_point(data = final_data, 
-  geom_line(data=s, 
-            aes(x = DL_datetime, y = temp_C, color = sensor_MAC)) +
-  # geom_line(data = final_data, aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
-  ggtitle("Temperatures By MAC") +
+
+# # specify DL_datetime range and select a sensor_MAC to see climate statistics
+# s <- raw_climate_dl_data %>% filter(DL_datetime >= as.POSIXct("2024-01-01 00:00:00") & 
+#                                       DL_datetime <= as.POSIXct("2024-02-01 00:00:00") &
+#                                       sensor_MAC == "48E72953672E")
+
+
+pmac <- "48E72953672E"
+pdata <- MACmap %>% 
+  filter(MAC == pmac) %>% 
+  select(role, name, level)
+
+d.begin <- "2023-12-01 00:00:00"
+d.end <-"2024-01-01 00:00:00"
+title_begin <- format.Date(d.begin, "%D")
+title_end <- format.Date(d.end, "%D")
+
+title1 <- paste("Temperature for", pdata$role, "level", pdata$level, sep = " ")
+Ttitle <- paste(title1, "\n", title_begin, "-", title_end, sep = " ")
+
+p1 <- plot_MAC_date_range(climate_dl_data %>% 
+                           filter(DL_datetime >= as.POSIXct(d.begin) & 
+                                    DL_datetime <= as.POSIXct(d.end) &
+                                    sensor_MAC == pmac), "temp_C", "#619CFF", Ttitle)
+
+p1
+
+d.begin <- "2024-01-01 00:00:00"
+d.end <-"2024-02-01 00:00:00"
+title_begin <- format.Date(d.begin, "%D")
+title_end <- format.Date(d.end, "%D")
+
+pmac <- "48E72953672E"
+pdata <- MACmap %>% 
+  filter(MAC == pmac) %>% 
+  select(role, name, level)
+
+title1 <- paste("Temperature for", pdata$role, "level", pdata$level, sep = " ")
+Ttitle <- paste(title1, "\n", title_begin, "-", title_end, sep = " ")
+
+p2 <- plot_MAC_date_range(climate_dl_data %>% 
+                           filter(DL_datetime >= as.POSIXct(d.begin) & 
+                                    DL_datetime <= as.POSIXct(d.end) &
+                                    sensor_MAC == pmac), "temp_C", "#619CFF", Ttitle)
+
+p2
+
+d.begin <- "2024-02-01 00:00:00"
+d.end <-"2024-03-01 00:00:00"
+title_begin <- format.Date(d.begin, "%D")
+title_end <- format.Date(d.end, "%D")
+
+pmac <- "48E72953672E"
+pdata <- MACmap %>% 
+  filter(MAC == pmac) %>% 
+  select(role, name, level)
+
+title1 <- paste("Temperature for", pdata$role, "level", pdata$level, sep = " ")
+Ttitle <- paste(title1, "\n", title_begin, "-", title_end, sep = " ")
+
+p3 <- plot_MAC_date_range(climate_dl_data %>% 
+                           filter(DL_datetime >= as.POSIXct(d.begin) & 
+                                    DL_datetime <= as.POSIXct(d.end) &
+                                    sensor_MAC == pmac), "temp_C", "#619CFF", Ttitle)
+
+p3
+
+d.begin <- "2024-03-01 00:00:00"
+d.end <-"2024-04-01 00:00:00"
+title_begin <- format.Date(d.begin, "%D")
+title_end <- format.Date(d.end, "%D")
+
+pmac <- "48E72953672E"
+pdata <- MACmap %>% 
+  filter(MAC == pmac) %>% 
+  select(role, name, level)
+
+title1 <- paste("Temperature for", pdata$role, "level", pdata$level, sep = " ")
+Ttitle <- paste(title1, "\n", title_begin, "-", title_end, sep = " ")
+
+p4 <- plot_MAC_date_range(climate_dl_data %>% 
+                           filter(DL_datetime >= as.POSIXct(d.begin) & 
+                                    DL_datetime <= as.POSIXct(d.end) &
+                                    sensor_MAC == pmac), "temp_C", "#619CFF", Ttitle)
+p4
+
+# p1/p2/p3/p4
+```
+
+
+```{r plot_TRC}
+
+
+d.begin <- "2024-01-01 00:00:00"
+d.end <-"2024-02-01 00:00:00"
+title_begin <- format.Date(d.begin, "%D")
+title_end <- format.Date(d.end, "%D")
+
+pmac <- "48E7295552AD"
+pdata <- MACmap %>% 
+  filter(MAC == pmac) %>% 
+  select(role, name, level)
+
+title1 <- paste("Treatment for level", pdata$level, sep = " ")
+Ttitle <- paste(title1, "\n", title_begin, "-", title_end, sep = " ")
+
+T1 <- plot_MAC_date_range(TRC_dl_data %>% 
+                           filter(DL_datetime >= as.POSIXct(d.begin) & 
+                                    DL_datetime <= as.POSIXct(d.end) &
+                                    sensor_MAC == pmac), "T1", "#619CFF", Ttitle)
+T1
+
+
+d.begin <- "2024-01-01 00:00:00"
+d.end <-"2024-02-01 00:00:00"
+title_begin <- format.Date(d.begin, "%D")
+title_end <- format.Date(d.end, "%D")
+
+pmac <- "48E7295552AD"
+pdata <- MACmap %>% 
+  filter(MAC == pmac) %>% 
+  select(role, name, level)
+
+title1 <- paste("Control for level", pdata$level, sep = " ")
+Ttitle <- paste(title1, "\n", title_begin, "-", title_end, sep = " ")
+
+T2 <- plot_MAC_date_range(TRC_dl_data %>% 
+                           filter(DL_datetime >= as.POSIXct(d.begin) & 
+                                    DL_datetime <= as.POSIXct(d.end) &
+                                    sensor_MAC == pmac), "T2", "#619CFF", Ttitle)
+T2
+
+d.begin <- "2024-01-01 00:00:00"
+d.end <-"2024-02-01 00:00:00"
+title_begin <- format.Date(d.begin, "%D")
+title_end <- format.Date(d.end, "%D")
+
+pmac <- "48E7295552AD"
+pdata <- MACmap %>% 
+  filter(MAC == pmac) %>% 
+  select(role, name, level)
+
+title1 <- paste("Reference for level", pdata$level, sep = " ")
+Ttitle <- paste(title1, "\n", title_begin, "-", title_end, sep = " ")
+
+T3 <- plot_MAC_date_range(TRC_dl_data %>% 
+                           filter(DL_datetime >= as.POSIXct(d.begin) & 
+                                    DL_datetime <= as.POSIXct(d.end) &
+                                    sensor_MAC == pmac), "T3", "#619CFF", Ttitle)
+T3
+
+
+d.begin <- "2024-01-01 00:00:00"
+d.end <-"2024-02-01 00:00:00"
+title_begin <- format.Date(d.begin, "%D")
+title_end <- format.Date(d.end, "%D")
+
+pmac <- "48E7295552AD"
+pdata <- MACmap %>% 
+  filter(MAC == pmac) %>% 
+  select(role, name, level)
+
+
+Treatment <- TRC_dl_data %>% 
+  filter(DL_datetime >= as.POSIXct(d.begin) & 
+           DL_datetime <= as.POSIXct(d.end) &
+           sensor_MAC == pmac) %>%
+  select(DL_datetime, T1)
+
+Reference <- TRC_dl_data %>% 
+  filter(DL_datetime >= as.POSIXct(d.begin) & 
+           DL_datetime <= as.POSIXct(d.end) &
+           sensor_MAC == pmac) %>%
+  select(T3)
+
+tdiff <- cbind(Treatment, Reference)
+tdiff$diff <- tdiff$T1 - tdiff$T3
+tdiff_mean <- round(mean(tdiff$diff, na.rm = TRUE), 1)
+tdiff_sd <- round(sd(tdiff$diff, na.rm = TRUE), 1)
+
+title1 <- paste("Temperature Difference between Treatment and Reference for level", pdata$level,sep = " ")
+Ttitle <- paste(title1, "\n Mean:", tdiff_mean, "SD:", tdiff_sd,  sep = " ")
+
+
+
+
+# colnames(tdiff) <- c('Treatment_T', 'Reference_T', 'deltaT')
+
+plotdiff <- ggplot() +
+  geom_line(data = tdiff, 
+            aes(x = DL_datetime, y = diff, color = "Delta T"), 
+            size = 1) +
+  geom_line(data = tdiff, 
+            aes(x = DL_datetime, y = T1, color = "Treatment"), 
+            size = 1) +
+  geom_line(data = tdiff, 
+            aes(x = DL_datetime, y = T3, color = "Reference"), 
+            size = 1) +
+  ggtitle(paste("Temperature Difference between Treatment and Reference\nMean Difference:", tdiff_mean, sep = " ")) +
   xlab("Day of Month") +
-  ylab("Temperature (C)") +
-  # scale_color_manual(name='MAC',
-  #                    breaks=c('Treatment', 'Control', 'Reference'),
-  #                    values=c('Treatment'='#F8766D', 'Control'='#619CFF', 'Reference'='#00BA38'))+
+  ylab("Temperature Difference (C)") +
+      scale_color_manual(name='Thermocouple',
+                       breaks=c('Delta T', 'Treatment', 'Reference'),
+                       values=c('Delta T'='#619CFF', 'Treatment'='#F8766D', 'Reference'='#00BA38'))+
   # scale_y_continuous(limits=c(0.0, 0.2), breaks=c(0, 0.1, 0.2, 0.5))   +
   scale_x_datetime(date_labels = ("%d"),
-      date_breaks = "days",  expand = expansion(0)) +
-  theme(axis.text.x=element_text(angle=60, hjust=1))
-plotT
+                   date_breaks = "days", 
+                   expand = expansion(0)) +
+  theme(axis.text.x=element_text(angle = 60, hjust = 1))
 
-plotRH <- ggplot() +
-  # geom_point(data = final_data, 
-  geom_line(data=s, 
-            aes(x = DL_datetime, y = RH, color = sensor_MAC)) +
-  # geom_line(data = final_data, aes(x = SysObs_date, y = GasEx_gsw, color = "GasEx_gsw")) +
-  ggtitle("RH By MAC") +
-  xlab("Day of Month") +
-  ylab("RH (%)") +
-  # scale_color_manual(name='MAC',
-  #                    breaks=c('Treatment', 'Control', 'Reference'),
-  #                    values=c('Treatment'='#F8766D', 'Control'='#619CFF', 'Reference'='#00BA38'))+
-  # scale_y_continuous(limits=c(25.0, 100.0))   +
-  scale_x_datetime(date_labels = ("%d"),
-      date_breaks = "days",  expand = expansion(0)) +
-  theme(axis.text.x=element_text(angle=60, hjust=1))
-plotRH
 
-plotT/plotRH
+plotdiff
+
+
+
+```
+
+
+
+```{r}
+
+d.begin <- "2024-01-01 00:00:00"
+d.end <-"2024-02-01 00:00:00"
+title_begin <- format.Date(d.begin, "%D")
+title_end <- format.Date(d.end, "%D")
+
+pmac <- "48E7295552AD"
+# pdata <- MACmap %>% 
+#   filter(MAC == pmac) %>% 
+#   select(role, name, level)
+
+TCdata <- TRC_dl_data %>% 
+  filter(DL_datetime >= as.POSIXct(d.begin) & 
+           DL_datetime <= as.POSIXct(d.end) &
+           sensor_MAC == pmac) 
+
+long <- TCdata %>% 
+  pivot_longer(
+    cols = starts_with("T") #, 
+    # names_to = "year",
+    # values_to = "value"
+)
+
+ggplot() +
+  geom_boxplot(data = long, 
+               aes(x = name , y = value, color = name),
+               outlier.color = "pink", outlier.size = 1) +
+  # scale_fill_discrete(labels=c('Treatment', 'Control', "Reference", "Heated Pad", "Non-Heated Pad"))+
+  # scale_color_manual(name='Thermocouple',
+                     # breaks=c('T1', 'T2', 'T3', 'T4', 'T5'),
+                     # values=c('T1'='#F8766D', 'T2'='#619CFF', 'T3'='#00BA38', 'T4'='red', 'T5'='blue'))+
+  scale_colour_manual(
+  values = c('#F8766D', '#619CFF', '#00BA38', 'red', 'blue'),
+  breaks=c('T1', 'T2', 'T3', 'T4', 'T5'),
+  labels = c('Treatment', 'Control', "Reference", "Heated Pad", "Non-Heated Pad"))+
+  # scale_y_continuous(limits=c(1.0, 2.8)) +#, breaks=c(0, 2.5, 3.0, 3.5)) +
+  ggtitle("Thermocouple Values") +
+  xlab("TC Number") +
+  ylab("Temperature (C)")
+ 
+ p
 ```
 
