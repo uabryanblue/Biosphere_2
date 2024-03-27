@@ -1,7 +1,18 @@
 ---
-title: "Wrangle Experimental Datalogger Sensor Data"
+title: "Experiment Sensor Data Level 3"
 author: "Bryan Blue"
-format: html
+date: "Last Generated: `r Sys.Date()`"
+
+execute:
+  echo: false
+format: 
+  html:
+    code-fold: true
+    fig-width: 8
+    fig-height: 6
+  pdf:
+    fig-width: 8
+    fig-height: 6
 ---
 
 ```{r init}
@@ -27,15 +38,14 @@ DATAUSER <- "data_user"
 
 ## Load Data Logger Data
 
-Many climate and TRC data logs exist. Read them all into a "raw\_" df\
+Many climate and warming device data logs exist. Read them all into a "raw\_" df\
 Run unique on each df due to an SD card not erased before being reused.\
-Break each log into the individual sensors values which correspond to the MAC address in the file.
 
 ### Data Issues
 
 Are all of the logs from a valid start dates?\
 There are more MAC address than should be here for the actual experiment. These need identified and removed.\
-TRC data has duplication of 2 MAC addresses. One in the all capital MAC format, and one in the colon version. These need combined or removed.\
+Warming device data has duplication of 2 MAC addresses. One in the all capital MAC format, and one in the colon version. These need combined or removed.\
 TRC has one line that is NA which needs removed.
 
 ### Hardware Inventory  
@@ -45,10 +55,10 @@ Use MAC address to reference the function of the microprocessor. It appears in l
 |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
 | M01 | 9/24/2023 | ESP8266 NodeMCU V2 | Data Logger | 48:55:19:DF:29:86 | DL1 - TIMESERVER | 1     |
 | M02 | 9/24/2023 | ESP8266 NodeMCU V2 | Data Logger | 8C:AA:B5:4D:7F:18 | DL2              | 1     |
-| M05 | 9/25/2033 | ESP8266 NodeMCU V2 | THP Sensor  | 48:e7:29:53:67:2e | THP2             | 2     |
-| M08 | 9/25/2023 | ESP8266 NodeMCU V2 | TRC Sensor  | 48:e7:29:55:52:ad | TRC              | 2     |
-| M04 | 9/25/2023 | ESP8266 NodeMCU V2 | THP Sensor  | 48:55:19:df:28:48 | THP3             | 3     |
-| M09 | 9/24/2023 | ESP8266 NodeMCU V2 | TRC Sensor  | 48:e7:29:53:7e:2c | TRC              | 3     |
+| M05 | 9/25/2033 | ESP8266 NodeMCU V2 | Climate Sensor  | 48:e7:29:53:67:2e | THP2             | 2     |
+| M08 | 9/25/2023 | ESP8266 NodeMCU V2 | Warming Device Control  | 48:e7:29:55:52:ad | TRC              | 2     |
+| M04 | 9/25/2023 | ESP8266 NodeMCU V2 | Climate Sensor  | 48:55:19:df:28:48 | THP3             | 3     |
+| M09 | 9/24/2023 | ESP8266 NodeMCU V2 | Warming Device Control  | 48:e7:29:53:7e:2c | TRC              | 3     |
 
 : Hardware Inventory
 
@@ -94,23 +104,19 @@ TRC_dl_data <- raw_TRC_dl_data %>% distinct(DL_datetime, sensor_datetime, sensor
 
 # list out the unique MAC addresses found in all the logs
 climateMAC <- unique(raw_climate_dl_data$sensor_MAC)
-print("Found Climate MAC addresses: ")
-print(climateMAC)
+print("Found Climate MAC addresses:")
+print(paste(climateMAC, collapse=", "))
 
-# climate_dl_data_48E72953672E <- climate_dl_data %>% dplyr::filter(sensor_MAC == "48E72953672E") 
-# climate_dl_data_485519DF2848 <- climate_dl_data %>% dplyr::filter(sensor_MAC == "485519DF2848") 
-# climate_dl_data_48E72952E8D2 <- climate_dl_data %>% dplyr::filter(sensor_MAC == "48E72952E8D2") 
+print("Using Climate MAC addresses: ")
+print(MACmap[MACmap$role == "Climate Sensor",]$MAC)
 
 # list out the unique MAC addresses found in all the logs
 TRCMAC <- unique(raw_TRC_dl_data$sensor_MAC)
-print("Found TRC MAC addresses: ")
-print(TRCMAC)
+print("Found Warming Device MAC addresses:")
+print(paste(TRCMAC, collapse=", "))
 
-print("Using Climate MAC addresses: ")
-print(MACmap[MACmap$role == "THP Climate Sensor",]$MAC)
-
-print("Using TRC MAC addresses: ")
-print(MACmap[MACmap$role == "TRC Warming Device Control",]$MAC)
+print("Using Warming Device MAC addresses: ")
+print(MACmap[MACmap$role == "Warming Device Control",]$MAC)
 
 # filter out anything except the MAC addresses in use for this analysis
 TRC_dl_data<- TRC_dl_data %>% 
@@ -193,17 +199,18 @@ plot_MAC_date_range <- function(df, plotvar, plcolor, title = "") {
 # GLOBAL SENSOR IDENTIFICATION FOR MONTLY GRAPHS
 # common values for the following monthly graphs
 # to run monthly graphs on a different sensor, change the MAC address
-pmac <- "48E72953672E" # level 2 aspriated climate sensor
-# pmac <- "485519DF2848" # level 3 aspriated climate sensor
+# pmac <- "48E72953672E" # level 2 aspriated climate sensor
+pmac <- "485519DF2848" # level 3 aspriated climate sensor
 
 ```
 
 # Climate Data
+**The experiment started on December 12, 2023.**  
+
 Data from the experimental aspirated temperature, humidity, and pressure sensor.  
 
-## Level 2 Installation
-This plant is located approximately 7 m above the tropical rain forest floor. It grows on the South side on a terrace.  
-Monthly graphs are shown below.  
+## Level 3 Installation
+This plant is located on level 3 the mountain top. It grows in a basin, surrounded by ~1.8 m walls, in the SE corner.  
 
 Graphs are created using the MAC address for the climate sensor. Change the MAC address to the climate sensor of interest to see it's data.  
 MAC: `r pmac`
@@ -233,26 +240,14 @@ plot_climate_temperature <- function(pmac, d.begin, d.end) {
 
 
 ```
-### November 2023 Temperature Data
 
-```{r november_2023_climate_graphs}
-#| echo: false
-#| warning: false
-
-
-d.begin <- "2023-11-01 00:00:00"
-d.end <-"2023-11-30 00:00:00"
-
-p <- plot_climate_temperature(pmac, d.begin, d.end)
-p
-```
 ### December 2023 Temperature Data
 
 ```{r december_2023_climate_graphs}
 #| echo: false
 #| warning: false
 
-d.begin <- "2023-12-01 00:00:00"
+d.begin <- "2023-12-12 00:00:00"
 d.end <-"2023-12-31 00:00:00"
 
 p <- plot_climate_temperature(pmac, d.begin, d.end)
@@ -299,23 +294,28 @@ p
 ```
 
 ```{r warming_intit}
+#| echo: false
+#| warning: false
+
 # change MAC address to see plots of other TRC devices
-pmac <- "48E7295552AD" # level 2
-# pmac <- "48E729537E2C" # level 3
+# pmac <- "48E7295552AD" # level 2
+pmac <- "48E729537E2C" # level 3
 
 pdata <- MACmap %>% 
   filter(MAC == pmac) %>% 
   select(role, name, level)
 ```
 
-
 # Experimental Warming Device  
-Data from the warming device's five thermocouples placed on the warmed leaf and the warming pad that is controlled, the non-warmed leaf and the warming pad that is not controlled, and the reference leaf.  
+**The installation was not operational until December 13th, 2023.** 
 
-## Level 2 Installation
-This plant is located approximately 7 m above the tropical rain forest floor. It grows on the South side on a terrace.  
-Monthly graphs are shown below.  
-MAC: `r pmac`
+Data from the warming device's five thermocouples placed on:  
+warmed leaf and it's controlled warming pad  
+non-warmed leaf with the warming pad that is not controlled  
+reference leaf with nothing attached other than the thermocouple   
+  
+This installation was not as secure as the level 2 installation. Thermocouples would randomly move and not touch their respective leaf. This caused inaccurate warming control. At one point the sensor on the reference leaf was not touching the leaf and the warming pad heated too high, scortching the warmed leaf.  
+
 
 ```{r plot_TRC}
 #| echo: false
@@ -377,7 +377,8 @@ plot_treatment_vs_reference <- function(pmac, d.begin, d.end) {
 
 # TESTING begin -------------
 # change MAC address to see plots of other TRC devices
-# pmac <- "48E7295552AD"
+# pmac <- "48E7295552AD" # level 2
+pmac <- "48E729537E2C" # level 3
 # 
 # pdata <- MACmap %>% 
 #   filter(MAC == pmac) %>% 
@@ -392,28 +393,15 @@ plot_treatment_vs_reference <- function(pmac, d.begin, d.end) {
 
 ```
 
-### November 2023 DeltaT Data
-```{r November_2023_deltaT_graphs}
-#| echo: false
-#| warning: false
+### December 2023 DeltaT Data  
+**The experiment started on December 12, 2023.**  
 
-d.begin <- "2023-11-01 00:00:00"
-d.end <- "2023-11-30 00:00:00"
-
-plotdiff <- plot_treatment_vs_reference(pmac, d.begin, d.end)
-plotdiff
-
-# this needs modified so the filename is dynamic
-# ggsave(here("figures", "deltaT_lvl2_november_2023.jpg"), plot = last_plot(), width = 8, height = 6)
-
-
-```
-### December 2023 DeltaT Data
+It is unknown why the device was not operating around December 15th. It was hard reset and it continued to run without trouble.  
 ```{r December_2023_deltaT_graphs}
 #| echo: false
 #| warning: false
 
-d.begin <- "2023-12-01 00:00:00"
+d.begin <- "2023-12-12 00:00:00"
 d.end <- "2023-12-31 00:00:00"
 
 plotdiff <- plot_treatment_vs_reference(pmac, d.begin, d.end)
@@ -468,69 +456,29 @@ plotdiff
 ```
 
 # Leaf Warming All Data  
-Plots and information on all of the thermocouples.  
+**The experiment did not start until December 12, 2023.**  
+
+Plots and information on all thermocouples.  
+  
+The warming pad shows that the temperatures reached well above the desired values. A safety cutoff of 50 C was present in the software and it looks as though it hit this value.  
+  
+The warming pad that was not controlled shows a large variance of temperatures even though it was never plugged in with an average above the leaf temperatures.  
+
+The leaf temperatures show very similar values. The treatment leaf should show a higher temperature even if the thermocouple was not attached to the leaf as it was still positioned above the heating pad.  
 
 ```{r boxplot_all_TC}
 #| echo: false
 #| warning: false
 
-d.begin <- "2023-11-01 00:00:00"
+d.begin <- "2023-12-12 00:00:00"
 d.end <-"2024-03-01 00:00:00"
 title_begin <- format.Date(d.begin, "%D")
 title_end <- format.Date(d.end, "%D")
 
 # change MAC address to see plots of other TRC devices
-pmac <- "48E7295552AD" # level 2
-# pmac <- "48E729537E2C" # level 3
-
-pdata <- MACmap %>% 
-  filter(MAC == pmac) %>% 
-  select(role, name, level)
-
-TCdata <- TRC_dl_data %>% 
-  filter(DL_datetime >= as.POSIXct(d.begin) & 
-           DL_datetime <= as.POSIXct(d.end) &
-           sensor_MAC == pmac) 
-
-# the TC names need to be in one row for this plot
-long <- TCdata %>% 
-  pivot_longer(
-    cols = starts_with("T") , 
-    names_to = "Thermocouple",
-    # values_to = "value"
-)
-
-title1 <- paste("Thermocouple Values for level", pdata$level, sep = " ")
-Ttitle <- paste(title1, "\n", title_begin, "-", title_end, sep = " ")
-
-p <- ggplot() +
-  geom_boxplot(data = long, 
-               aes(x = Thermocouple , y = value, color = Thermocouple),
-               outlier.color = "red", outlier.size = 1) +
-  # scale_fill_discrete(labels=c('Treatment', 'Control', "Reference", "Heated Pad", "Non-Heated Pad"))+
-  # scale_color_manual(name='Thermocouple',
-                     # breaks=c('T1', 'T2', 'T3', 'T4', 'T5'),
-                     # values=c('T1'='#F8766D', 'T2'='#619CFF', 'T3'='#00BA38', 'T4'='red', 'T5'='blue'))+
-  scale_colour_manual(
-  values = c('#F8766D', '#619CFF', '#00BA38', 'red', 'blue'),
-  breaks=c('T1', 'T2', 'T3', 'T4', 'T5'),
-  labels = c('Treatment', 'Control', "Reference", "Heated Pad", "Non-Heated Pad"))+
-  scale_y_continuous(limits=c(20.0, 50.0), breaks=c(20, 30, 40, 50)) +
-  ggtitle(Ttitle) +
-  xlab("TC Number") +
-  ylab("Temperature (C)")
-
-ggsave(here("figures", "TC_boxplot_lvl2_nov_1-2023_mar_3-2024.jpg"), plot = last_plot(), width = 8, height = 6)
-
- p
- 
- 
-d.begin <- "2023-11-01 00:00:00"
-d.end <-"2024-03-01 00:00:00"
-title_begin <- format.Date(d.begin, "%D")
-title_end <- format.Date(d.end, "%D")
-
+# pmac <- "48E7295552AD" # level 2
 pmac <- "48E729537E2C" # level 3
+
 pdata <- MACmap %>% 
   filter(MAC == pmac) %>% 
   select(role, name, level)
@@ -568,8 +516,10 @@ p <- ggplot() +
   xlab("TC Number") +
   ylab("Temperature (C)")
 
-ggsave(here("figures", "TC_boxplot_lvl3_nov_1-2023_mar_3-2024.jpg"), plot = last_plot(), width = 8, height = 6)
+ggsave(here("figures", "TC_boxplot_lvl3_dec_12-2023_mar_3-2024.jpg"), plot = last_plot(), width = 8, height = 6)
 
  p
-```
+ 
+ 
 
+```
