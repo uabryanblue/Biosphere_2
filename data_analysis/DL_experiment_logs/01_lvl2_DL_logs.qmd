@@ -44,7 +44,7 @@ Run unique on each df due to an SD card not erased before being reused.\
 Break each log into the individual sensors values which correspond to the MAC address in the file.
 
 ### Data Issues  
-  
+
 Are all of the logs from a valid start dates?\
 There are more MAC address than should be here for the actual experiment. These need identified and removed.\
 TRC data has duplication of 2 MAC addresses. One in the all capital MAC format, and one in the colon version. These need combined or removed.\
@@ -308,7 +308,7 @@ p
 ```{r warming_intit}
 #| echo: false
 #| warning: false
- 
+
 # change MAC address to see plots of other TRC devices
 pmac <- "48E7295552AD" # level 2
 # pmac <- "48E729537E2C" # level 3
@@ -329,7 +329,7 @@ reference leaf with nothing attached other than the thermocouple
 This plant is located approximately 7 m above the tropical rain forest floor. It grows on the South side of the mountain on a terrace.  
 Monthly graphs are shown below.  
 MAC: `r pmac`
-  
+
 ```{r plot_TRC}
 #| echo: false
 #| warning: false
@@ -489,7 +489,7 @@ plotdiff
 **The experiment started on November 22, 2023.**  
 
 Plots and information on all of the thermocouples.  
-  
+
 The software has a safety cutoff of 50 C for the heated pad which looks to have been reached.  
 
 ```{r boxplot_all_TC}
@@ -517,7 +517,7 @@ long <- TCdata %>%
     cols = starts_with("T") , 
     names_to = "Thermocouple",
     # values_to = "value"
-)
+  )
 
 title1 <- paste("Thermocouple Values for level", pdata$level, sep = " ")
 Ttitle <- paste(title1, "\n", title_begin, "-", title_end, sep = " ")
@@ -528,12 +528,12 @@ p <- ggplot() +
                outlier.color = "red", outlier.size = 1) +
   # scale_fill_discrete(labels=c('Treatment', 'Control', "Reference", "Heated Pad", "Non-Heated Pad"))+
   # scale_color_manual(name='Thermocouple',
-                     # breaks=c('T1', 'T2', 'T3', 'T4', 'T5'),
-                     # values=c('T1'='#F8766D', 'T2'='#619CFF', 'T3'='#00BA38', 'T4'='red', 'T5'='blue'))+
+  # breaks=c('T1', 'T2', 'T3', 'T4', 'T5'),
+  # values=c('T1'='#F8766D', 'T2'='#619CFF', 'T3'='#00BA38', 'T4'='red', 'T5'='blue'))+
   scale_colour_manual(
-  values = c('#F8766D', '#619CFF', '#00BA38', 'red', 'blue'),
-  breaks=c('T1', 'T2', 'T3', 'T4', 'T5'),
-  labels = c('Treatment', 'Control', "Reference", "Heated Pad", "Non-Heated Pad"))+
+    values = c('#F8766D', '#619CFF', '#00BA38', 'red', 'blue'),
+    breaks=c('T1', 'T2', 'T3', 'T4', 'T5'),
+    labels = c('Treatment', 'Control', "Reference", "Heated Pad", "Non-Heated Pad"))+
   scale_y_continuous(limits=c(20.0, 50.0), breaks=c(20, 30, 40, 50)) +
   ggtitle(Ttitle) +
   xlab("TC Number") +
@@ -541,6 +541,67 @@ p <- ggplot() +
 
 ggsave(here("figures", "TC_boxplot_lvl3_nov_1-2023_mar_3-2024.jpg"), plot = last_plot(), width = 8, height = 6)
 
- p
+p
 ```
+# Histograms Comparing Temperature Frequencies  
+
+```{r all_data_histograms}
+
+#| echo: false
+#| warning: false
+
+d.begin <- "2023-11-22 00:00:00"
+d.end <-"2024-03-01 00:00:00"
+title_begin <- format.Date(d.begin, "%D")
+title_end <- format.Date(d.end, "%D")
+
+pmac <- "48E7295552AD" # level 3
+pdata <- MACmap %>% 
+  filter(MAC == pmac) %>% 
+  select(role, name, level)
+
+TCdata <- TRC_dl_data %>% 
+  filter(DL_datetime >= as.POSIXct(d.begin) & 
+           DL_datetime <= as.POSIXct(d.end) &
+           sensor_MAC == pmac) 
+
+# the TC names need to be in one row for this plot
+long <- TCdata %>% 
+  pivot_longer(
+    cols = starts_with("T") , 
+    names_to = "Thermocouple",
+    # values_to = "value"
+  )
+
+# title1 <- paste("Thermocouple Values for level", pdata$level, sep = " ")
+# Ttitle <- paste(title1, "\n", title_begin, "-", title_end, sep = " ")
+
+# Base R
+#plot two histograms in same graph
+hist(TCdata$T1, col='red', xlim=c(20, 40), main='Multiple Histograms', xlab='Treatment vs Reference')
+hist(TCdata$T3, col='green', add=TRUE)
+#add legend
+legend('topright', c('T1 Treatment', 'T3 Reference'), fill=c('red', 'green'))
+
+#plot two histograms in same graph
+hist(TCdata$T2, col='red', xlim=c(20, 40), main='Multiple Histograms', xlab='Control vs Reference')
+hist(TCdata$T3, col='green', add=TRUE)
+#add legend
+legend('topright', c('T2 Control', 'T3 Reference'), fill=c('red', 'green'))
+
+#plot two histograms in same graph
+hist(TCdata$T3, col='red', xlim=c(20, 40), main='Multiple Histograms', xlab='Reference vs Non-Heated Pad')
+hist(TCdata$T5, col='green', add=TRUE)
+#add legend
+legend('topright', c('T3 Reference', 'T5 Non-Heated Pad'), fill=c('red', 'green'))
+
+#plot two histograms in same graph
+hist(TCdata$T4, col='red', xlim=c(20, 55), main='Multiple Histograms', xlab='Heated Pad vs Non-Heated Pad')
+hist(TCdata$T5, col='green', add=TRUE)
+#add legend
+legend('topright', c('T4 Heated Pad', 'T5 Non-Heated Pad'), fill=c('red', 'green'))
+
+
+```
+
 
