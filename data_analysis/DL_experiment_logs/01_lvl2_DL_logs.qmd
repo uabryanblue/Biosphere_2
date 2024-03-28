@@ -305,6 +305,20 @@ p
 # p1/p2/p3/p4
 ```
 
+### April 2024 Temperature Data
+```{r april_2024_climate_graphs}
+#| echo: false
+#| warning: false
+
+d.begin <- "2024-04-01 00:00:00"
+d.end <-"2024-04-30 00:00:00"
+
+p <- plot_climate_temperature(pmac, d.begin, d.end)
+p
+
+# p1/p2/p3/p4
+```
+
 ```{r warming_intit}
 #| echo: false
 #| warning: false
@@ -485,6 +499,21 @@ plotdiff
 
 ```
 
+### April 2024 DeltaT Data
+```{r April_2024_deltaT_graphs}
+#| echo: false
+#| warning: false
+
+d.begin <- "2024-04-01 00:00:00"
+d.end <- "2024-04-30 00:00:00"
+
+plotdiff <- plot_treatment_vs_reference(pmac, d.begin, d.end)
+plotdiff
+
+# ggsave(here("figures", "deltaT_lvl2_march_2024.jpg"), plot = last_plot(), width = 8, height = 6)
+
+```
+
 # Leaf Warming All Data  
 **The experiment started on November 22, 2023.**  
 
@@ -497,7 +526,7 @@ The software has a safety cutoff of 50 C for the heated pad which looks to have 
 #| warning: false
 
 d.begin <- "2023-11-22 00:00:00"
-d.end <-"2024-03-01 00:00:00"
+d.end <-"2024-04-01 00:00:00"
 title_begin <- format.Date(d.begin, "%D")
 title_end <- format.Date(d.end, "%D")
 
@@ -551,7 +580,7 @@ p
 #| warning: false
 
 d.begin <- "2023-11-22 00:00:00"
-d.end <-"2024-03-01 00:00:00"
+d.end <-"2024-04-01 00:00:00"
 title_begin <- format.Date(d.begin, "%D")
 title_end <- format.Date(d.end, "%D")
 
@@ -596,7 +625,7 @@ hist(TCdata$T5, col='green', add=TRUE)
 legend('topright', c('T3 Reference', 'T5 Non-Heated Pad'), fill=c('red', 'green'))
 
 #plot two histograms in same graph
-hist(TCdata$T4, col='red', xlim=c(20, 55), main='Multiple Histograms', xlab='Heated Pad vs Non-Heated Pad')
+hist(TCdata$T4, col='red', xlim=c(20, 60), main='Multiple Histograms', xlab='Heated Pad vs Non-Heated Pad')
 hist(TCdata$T5, col='green', add=TRUE)
 #add legend
 legend('topright', c('T4 Heated Pad', 'T5 Non-Heated Pad'), fill=c('red', 'green'))
