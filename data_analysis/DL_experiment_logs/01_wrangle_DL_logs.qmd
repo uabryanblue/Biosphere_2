@@ -475,7 +475,7 @@ Plots and information on all of the thermocouples.
 #| warning: false
 
 d.begin <- "2023-11-01 00:00:00"
-d.end <-"2024-03-01 00:00:00"
+d.end <-"2024-04-01 00:00:00"
 title_begin <- format.Date(d.begin, "%D")
 title_end <- format.Date(d.end, "%D")
 
@@ -526,7 +526,7 @@ ggsave(here("figures", "TC_boxplot_lvl2_nov_1-2023_mar_3-2024.jpg"), plot = last
  
  
 d.begin <- "2023-11-01 00:00:00"
-d.end <-"2024-03-01 00:00:00"
+d.end <-"2024-04-01 00:00:00"
 title_begin <- format.Date(d.begin, "%D")
 title_end <- format.Date(d.end, "%D")
 
